@@ -68,8 +68,12 @@ input:focus{outline:none;border-color:var(--band)}
 .only-sticker .pin,.only-pin .sticker{display:none}
 .only-pin .pin{border-top:.4mm dashed #9aa0a8}
 .state{width:60mm;font-size:13px;color:#555;padding:6px 2px;background:var(--bg)}
+.state .mini{display:block;width:100%;margin-top:5px;font:inherit;font-size:14px;font-weight:700;padding:8px;border-radius:6px;
+  border:0;background:var(--band);color:#fff;cursor:pointer}
+.state .mini.ghost{background:transparent;color:var(--band);border:2px solid var(--line);font-weight:600}
+.state .mini[disabled]{opacity:.6}
 @page{size:A4;margin:10mm}
-@media print{.noprint{display:none!important}body{background:#fff;padding:0}main.wide{max-width:none}
+@media print{.noprint,.tag.skip{display:none!important}body{background:#fff;padding:0}main.wide{max-width:none}
   .grid{gap:3mm}}
 </style>
 </head>
@@ -220,7 +224,33 @@ function stickerHtml(code) {
           </div></div>`;
 }
 
-let printMode = "only-sticker", onlyEmpty = true;
+let printMode = "", view = "ready";
+
+// Verildi işaretleri (supabase/verildi.sql). Fonksiyon kurulu değilse null döner.
+async function loadGiven() {
+  try { return new Set(await rpc("admin_given_list", {p_key: adminKey})); }
+  catch (e) { return null; }
+}
+
+async function setGiven(codes, given) {
+  await rpc("admin_set_given", {p_key: adminKey, p_codes: codes, p_given: given});
+}
+
+function adminError(text) {
+  document.getElementById("msg").innerHTML = `<div class="msg err noprint">${esc(text)}</div>`;
+}
+
+// Görünen etiketleri yazdırır; ardından verildi olarak işaretlemeyi önerir.
+async function printTags(codes, givenSupported) {
+  document.querySelectorAll(".tag").forEach(t => t.classList.toggle("skip", !codes.includes(t.dataset.code)));
+  await new Promise(done => { addEventListener("afterprint", done, {once: true}); print(); });
+  document.querySelectorAll(".tag.skip").forEach(t => t.classList.remove("skip"));
+  const fresh = codes.filter(c => document.querySelector(`.tag[data-code="${CSS.escape(c)}"]`)?.dataset.state === "ready");
+  if (!givenSupported || !fresh.length) return;
+  if (!confirm(`${fresh.length} etiket verildi olarak işaretlensin mi? Verilen etiketler bu listede bir daha görünmez.`)) return;
+  try { await setGiven(fresh, true); showAdmin(); }
+  catch (e) { adminError("İşaretlenemedi: " + e.message); }
+}
 
 async function showAdmin() {
   show("<p>Etiketler yükleniyor…</p>");
@@ -229,38 +259,63 @@ async function showAdmin() {
   catch (e) { return showAdminLogin(e.status ? "Şifre hatalı." : "Bağlantı hatası, tekrar deneyin."); }
   if (!Array.isArray(rows)) return showAdminLogin("Beklenmeyen yanıt, tekrar deneyin.");
   if (typeof qrcode !== "function") return showMessage("QR kütüphanesi yüklenemedi", "Sayfayı yenileyip tekrar deneyin.");
-  const used = rows.filter(r => r.phone).length;
-  const list = onlyEmpty ? rows.filter(r => !r.phone) : rows;
+  const given = await loadGiven();
+  const state = r => r.phone ? "used" : given?.has(String(r.code).toUpperCase()) ? "given" : "ready";
+  const count = {ready: 0, given: 0, used: 0};
+  rows.forEach(r => count[state(r)]++);
+  const list = rows.filter(r => view === "all" || (view === "ready") === (state(r) === "ready"));
+  const label = {ready: "Verilmedi", given: "Verildi, henüz numara kaydedilmedi", used: "Kayıtlı"};
   show(`
     <div class="bar noprint">
-      <button class="btn" id="print">Yazdır</button>
+      <select id="view" aria-label="Hangi etiketler">
+        <option value="ready">Verilecek etiketler (${count.ready})</option>
+        <option value="out">Verilmiş etiketler (${count.given + count.used})</option>
+        <option value="all">Tümü (${rows.length})</option>
+      </select>
       <select id="mode" aria-label="Ne yazdırılsın">
+        <option value="">Sticker + PIN kartı</option>
         <option value="only-sticker">Sadece stickerlar</option>
         <option value="only-pin">Sadece PIN kartları</option>
-        <option value="">Sticker + PIN kartı</option>
       </select>
-      <label><input type="checkbox" id="empty" style="width:auto"> Sadece boş etiketler</label>
+      <button class="btn" id="print">Listedekileri yazdır</button>
       <button class="btn" id="add">10 etiket daha üret</button>
     </div>
-    <p class="noprint">${rows.length} etiket, ${used} tanesi bir numaraya bağlı. Gösterilen: ${list.length}.
-      Yazdırırken ölçek <b>%100 / Gerçek boyut</b> seçin (sticker 60×90 mm, A4'e 9 adet). Kesik çizgilerden kesin; PIN kartını araç sahibine ayrı verin.</p>
+    ${given ? "" : `<div class="msg err noprint">"Verildi" takibi kurulu değil. Supabase SQL Editor'da <b>supabase/verildi.sql</b> dosyasını bir kez çalıştırın.</div>`}
+    <p class="noprint">Talep edene etiket verirken <b>Yazdır ve ver</b>'e basın: sticker ve PIN kartı yazdırılır, etiket verildi olarak işaretlenip bu listeden kalkar.
+      Kişi QR'ı okutup numarasını ve PIN'i girdiğinde etiket o numarayı aramaya başlar.
+      Yazdırırken ölçek <b>%100 / Gerçek boyut</b> olmalı (sticker 60×90 mm).</p>
     <div id="msg"></div>
+    ${list.length ? "" : `<p>Bu listede etiket yok.${view === "ready" ? " Yeni etiket üretmek için “10 etiket daha üret”e basın." : ""}</p>`}
     <div class="grid ${printMode}">
       ${list.map(r => `
-        <div class="tag">${stickerHtml(r.code)}
-          <div class="pin"><b>${esc(r.code)}</b> etiketinin PIN'i<span>${esc(r.pin)}</span><small>Bu kartı araçta bırakmayın.</small></div>
-          <div class="state noprint">Durum: ${r.phone ? esc(prettyPhone(r.phone)) : "boş"}</div>
+        <div class="tag" data-code="${esc(r.code)}" data-state="${state(r)}">${stickerHtml(r.code)}
+          <div class="pin"><b>${esc(r.code)}</b> etiketinin PIN'i<span>${esc(r.pin)}</span><small>Numarayı kaydetmek ve değiştirmek için gerekir. Bu kartı araçta bırakmayın.</small></div>
+          <div class="state noprint">
+            <div>${label[state(r)]}${r.phone ? ": " + esc(prettyPhone(r.phone)) : ""}</div>
+            ${state(r) === "ready" ? `<button class="mini" data-act="give">Yazdır ve ver</button>` : ""}
+            ${state(r) === "ready" && given ? `<button class="mini ghost" data-act="mark">Sadece verildi işaretle</button>` : ""}
+            ${state(r) === "given" ? `<button class="mini ghost" data-act="undo">Geri al (verilmedi)</button>` : ""}
+          </div>
         </div>`).join("")}
     </div>`, true);
-  const mode = document.getElementById("mode"), empty = document.getElementById("empty");
-  mode.value = printMode; empty.checked = onlyEmpty;
+  const viewSel = document.getElementById("view"), mode = document.getElementById("mode");
+  viewSel.value = view; mode.value = printMode;
+  viewSel.onchange = () => { view = viewSel.value; showAdmin(); };
   mode.onchange = () => { printMode = mode.value; document.querySelector(".grid").className = "grid " + printMode; };
-  empty.onchange = () => { onlyEmpty = empty.checked; showAdmin(); };
-  document.getElementById("print").onclick = () => print();
+  document.getElementById("print").onclick = () => printTags(list.map(r => r.code), !!given);
+  document.querySelector(".grid").onclick = async ev => {
+    const btn = ev.target.closest("button[data-act]");
+    if (!btn) return;
+    const code = btn.closest(".tag").dataset.code;
+    if (btn.dataset.act === "give") return printTags([code], !!given);
+    btn.disabled = true;
+    try { await setGiven([code], btn.dataset.act === "mark"); showAdmin(); }
+    catch (e) { btn.disabled = false; adminError("İşlem yapılamadı: " + e.message); }
+  };
   document.getElementById("add").onclick = async ev => {
     ev.target.disabled = true;
     try { await rpc("admin_add", {p_key: adminKey, p_count: 10}); }
-    catch (e) { ev.target.disabled = false; document.getElementById("msg").innerHTML = `<div class="msg err noprint">Etiket üretilemedi: ${esc(e.message)}</div>`; return; }
+    catch (e) { ev.target.disabled = false; return adminError("Etiket üretilemedi: " + e.message); }
     showAdmin();
   };
 }
@@ -273,7 +328,7 @@ async function route() {
   if (params.has("admin")) return showAdminLogin();
 
   const code = (params.get("k") || "").trim().toUpperCase();
-  if (!code) return showMessage("Araç QR", "Aracın üzerindeki QR kodu okutun.");
+  if (!code) return showMessage("Araç QR", "Bu sayfa araç QR etiketleri içindir. Araç sahibine ulaşmak için aracın camındaki QR kodu telefon kameranızla okutun; açılan sayfadan tek dokunuşla arayabilirsiniz.");
 
   let tag;
   try { tag = await rpc("tag_lookup", {p_code: code}); }
