@@ -51,27 +51,64 @@ input:focus{outline:none;border-color:var(--band)}
 .grid{display:flex;flex-wrap:wrap;gap:5mm;align-items:flex-start}
 .tag{break-inside:avoid;page-break-inside:avoid;display:flex;flex-direction:column}
 /* sticker: 60x90 mm, A4'e 3x3 = 9 adet sığar */
+.block{background:#fff}
 .sticker{width:60mm;height:90mm;background:#fff;border:.4mm dashed #9aa0a8;border-radius:3mm;padding:2.5mm;
   display:flex;flex-direction:column;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.sticker .in{flex:1;display:flex;flex-direction:column;border:.8mm solid var(--ink);border-radius:2mm;overflow:hidden}
-.sticker .top{background:var(--band);color:#fff;text-align:center;padding:2mm 1.5mm 1.8mm;
-  font-family:"Barlow Condensed","Barlow",sans-serif;font-weight:700;font-size:11pt;line-height:1.05;letter-spacing:0}
-.sticker .msgline{text-align:center;font-weight:700;font-size:9.5pt;line-height:1.2;padding:1.5mm 2mm 0;color:var(--ink)}
+.sticker .in{position:relative;flex:1;display:flex;flex-direction:column;border:.8mm solid var(--ink);border-radius:2mm;
+  overflow:hidden;background:#fff;color:var(--ink)}
+.sticker .in > *{position:relative}
+.sticker .top{background:var(--band);color:#fff;text-align:center;padding:2mm 1.5mm 1.8mm;display:flex;align-items:center;
+  justify-content:center;gap:1.5mm;font-family:"Barlow Condensed","Barlow",sans-serif;font-weight:700;font-size:11pt;line-height:1.05}
+.sticker .top svg{flex:none}
+.sticker .msgline{text-align:center;font-weight:700;font-size:9pt;line-height:1.2;padding:1.5mm 2mm 0}
 .sticker .qr{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:1mm 0}
-.sticker .qr svg{width:40mm;height:40mm;display:block}
-.sticker .how{text-align:center;font-size:7pt;line-height:1.2;color:#333;padding:0 2mm 1.2mm}
+.sticker .qr .box{background:#fff;padding:1mm;border-radius:1.5mm;line-height:0}
+.sticker .qr svg{width:38mm;height:38mm;display:block}
+.sticker .how{text-align:center;font-size:7pt;line-height:1.2;opacity:.85;padding:0 2mm 1.2mm}
 .sticker .code{background:var(--ink);color:#fff;text-align:center;font-family:"Barlow Condensed","Barlow",sans-serif;
   font-weight:700;font-size:10pt;letter-spacing:.12em;padding:1mm}
+.sticker .deco{position:absolute;inset:0;width:100%;height:100%}
+/* plaka */
+.d-plaka .top{background:#fff;color:var(--ink);padding:0;border-bottom:.8mm solid var(--ink);gap:0;align-items:stretch}
+.d-plaka .top .tr{background:var(--band);color:#fff;width:7mm;font-size:7pt;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1mm}
+.d-plaka .top .t{flex:1;padding:1.8mm 1mm;font-size:13pt;letter-spacing:.06em}
+/* dikkat */
+.d-dikkat .in{background:#ffd400}
+.d-dikkat .top{background:#111;color:#ffd400;font-size:12pt;letter-spacing:.04em}
+.d-dikkat .stripe{line-height:0}.d-dikkat .stripe svg{width:100%;height:3.5mm;display:block}
+.d-dikkat .code{background:#111;color:#ffd400}
+/* kedi */
+.d-kedi .in{background:#fff1e3;border-color:#d9682b}
+.d-kedi .top{background:transparent;color:#d9682b;font-size:15pt;padding:1.5mm 1.5mm 0}
+.d-kedi .code{background:#d9682b}
+/* özür */
+.d-ozur .in{background:#e8f7ee;border-color:#0c7a43}
+.d-ozur .top{background:#0c7a43;font-size:10.5pt}
+.d-ozur .code{background:#0c7a43}
+/* gece */
+.d-gece .in{background:#0d1530;border-color:#0d1530;color:#fff}
+.d-gece .top{background:transparent;color:#5ef2ff;font-size:13pt;letter-spacing:.05em}
+.d-gece .code{background:#5ef2ff;color:#0d1530}
+/* minimal (mürekkep dostu) */
+.d-minimal .top{background:#fff;color:var(--ink);border-bottom:.5mm solid var(--ink)}
+.d-minimal .code{background:#fff;color:var(--ink);border-top:.5mm solid var(--ink)}
 .pin{width:60mm;border:.4mm dashed #9aa0a8;border-top:0;padding:2.5mm;text-align:center;font-size:9pt;background:#fff}
 .pin span{display:block;font-size:20pt;font-weight:700;letter-spacing:.15em;margin:1mm 0}
 .pin small{color:#666}
 .only-sticker .pin,.only-pin .sticker{display:none}
 .only-pin .pin{border-top:.4mm dashed #9aa0a8}
 .state{width:60mm;font-size:13px;color:#555;padding:6px 2px;background:var(--bg)}
+.state select{width:100%;margin-top:5px;font:inherit;font-size:14px;padding:7px;border:2px solid var(--line);border-radius:6px;background:#fff}
 .state .mini{display:block;width:100%;margin-top:5px;font:inherit;font-size:14px;font-weight:700;padding:8px;border-radius:6px;
   border:0;background:var(--band);color:#fff;cursor:pointer}
 .state .mini.ghost{background:transparent;color:var(--band);border:2px solid var(--line);font-weight:600}
-.state .mini[disabled]{opacity:.6}
+.state .mini.alt{background:#2b3240}
+.state .mini[disabled],.bar .btn[disabled]{opacity:.6}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;
+  border-radius:10px;font-weight:600;z-index:20;box-shadow:0 6px 24px #0004;max-width:calc(100% - 32px);text-align:center}
+.confetti{position:fixed;top:-12px;width:9px;height:14px;z-index:19;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(105vh) rotate(720deg)}}
+@media (prefers-reduced-motion:reduce){.confetti{display:none}}
 @page{size:A4;margin:10mm}
 @media print{.noprint,.tag.skip{display:none!important}body{background:#fff;padding:0}main.wide{max-width:none}
   .grid{gap:3mm}}
@@ -181,6 +218,7 @@ function showSaved(code, phone) {
     <div class="msg ok">Kaydedildi. Bu QR artık ${esc(prettyPhone(phone))} numarasını arar.</div>
     <p>PIN kartını saklayın; numarayı değiştirmek için gerekecek.</p>
     <a class="btn" href="${esc(tagLink(code))}">QR'ı test et</a>`);
+  confetti();
 }
 
 function showMessage(title, text) {
@@ -213,18 +251,102 @@ function qrSvg(text) {
   return q.createSvgTag({cellSize: 4, margin: 2, scalable: true});
 }
 
-function stickerHtml(code) {
-  return `
-          <div class="sticker"><div class="in">
-            <div class="top">ARAÇ SAHİBİNE ULAŞIN</div>
-            <div class="msgline">Bu aracın sahibine ulaşmak için QR kodu okutun</div>
-            <div class="qr">${qrSvg(tagLink(code))}</div>
-            <div class="how">Telefon kameranızı açın, kodu okutun,<br>tek dokunuşla arayın.</div>
-            <div class="code">${esc(code)}</div>
-          </div></div>`;
+// ---------------------------------------------------------------- tasarımlar
+const svgCat = `<svg viewBox="0 0 40 34" width="11mm" height="9.3mm" aria-hidden="true"><path d="M5 30V6l9 7h12l9-7v24c0 2-2 3-4 3H9c-2 0-4-1-4-3z" fill="#f3a25a" stroke="#d9682b" stroke-width="2" stroke-linejoin="round"/><circle cx="14" cy="20" r="2.4" fill="#2a1a10"/><circle cx="26" cy="20" r="2.4" fill="#2a1a10"/><path d="M18 24h4l-2 2.2z" fill="#d9426b"/><path d="M20 26.2q-2 2.5-4 1M20 26.2q2 2.5 4 1" stroke="#2a1a10" stroke-width="1" fill="none" stroke-linecap="round"/><path d="M1 22l9 1M1 26l9-1M39 22l-9 1M39 26l-9-1" stroke="#2a1a10" stroke-width=".8"/></svg>`;
+const svgSmile = `<svg viewBox="0 0 24 24" width="6mm" height="6mm" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#ffd400" stroke="#fff" stroke-width="1.5"/><circle cx="8.5" cy="10" r="1.4" fill="#222"/><circle cx="15.5" cy="10" r="1.4" fill="#222"/><path d="M7 14.5q5 5 10 0" stroke="#222" stroke-width="1.6" fill="none" stroke-linecap="round"/><ellipse cx="6" cy="14" rx="1.6" ry="1" fill="#ff8aa0"/><ellipse cx="18" cy="14" rx="1.6" ry="1" fill="#ff8aa0"/></svg>`;
+const svgStripe = `<div class="stripe"><svg viewBox="0 0 120 7" preserveAspectRatio="none" aria-hidden="true"><rect width="120" height="7" fill="#ffd400"/>${Array.from({length: 13}, (_, i) => `<path d="M${i * 10 - 4} 7l7-7h5l-7 7z" fill="#111"/>`).join("")}</svg></div>`;
+const svgStars = `<svg class="deco" viewBox="0 0 100 150" preserveAspectRatio="none" aria-hidden="true">${[[5,30],[95,34],[4,60],[96,66],[5,95],[95,100],[4,122],[96,120],[8,8],[22,4]].map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="${i % 3 ? .7 : 1.1}" fill="#fff" opacity=".8"/>`).join("")}</svg>`;
+const svgMoon = `<svg viewBox="0 0 20 20" width="4.5mm" height="4.5mm" aria-hidden="true"><path d="M15 15A8 8 0 1 1 9 2a6.2 6.2 0 0 0 6 13z" fill="#ffe28a"/></svg>`;
+const MSG = "Bu aracın sahibine ulaşmak için QR kodu okutun";
+const HOW = "Telefon kameranızı açın, kodu okutun,<br>tek dokunuşla arayın.";
+
+const DESIGNS = {
+  klasik:  {name: "Klasik mavi", top: "ARAÇ SAHİBİNE ULAŞIN", msg: MSG, how: HOW},
+  plaka:   {name: "Plaka", top: `<span class="tr">TR</span><span class="t">SAHİBİNE ULAŞ</span>`, msg: MSG, how: HOW},
+  dikkat:  {name: "Dikkat şeritli", pre: svgStripe, top: "PARK SORUNU MU?", msg: MSG, how: HOW, post: svgStripe},
+  kedi:    {name: "Miyav kedi", top: `${svgCat}MİYAV!`, msg: "Sahibime ulaşmak için QR kodu okut, hemen gelsin!",
+            how: "Kameranı aç, kodu okut, ara.<br>Patiler seni bekliyor."},
+  ozur:    {name: "Kusura bakmayın", top: `${svgSmile}YOLUNUZU MU KAPATTIM?`,
+            msg: "Kusura bakmayın! Bana ulaşmak için QR kodu okutun, hemen geleyim.", how: "Kameranızı açın, kodu okutun,<br>tek dokunuşla arayın."},
+  gece:    {name: "Gece yıldızlı", pre: svgStars, top: `SAHİBİNE ULAŞ${svgMoon}`, msg: MSG, how: "Gece gündüz fark etmez,<br>tek dokunuşla arayın."},
+  minimal: {name: "Sade (az mürekkep)", top: "ARAÇ SAHİBİNE ULAŞIN", msg: MSG, how: HOW},
+};
+const RANDOM = "rastgele";
+const pickRandom = () => { const k = Object.keys(DESIGNS); return k[Math.floor(Math.random() * k.length)]; };
+
+// Tasarım metinleri sabit HTML; yalnızca kod kaçışlanır.
+function stickerHtml(code, design) {
+  const d = DESIGNS[design] ? design : "klasik", D = DESIGNS[d];
+  return `<div class="sticker d-${d}"><div class="in">${D.pre || ""}
+      <div class="top">${D.top}</div>
+      <div class="msgline">${D.msg}</div>
+      <div class="qr"><div class="box">${qrSvg(tagLink(code))}</div></div>
+      <div class="how">${D.how}</div>
+      <div class="code">${esc(code)}</div>${D.post || ""}
+    </div></div>`;
 }
 
-let printMode = "", view = "ready";
+// ---------------------------------------------------------------- eğlence
+function toast(text, ms = 3200) {
+  document.querySelector(".toast")?.remove();
+  const t = Object.assign(document.createElement("div"), {className: "toast noprint", textContent: text});
+  t.setAttribute("role", "status");
+  document.body.append(t);
+  setTimeout(() => t.remove(), ms);
+}
+
+function confetti() {
+  const colors = ["#0a3a9e", "#ffd400", "#0c7a43", "#d9426b", "#5ef2ff", "#f3a25a"];
+  for (let i = 0; i < 70; i++) {
+    const c = document.createElement("div");
+    c.className = "confetti noprint";
+    c.style.cssText = `left:${Math.random() * 100}vw;background:${colors[i % colors.length]};` +
+      `animation-duration:${1.6 + Math.random() * 1.6}s;animation-delay:${Math.random() * .4}s;border-radius:${i % 3 ? 2 : 50}px`;
+    document.body.append(c);
+    setTimeout(() => c.remove(), 3800);
+  }
+}
+
+// ---------------------------------------------------------------- PDF
+function loadScript(src) {
+  return new Promise((ok, fail) => {
+    if (document.querySelector(`script[src="${src}"]`)) return ok();
+    const el = Object.assign(document.createElement("script"), {src, onload: ok, onerror: () => fail(new Error("Kütüphane yüklenemedi"))});
+    document.head.append(el);
+  });
+}
+
+async function loadPdfLibs() {
+  await Promise.all([
+    loadScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"),
+    loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"),
+  ]);
+}
+
+// Etiketleri gerçek boyutlarıyla A4 sayfalara dizer (yazdırırken %100 ölçek).
+async function savePdf(codes) {
+  await loadPdfLibs();
+  await document.fonts?.ready;
+  const pdf = new window.jspdf.jsPDF({unit: "mm", format: "a4"});
+  const M = 10, G = 4, W = 210, H = 297, PX = 25.4 / 96;
+  let x = M, y = M, rowH = 0;
+  for (const code of codes) {
+    const block = document.querySelector(`.tag[data-code="${CSS.escape(code)}"] .block`);
+    if (!block) continue;
+    const r = block.getBoundingClientRect(), w = r.width * PX, h = r.height * PX;
+    const canvas = await html2canvas(block, {scale: 5, backgroundColor: "#ffffff", logging: false});
+    if (x + w > W - M + .1) { x = M; y += rowH + G; rowH = 0; }
+    if (y + h > H - M + .1) { pdf.addPage(); x = M; y = M; rowH = 0; }
+    pdf.addImage(canvas.toDataURL("image/png"), "PNG", x, y, w, h);
+    x += w + G; rowH = Math.max(rowH, h);
+  }
+  pdf.save(codes.length === 1 ? `etiket-${codes[0]}.pdf` : `etiketler-${codes.length}.pdf`);
+}
+
+// ---------------------------------------------------------------- yönetim listesi
+let printMode = "", view = "ready", defaultDesign = "klasik";
+const designOf = {};
+try { defaultDesign = localStorage.getItem("aracqr-design") || "klasik"; } catch (e) {}
 
 // Verildi işaretleri (supabase/verildi.sql). Fonksiyon kurulu değilse null döner.
 async function loadGiven() {
@@ -240,17 +362,32 @@ function adminError(text) {
   document.getElementById("msg").innerHTML = `<div class="msg err noprint">${esc(text)}</div>`;
 }
 
-// Görünen etiketleri yazdırır; ardından verildi olarak işaretlemeyi önerir.
-async function printTags(codes, givenSupported) {
-  document.querySelectorAll(".tag").forEach(t => t.classList.toggle("skip", !codes.includes(t.dataset.code)));
-  await new Promise(done => { addEventListener("afterprint", done, {once: true}); print(); });
-  document.querySelectorAll(".tag.skip").forEach(t => t.classList.remove("skip"));
+// Yazdırır ya da PDF kaydeder; ardından verilmemiş olanları verildi olarak işaretlemeyi önerir.
+async function deliver(codes, how, givenSupported) {
+  if (!codes.length) return;
+  if (how === "pdf") {
+    toast("PDF hazırlanıyor…", 60000);
+    try { await savePdf(codes); toast("PDF kaydedildi."); }
+    catch (e) { document.querySelector(".toast")?.remove(); return adminError("PDF oluşturulamadı: " + e.message); }
+  } else {
+    document.querySelectorAll(".tag").forEach(t => t.classList.toggle("skip", !codes.includes(t.dataset.code)));
+    await new Promise(done => { addEventListener("afterprint", done, {once: true}); print(); });
+    document.querySelectorAll(".tag.skip").forEach(t => t.classList.remove("skip"));
+  }
   const fresh = codes.filter(c => document.querySelector(`.tag[data-code="${CSS.escape(c)}"]`)?.dataset.state === "ready");
   if (!givenSupported || !fresh.length) return;
   if (!confirm(`${fresh.length} etiket verildi olarak işaretlensin mi? Verilen etiketler bu listede bir daha görünmez.`)) return;
-  try { await setGiven(fresh, true); showAdmin(); }
-  catch (e) { adminError("İşaretlenemedi: " + e.message); }
+  try {
+    await setGiven(fresh, true);
+    await showAdmin();
+    confetti();
+    toast(fresh.length === 1 ? `${fresh[0]} yeni sahibine yolculuğa çıktı!` : `${fresh.length} etiket yeni sahiplerine yolculuğa çıktı!`);
+  } catch (e) { adminError("İşaretlenemedi: " + e.message); }
 }
+
+const designOptions = (sel, withRandom) =>
+  (withRandom ? `<option value="${RANDOM}"${sel === RANDOM ? " selected" : ""}>Rastgele (her etikete farklı)</option>` : "") +
+  Object.entries(DESIGNS).map(([k, d]) => `<option value="${k}"${k === sel ? " selected" : ""}>${esc(d.name)}</option>`).join("");
 
 async function showAdmin() {
   show("<p>Etiketler yükleniyor…</p>");
@@ -264,6 +401,7 @@ async function showAdmin() {
   const count = {ready: 0, given: 0, used: 0};
   rows.forEach(r => count[state(r)]++);
   const list = rows.filter(r => view === "all" || (view === "ready") === (state(r) === "ready"));
+  list.forEach(r => { designOf[r.code] ||= defaultDesign === RANDOM ? pickRandom() : defaultDesign; });
   const label = {ready: "Verilmedi", given: "Verildi, henüz numara kaydedilmedi", used: "Kayıtlı"};
   show(`
     <div class="bar noprint">
@@ -272,47 +410,78 @@ async function showAdmin() {
         <option value="out">Verilmiş etiketler (${count.given + count.used})</option>
         <option value="all">Tümü (${rows.length})</option>
       </select>
-      <select id="mode" aria-label="Ne yazdırılsın">
+      <select id="mode" aria-label="Ne çıkarılsın">
         <option value="">Sticker + PIN kartı</option>
         <option value="only-sticker">Sadece stickerlar</option>
         <option value="only-pin">Sadece PIN kartları</option>
       </select>
+      <select id="design" aria-label="Tümü için tasarım">${designOptions(defaultDesign, true)}</select>
+      <button class="btn" id="dice" title="Hepsine rastgele tasarım">🎲 Karıştır</button>
       <button class="btn" id="print">Listedekileri yazdır</button>
+      <button class="btn" id="pdf">Listedekileri PDF kaydet</button>
       <button class="btn" id="add">10 etiket daha üret</button>
     </div>
     ${given ? "" : `<div class="msg err noprint">"Verildi" takibi kurulu değil. Supabase SQL Editor'da <b>supabase/verildi.sql</b> dosyasını bir kez çalıştırın.</div>`}
-    <p class="noprint">Talep edene etiket verirken <b>Yazdır ve ver</b>'e basın: sticker ve PIN kartı yazdırılır, etiket verildi olarak işaretlenip bu listeden kalkar.
+    <p class="noprint">Talep edene etiket verirken tasarımı seçip <b>Yazdır ve ver</b> ya da <b>PDF kaydet ve ver</b>'e basın; etiket verildi olarak işaretlenip bu listeden kalkar.
       Kişi QR'ı okutup numarasını ve PIN'i girdiğinde etiket o numarayı aramaya başlar.
       Yazdırırken ölçek <b>%100 / Gerçek boyut</b> olmalı (sticker 60×90 mm).</p>
     <div id="msg"></div>
     ${list.length ? "" : `<p>Bu listede etiket yok.${view === "ready" ? " Yeni etiket üretmek için “10 etiket daha üret”e basın." : ""}</p>`}
     <div class="grid ${printMode}">
       ${list.map(r => `
-        <div class="tag" data-code="${esc(r.code)}" data-state="${state(r)}">${stickerHtml(r.code)}
-          <div class="pin"><b>${esc(r.code)}</b> etiketinin PIN'i<span>${esc(r.pin)}</span><small>Numarayı kaydetmek ve değiştirmek için gerekir. Bu kartı araçta bırakmayın.</small></div>
+        <div class="tag" data-code="${esc(r.code)}" data-state="${state(r)}">
+          <div class="block">${stickerHtml(r.code, designOf[r.code])}
+            <div class="pin"><b>${esc(r.code)}</b> etiketinin PIN'i<span>${esc(r.pin)}</span><small>Numarayı kaydetmek ve değiştirmek için gerekir. Bu kartı araçta bırakmayın.</small></div>
+          </div>
           <div class="state noprint">
             <div>${label[state(r)]}${r.phone ? ": " + esc(prettyPhone(r.phone)) : ""}</div>
-            ${state(r) === "ready" ? `<button class="mini" data-act="give">Yazdır ve ver</button>` : ""}
+            <select data-act="design" aria-label="${esc(r.code)} tasarımı">${designOptions(designOf[r.code], false)}</select>
+            ${state(r) === "ready" ? `<button class="mini" data-act="give">Yazdır ve ver</button>
+              <button class="mini alt" data-act="givepdf">PDF kaydet ve ver</button>` :
+              `<button class="mini alt" data-act="pdf">PDF kaydet</button>`}
             ${state(r) === "ready" && given ? `<button class="mini ghost" data-act="mark">Sadece verildi işaretle</button>` : ""}
             ${state(r) === "given" ? `<button class="mini ghost" data-act="undo">Geri al (verilmedi)</button>` : ""}
           </div>
         </div>`).join("")}
     </div>`, true);
-  const viewSel = document.getElementById("view"), mode = document.getElementById("mode");
-  viewSel.value = view; mode.value = printMode;
-  viewSel.onchange = () => { view = viewSel.value; showAdmin(); };
-  mode.onchange = () => { printMode = mode.value; document.querySelector(".grid").className = "grid " + printMode; };
-  document.getElementById("print").onclick = () => printTags(list.map(r => r.code), !!given);
-  document.querySelector(".grid").onclick = async ev => {
+  const $ = id => document.getElementById(id);
+  const codes = list.map(r => r.code);
+  $("view").value = view; $("mode").value = printMode;
+  $("view").onchange = () => { view = $("view").value; showAdmin(); };
+  $("mode").onchange = () => { printMode = $("mode").value; document.querySelector(".grid").className = "grid " + printMode; };
+  const redesign = (code, d) => {
+    designOf[code] = d;
+    const tag = document.querySelector(`.tag[data-code="${CSS.escape(code)}"]`);
+    tag.querySelector(".sticker").outerHTML = stickerHtml(code, d);
+    tag.querySelector('select[data-act="design"]').value = d;
+  };
+  $("design").onchange = () => {
+    defaultDesign = $("design").value;
+    try { localStorage.setItem("aracqr-design", defaultDesign); } catch (e) {}
+    codes.forEach(c => redesign(c, defaultDesign === RANDOM ? pickRandom() : defaultDesign));
+  };
+  $("dice").onclick = () => { codes.forEach(c => redesign(c, pickRandom())); toast("Tasarımlar karıştırıldı!", 1500); };
+  $("print").onclick = () => deliver(codes, "print", !!given);
+  $("pdf").onclick = async ev => { ev.target.disabled = true; await deliver(codes, "pdf", !!given); ev.target.disabled = false; };
+  const grid = document.querySelector(".grid");
+  grid.onchange = ev => {
+    if (ev.target.dataset.act === "design") redesign(ev.target.closest(".tag").dataset.code, ev.target.value);
+  };
+  grid.onclick = async ev => {
     const btn = ev.target.closest("button[data-act]");
     if (!btn) return;
-    const code = btn.closest(".tag").dataset.code;
-    if (btn.dataset.act === "give") return printTags([code], !!given);
+    const code = btn.closest(".tag").dataset.code, act = btn.dataset.act;
     btn.disabled = true;
-    try { await setGiven([code], btn.dataset.act === "mark"); showAdmin(); }
-    catch (e) { btn.disabled = false; adminError("İşlem yapılamadı: " + e.message); }
+    try {
+      if (act === "give") return await deliver([code], "print", !!given);
+      if (act === "givepdf" || act === "pdf") return await deliver([code], "pdf", !!given);
+      await setGiven([code], act === "mark");
+      await showAdmin();
+      if (act === "mark") toast(`${code} verildi olarak işaretlendi.`);
+    } catch (e) { adminError("İşlem yapılamadı: " + e.message); }
+    finally { btn.disabled = false; }
   };
-  document.getElementById("add").onclick = async ev => {
+  $("add").onclick = async ev => {
     ev.target.disabled = true;
     try { await rpc("admin_add", {p_key: adminKey, p_count: 10}); }
     catch (e) { ev.target.disabled = false; return adminError("Etiket üretilemedi: " + e.message); }
