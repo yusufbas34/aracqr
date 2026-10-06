@@ -716,7 +716,7 @@ function showHome() {
       <h2>Nasıl çalışır?</h2>
       <ol class="steps">
         <li><b>Talep edin</b>Aşağıdaki formu doldurun. Bilgileriniz yalnızca size ulaşmak için kullanılır.</li>
-        <li><b>Etiketiniz gelsin</b>Size ulaşıp QR etiketinizi ve size özel PIN kartını teslim ederiz.</li>
+        <li><b>Etiketiniz gelsin</b>QR etiketinizi ve size özel PIN kartını e-postayla ya da isterseniz WhatsApp'tan göndeririz.</li>
         <li><b>Numaranızı bağlayın</b>Etiketi kendi telefonunuzla okutun, numaranızı ve karttaki PIN'i girin.</li>
         <li><b>Camınıza yapıştırın</b>Artık QR'ı okutan kişi sizi tek dokunuşla arayabilir.</li>
       </ol>
@@ -760,10 +760,9 @@ function requestFormHtml(error = "", v = {}) {
       </div>
       <label for="r-email">E-posta</label>
       <input id="r-email" type="email" inputmode="email" autocomplete="email" placeholder="ornek@mail.com" required ${val("email")}>
-      <label for="r-phone">Telefon</label>
-      <input id="r-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="05xx xxx xx xx" required ${val("phone")}>
-      <label for="r-plate">Araç plakası <span style="font-weight:400;color:var(--muted)">(isteğe bağlı)</span></label>
-      <input id="r-plate" autocomplete="off" placeholder="34 ABC 123" maxlength="12" ${val("plate")}>
+      <label for="r-phone">Telefon <span style="font-weight:400;color:var(--muted)">(isteğe bağlı)</span></label>
+      <input id="r-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="05xx xxx xx xx" aria-describedby="r-phone-hint" ${val("phone")}>
+      <small id="r-phone-hint" style="display:block;margin-top:6px;color:var(--muted);font-size:14px">Sticker'ı WhatsApp'tan isterseniz telefonunuzu girin.</small>
       <label for="r-note">Notunuz <span style="font-weight:400;color:var(--muted)">(isteğe bağlı: tasarım tercihi, adet…)</span></label>
       <textarea id="r-note" rows="3" maxlength="500">${esc(v.note || "")}</textarea>
       <div class="hp" aria-hidden="true"><label for="r-web">Web sitesi</label><input id="r-web" tabindex="-1" autocomplete="off"></div>
@@ -777,23 +776,23 @@ function bindRequestForm() {
     ev.preventDefault();
     const g = id => document.getElementById(id);
     const v = {first: g("r-first").value.trim(), last: g("r-last").value.trim(), email: g("r-email").value.trim(),
-      phone: g("r-phone").value.trim(), plate: g("r-plate").value.trim(), note: g("r-note").value.trim(), ok: g("r-ok").checked};
+      phone: g("r-phone").value.trim(), note: g("r-note").value.trim(), ok: g("r-ok").checked};
     const box = g("formbox");
     const fail = msg => { box.innerHTML = requestFormHtml(msg, v); bindRequestForm(); box.querySelector(".msg").scrollIntoView({block: "center"}); };
     if (!v.first || !v.last) return fail("Ad ve soyadınızı yazın.");
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.email)) return fail("E-posta adresi geçersiz. Örnek: ornek@mail.com");
-    const phone = normalizePhone(v.phone);
-    if (!phone) return fail("Telefon numarası geçersiz. Örnek: 0532 123 45 67");
+    const phone = v.phone ? normalizePhone(v.phone) : null;
+    if (v.phone && !phone) return fail("Telefon numarası geçersiz (örnek: 0532 123 45 67). İstemiyorsanız boş bırakabilirsiniz.");
     if (!v.ok) return fail("Devam etmek için bilgilendirme onayını işaretleyin.");
     const done = () => {
-      box.innerHTML = `<div class="msg ok" role="status"><b>Talebiniz alındı, teşekkürler ${esc(v.first)}!</b><br>En kısa sürede ${esc(v.email)} ya da ${esc(prettyPhone(phone))} üzerinden size ulaşacağız.</div>`;
+      box.innerHTML = `<div class="msg ok" role="status"><b>Talebiniz alındı, teşekkürler ${esc(v.first)}!</b><br>${phone ? `Sticker'ınızı ${esc(prettyPhone(phone))} numarasına WhatsApp'tan göndereceğiz.` : `En kısa sürede ${esc(v.email)} adresinden size ulaşacağız.`}</div>`;
       confetti();
     };
     if (g("r-web").value) return done(); // bot tuzağı: sessizce geç
     ev.submitter && (ev.submitter.disabled = true);
     try {
       const res = await rpc("request_create", {p_first_name: v.first, p_last_name: v.last, p_email: v.email, p_phone: phone,
-        p_plate: v.plate || null, p_note: v.note || null});
+        p_note: v.note || null});
       if (res?.ok) return done();
       fail({missing: "Ad ve soyadınızı yazın.", bad_email: "E-posta adresi geçersiz.", bad_phone: "Telefon numarası geçersiz.",
         too_many: "Bugün bu bilgilerle zaten talep gönderdiniz; sizinle iletişime geçeceğiz.",
@@ -863,7 +862,13 @@ async function loadRequests() {
   catch (e) { return null; }
 }
 
+// talepler.sql'in güncel sürümü (telefon isteğe bağlı) kurulu mu?
+async function requestsUpToDate() {
+  try { return (await rpc("aracqr_requests_version", {})) >= 2; } catch (e) { return false; }
+}
+
 async function showRequests(rows, given, requests) {
+  const upToDate = requests ? await requestsUpToDate() : true;
   const ready = rows.filter(r => !r.phone && !given?.has(String(r.code).toUpperCase())).map(r => r.code);
   const newCount = requests ? requests.filter(r => r.status === "yeni").length : 0;
   const list = (requests || []).filter(r => reqFilter === "all" || r.status === reqFilter);
@@ -872,6 +877,7 @@ async function showRequests(rows, given, requests) {
   show(`
     ${tabsHtml(newCount)}
     ${requests ? "" : setupHtml("Talep formu kurulu değil.", "talepler.sql")}
+    ${upToDate ? "" : setupHtml("Talep formu güncellendi (telefon artık isteğe bağlı). Veritabanını güncellemeniz gerekiyor; güncellenene kadar telefonsuz talepler reddedilir.", "talepler.sql")}
     <div class="bar">
       <select id="rfilter" aria-label="Talep durumu">
         <option value="yeni">Yeni talepler (${newCount})</option>
@@ -891,9 +897,9 @@ async function showRequests(rows, given, requests) {
             <h3>${esc(r.first_name)} ${esc(r.last_name)}</h3>
             <div class="meta">
               ${esc(date(r.created_at))}${r.plate ? ` · Plaka: <b>${esc(r.plate)}</b>` : ""}<br>
-              <a href="mailto:${esc(r.email)}">${esc(r.email)}</a> ·
-              <a href="tel:${esc(r.phone)}">${esc(prettyPhone(r.phone))}</a> ·
-              <a href="https://wa.me/${esc(digits(r.phone))}" target="_blank" rel="noopener">WhatsApp</a>
+              <a href="mailto:${esc(r.email)}">${esc(r.email)}</a>
+              ${r.phone ? ` · <a href="tel:${esc(r.phone)}">${esc(prettyPhone(r.phone))}</a> ·
+              <a href="https://wa.me/${esc(digits(r.phone))}?text=${encodeURIComponent(`Merhaba ${r.first_name}, Araç QR sticker'ınız hazır!`)}" target="_blank" rel="noopener"><b>WhatsApp'tan istiyor</b></a>` : " · <span>E-postayla</span>"}
             </div>
             ${r.note ? `<div class="note">${esc(r.note)}</div>` : ""}
           </div>
@@ -912,7 +918,7 @@ async function showRequests(rows, given, requests) {
   filter.value = reqFilter;
   filter.onchange = () => { reqFilter = filter.value; showRequests(rows, given, requests); };
   document.getElementById("csv").onclick = () => {
-    const cols = ["created_at", "first_name", "last_name", "email", "phone", "plate", "note", "status", "tag_code"];
+    const cols = ["created_at", "first_name", "last_name", "email", "phone", "note", "status", "tag_code"];
     // Formdan gelen metin Excel'de formül olarak çalışmasın (=, +, -, @ ile başlayanlar). Telefon sunucuda zaten yalnızca rakam ve +.
     const cell = (v, c) => { let t = String(v ?? ""); if (c !== "phone" && /^[=+\-@\t\r]/.test(t)) t = "'" + t; return `"${t.replace(/"/g, '""')}"`; };
     const csv = "\ufeff" + [cols.join(";"), ...list.map(r => cols.map(c => cell(r[c], c)).join(";"))].join("\r\n");
