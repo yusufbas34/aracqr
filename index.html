@@ -50,54 +50,58 @@ input:focus{outline:none;border-color:var(--band)}
 .bar label{display:flex;gap:6px;align-items:center;font-weight:400}
 .grid{display:flex;flex-wrap:wrap;gap:5mm;align-items:flex-start}
 .tag{break-inside:avoid;page-break-inside:avoid;display:flex;flex-direction:column}
-/* sticker: 60x90 mm, A4'e 3x3 = 9 adet sığar */
+.grid{--w:60mm;--h:90mm;--k:1}
+/* sticker: boyut .grid üzerindeki --w/--h ile seçilir; iç ölçüler --k ile ölçeklenir (60x90 mm = 1) */
 .block{background:#fff}
-.sticker{width:60mm;height:90mm;background:#fff;border:.4mm dashed #9aa0a8;border-radius:3mm;padding:2.5mm;
+.sticker{width:var(--w);height:var(--h);background:#fff;border:calc(var(--k)*.4mm) dashed #9aa0a8;border-radius:calc(var(--k)*3mm);padding:calc(var(--k)*2.5mm);
   display:flex;flex-direction:column;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.sticker .in{position:relative;flex:1;display:flex;flex-direction:column;border:.8mm solid var(--ink);border-radius:2mm;
+.sticker .in{position:relative;flex:1;display:flex;flex-direction:column;border:calc(var(--k)*.8mm) solid var(--ink);border-radius:calc(var(--k)*2mm);
   overflow:hidden;background:#fff;color:var(--ink)}
 .sticker .in > *{position:relative}
-.sticker .top{background:var(--band);color:#fff;text-align:center;padding:2mm 1.5mm 1.8mm;display:flex;align-items:center;
-  justify-content:center;gap:1.5mm;font-family:"Barlow Condensed","Barlow",sans-serif;font-weight:700;font-size:11pt;line-height:1.05}
+.sticker .top{background:var(--band);color:#fff;text-align:center;padding:calc(var(--k)*2mm) calc(var(--k)*1.5mm) calc(var(--k)*1.8mm);display:flex;align-items:center;
+  justify-content:center;gap:calc(var(--k)*1.5mm);font-family:"Barlow Condensed","Barlow",sans-serif;font-weight:700;font-size:calc(var(--k)*11pt);line-height:1.05}
 .sticker .top svg{flex:none}
-.sticker .msgline{text-align:center;font-weight:700;font-size:9pt;line-height:1.2;padding:1.5mm 2mm 0}
-.sticker .qr{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:1mm 0}
-.sticker .qr .box{background:#fff;padding:1mm;border-radius:1.5mm;line-height:0}
-.sticker .qr svg{width:38mm;height:38mm;display:block}
-.sticker .how{text-align:center;font-size:7pt;line-height:1.2;opacity:.85;padding:0 2mm 1.2mm}
+.sticker .ic-cat{width:calc(var(--k)*11mm);height:calc(var(--k)*9.3mm)}.sticker .ic-smile{width:calc(var(--k)*6mm);height:calc(var(--k)*6mm)}.sticker .ic-moon{width:calc(var(--k)*4.5mm);height:calc(var(--k)*4.5mm)}
+.sticker .msgline{text-align:center;font-weight:700;font-size:calc(var(--k)*9pt);line-height:1.2;padding:calc(var(--k)*1.5mm) calc(var(--k)*2mm) 0}
+.sticker .qr{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:calc(var(--k)*1mm) 0}
+.sticker .qr .box{background:#fff;padding:calc(var(--k)*1mm);border-radius:calc(var(--k)*1.5mm);line-height:0}
+.sticker .qr svg{width:calc(var(--k)*38mm);height:calc(var(--k)*38mm);display:block}
+.sticker .how{text-align:center;font-size:calc(var(--k)*7pt);line-height:1.2;opacity:.85;padding:0 calc(var(--k)*2mm) calc(var(--k)*1.2mm)}
 .sticker .code{background:var(--ink);color:#fff;text-align:center;font-family:"Barlow Condensed","Barlow",sans-serif;
-  font-weight:700;font-size:10pt;letter-spacing:.12em;padding:1mm}
+  font-weight:700;font-size:calc(var(--k)*10pt);letter-spacing:.12em;padding:calc(var(--k)*1mm)}
 .sticker .deco{position:absolute;inset:0;width:100%;height:100%}
 /* plaka */
-.d-plaka .top{background:#fff;color:var(--ink);padding:0;border-bottom:.8mm solid var(--ink);gap:0;align-items:stretch}
-.d-plaka .top .tr{background:var(--band);color:#fff;width:7mm;font-size:7pt;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1mm}
-.d-plaka .top .t{flex:1;padding:1.8mm 1mm;font-size:13pt;letter-spacing:.06em}
+.d-plaka .top{background:#fff;color:var(--ink);padding:0;border-bottom:calc(var(--k)*.8mm) solid var(--ink);gap:0;align-items:stretch}
+.d-plaka .top .tr{background:var(--band);color:#fff;width:calc(var(--k)*7mm);font-size:calc(var(--k)*7pt);display:flex;align-items:flex-end;justify-content:center;padding-bottom:calc(var(--k)*1mm)}
+.d-plaka .top .t{flex:1;padding:calc(var(--k)*1.8mm) calc(var(--k)*1mm);font-size:calc(var(--k)*13pt);letter-spacing:.06em}
 /* dikkat */
 .d-dikkat .in{background:#ffd400}
-.d-dikkat .top{background:#111;color:#ffd400;font-size:12pt;letter-spacing:.04em}
-.d-dikkat .stripe{line-height:0}.d-dikkat .stripe svg{width:100%;height:3.5mm;display:block}
+.d-dikkat .top{background:#111;color:#ffd400;font-size:calc(var(--k)*12pt);letter-spacing:.04em}
+.d-dikkat .stripe{line-height:0}.d-dikkat .stripe svg{width:100%;height:calc(var(--k)*3.5mm);display:block}
 .d-dikkat .code{background:#111;color:#ffd400}
 /* kedi */
 .d-kedi .in{background:#fff1e3;border-color:#d9682b}
-.d-kedi .top{background:transparent;color:#d9682b;font-size:15pt;padding:1.5mm 1.5mm 0}
+.d-kedi .top{background:transparent;color:#d9682b;font-size:calc(var(--k)*15pt);padding:calc(var(--k)*1.5mm) calc(var(--k)*1.5mm) 0}
 .d-kedi .code{background:#d9682b}
 /* özür */
 .d-ozur .in{background:#e8f7ee;border-color:#0c7a43}
-.d-ozur .top{background:#0c7a43;font-size:10.5pt}
+.d-ozur .top{background:#0c7a43;font-size:calc(var(--k)*10.5pt)}
 .d-ozur .code{background:#0c7a43}
 /* gece */
 .d-gece .in{background:#0d1530;border-color:#0d1530;color:#fff}
-.d-gece .top{background:transparent;color:#5ef2ff;font-size:13pt;letter-spacing:.05em}
+.d-gece .top{background:transparent;color:#5ef2ff;font-size:calc(var(--k)*13pt);letter-spacing:.05em}
 .d-gece .code{background:#5ef2ff;color:#0d1530}
 /* minimal (mürekkep dostu) */
-.d-minimal .top{background:#fff;color:var(--ink);border-bottom:.5mm solid var(--ink)}
-.d-minimal .code{background:#fff;color:var(--ink);border-top:.5mm solid var(--ink)}
-.pin{width:60mm;border:.4mm dashed #9aa0a8;border-top:0;padding:2.5mm;text-align:center;font-size:9pt;background:#fff}
-.pin span{display:block;font-size:20pt;font-weight:700;letter-spacing:.15em;margin:1mm 0}
+.d-minimal .top{background:#fff;color:var(--ink);border-bottom:calc(var(--k)*.5mm) solid var(--ink)}
+.d-minimal .code{background:#fff;color:var(--ink);border-top:calc(var(--k)*.5mm) solid var(--ink)}
+.pin{width:var(--w);border:calc(var(--k)*.4mm) dashed #9aa0a8;border-top:0;padding:calc(var(--k)*2.5mm);text-align:center;font-size:calc(var(--k)*9pt);background:#fff}
+.pin span{display:block;font-size:calc(var(--k)*20pt);font-weight:700;letter-spacing:.15em;margin:calc(var(--k)*1mm) 0}
 .pin small{color:#666}
 .only-sticker .pin,.only-pin .sticker{display:none}
-.only-pin .pin{border-top:.4mm dashed #9aa0a8}
-.state{width:60mm;font-size:13px;color:#555;padding:6px 2px;background:var(--bg)}
+.only-pin .pin{border-top:calc(var(--k)*.4mm) dashed #9aa0a8}
+.small-size .sticker .how{display:none}
+.tek .sticker,.tek .pin{border-color:transparent;border-radius:0}
+.state{width:max(var(--w),60mm);font-size:13px;color:#555;padding:6px 2px;background:var(--bg)}
 .state select{width:100%;margin-top:5px;font:inherit;font-size:14px;padding:7px;border:2px solid var(--line);border-radius:6px;background:#fff}
 .state .mini{display:block;width:100%;margin-top:5px;font:inherit;font-size:14px;font-weight:700;padding:8px;border-radius:6px;
   border:0;background:var(--band);color:#fff;cursor:pointer}
@@ -109,9 +113,9 @@ input:focus{outline:none;border-color:var(--band)}
 .confetti{position:fixed;top:-12px;width:9px;height:14px;z-index:19;pointer-events:none;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(105vh) rotate(720deg)}}
 @media (prefers-reduced-motion:reduce){.confetti{display:none}}
-@page{size:A4;margin:10mm}
 @media print{.noprint,.tag.skip{display:none!important}body{background:#fff;padding:0}main.wide{max-width:none}
-  .grid{gap:3mm}}
+  .grid{gap:3mm}
+  .grid.tek{display:block}.tek .tag{display:block}.tek .sticker,.tek .pin{break-after:page;page-break-after:always}}
 </style>
 </head>
 <body>
@@ -252,11 +256,11 @@ function qrSvg(text) {
 }
 
 // ---------------------------------------------------------------- tasarımlar
-const svgCat = `<svg viewBox="0 0 40 34" width="11mm" height="9.3mm" aria-hidden="true"><path d="M5 30V6l9 7h12l9-7v24c0 2-2 3-4 3H9c-2 0-4-1-4-3z" fill="#f3a25a" stroke="#d9682b" stroke-width="2" stroke-linejoin="round"/><circle cx="14" cy="20" r="2.4" fill="#2a1a10"/><circle cx="26" cy="20" r="2.4" fill="#2a1a10"/><path d="M18 24h4l-2 2.2z" fill="#d9426b"/><path d="M20 26.2q-2 2.5-4 1M20 26.2q2 2.5 4 1" stroke="#2a1a10" stroke-width="1" fill="none" stroke-linecap="round"/><path d="M1 22l9 1M1 26l9-1M39 22l-9 1M39 26l-9-1" stroke="#2a1a10" stroke-width=".8"/></svg>`;
-const svgSmile = `<svg viewBox="0 0 24 24" width="6mm" height="6mm" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#ffd400" stroke="#fff" stroke-width="1.5"/><circle cx="8.5" cy="10" r="1.4" fill="#222"/><circle cx="15.5" cy="10" r="1.4" fill="#222"/><path d="M7 14.5q5 5 10 0" stroke="#222" stroke-width="1.6" fill="none" stroke-linecap="round"/><ellipse cx="6" cy="14" rx="1.6" ry="1" fill="#ff8aa0"/><ellipse cx="18" cy="14" rx="1.6" ry="1" fill="#ff8aa0"/></svg>`;
+const svgCat = `<svg class="ic-cat" viewBox="0 0 40 34" aria-hidden="true"><path d="M5 30V6l9 7h12l9-7v24c0 2-2 3-4 3H9c-2 0-4-1-4-3z" fill="#f3a25a" stroke="#d9682b" stroke-width="2" stroke-linejoin="round"/><circle cx="14" cy="20" r="2.4" fill="#2a1a10"/><circle cx="26" cy="20" r="2.4" fill="#2a1a10"/><path d="M18 24h4l-2 2.2z" fill="#d9426b"/><path d="M20 26.2q-2 2.5-4 1M20 26.2q2 2.5 4 1" stroke="#2a1a10" stroke-width="1" fill="none" stroke-linecap="round"/><path d="M1 22l9 1M1 26l9-1M39 22l-9 1M39 26l-9-1" stroke="#2a1a10" stroke-width=".8"/></svg>`;
+const svgSmile = `<svg class="ic-smile" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#ffd400" stroke="#fff" stroke-width="1.5"/><circle cx="8.5" cy="10" r="1.4" fill="#222"/><circle cx="15.5" cy="10" r="1.4" fill="#222"/><path d="M7 14.5q5 5 10 0" stroke="#222" stroke-width="1.6" fill="none" stroke-linecap="round"/><ellipse cx="6" cy="14" rx="1.6" ry="1" fill="#ff8aa0"/><ellipse cx="18" cy="14" rx="1.6" ry="1" fill="#ff8aa0"/></svg>`;
 const svgStripe = `<div class="stripe"><svg viewBox="0 0 120 7" preserveAspectRatio="none" aria-hidden="true"><rect width="120" height="7" fill="#ffd400"/>${Array.from({length: 13}, (_, i) => `<path d="M${i * 10 - 4} 7l7-7h5l-7 7z" fill="#111"/>`).join("")}</svg></div>`;
 const svgStars = `<svg class="deco" viewBox="0 0 100 150" preserveAspectRatio="none" aria-hidden="true">${[[5,30],[95,34],[4,60],[96,66],[5,95],[95,100],[4,122],[96,120],[8,8],[22,4]].map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="${i % 3 ? .7 : 1.1}" fill="#fff" opacity=".8"/>`).join("")}</svg>`;
-const svgMoon = `<svg viewBox="0 0 20 20" width="4.5mm" height="4.5mm" aria-hidden="true"><path d="M15 15A8 8 0 1 1 9 2a6.2 6.2 0 0 0 6 13z" fill="#ffe28a"/></svg>`;
+const svgMoon = `<svg class="ic-moon" viewBox="0 0 20 20" aria-hidden="true"><path d="M15 15A8 8 0 1 1 9 2a6.2 6.2 0 0 0 6 13z" fill="#ffe28a"/></svg>`;
 const MSG = "Bu aracın sahibine ulaşmak için QR kodu okutun";
 const HOW = "Telefon kameranızı açın, kodu okutun,<br>tek dokunuşla arayın.";
 
@@ -323,30 +327,88 @@ async function loadPdfLibs() {
   ]);
 }
 
-// Etiketleri gerçek boyutlarıyla A4 sayfalara dizer (yazdırırken %100 ölçek).
+const PX = 25.4 / 96; // CSS px -> mm
+
+async function snap(el) {
+  const r = el.getBoundingClientRect();
+  const canvas = await html2canvas(el, {scale: 5, backgroundColor: "#ffffff", logging: false});
+  return {img: canvas.toDataURL("image/png"), w: r.width * PX, h: r.height * PX};
+}
+
+// A4: etiketleri gerçek boyutlarıyla sayfaya dizer. Tek: her sticker / PIN kartı kendi ölçüsünde ayrı sayfa (matbaa, etiket yazıcısı).
 async function savePdf(codes) {
   await loadPdfLibs();
   await document.fonts?.ready;
-  const pdf = new window.jspdf.jsPDF({unit: "mm", format: "a4"});
-  const M = 10, G = 4, W = 210, H = 297, PX = 25.4 / 96;
-  let x = M, y = M, rowH = 0;
-  for (const code of codes) {
-    const block = document.querySelector(`.tag[data-code="${CSS.escape(code)}"] .block`);
-    if (!block) continue;
-    const r = block.getBoundingClientRect(), w = r.width * PX, h = r.height * PX;
-    const canvas = await html2canvas(block, {scale: 5, backgroundColor: "#ffffff", logging: false});
-    if (x + w > W - M + .1) { x = M; y += rowH + G; rowH = 0; }
-    if (y + h > H - M + .1) { pdf.addPage(); x = M; y = M; rowH = 0; }
-    pdf.addImage(canvas.toDataURL("image/png"), "PNG", x, y, w, h);
-    x += w + G; rowH = Math.max(rowH, h);
+  const {jsPDF} = window.jspdf;
+  const tags = codes.map(c => document.querySelector(`.tag[data-code="${CSS.escape(c)}"]`)).filter(Boolean);
+  let pdf;
+  if (paper === "tek") {
+    const {w, h} = dims(stickerSize), fmt = [w, h];
+    for (const tag of tags) {
+      for (const el of tag.querySelectorAll(".sticker, .pin")) {
+        if (!el.offsetParent) continue; // seçili modda gizli
+        const s = await snap(el);
+        if (pdf) pdf.addPage(fmt, "portrait"); else pdf = new jsPDF({unit: "mm", format: fmt, orientation: "portrait"});
+        pdf.addImage(s.img, "PNG", (w - s.w) / 2, el.classList.contains("pin") ? 0 : (h - s.h) / 2, s.w, s.h);
+      }
+    }
+  } else {
+    pdf = new jsPDF({unit: "mm", format: "a4"});
+    const {W, H, M, G} = A4;
+    let x = M, y = M, rowH = 0;
+    for (const tag of tags) {
+      const s = await snap(tag.querySelector(".block"));
+      if (x + s.w > W - M + .1) { x = M; y += rowH + G; rowH = 0; }
+      if (y + s.h > H - M + .1) { pdf.addPage(); x = M; y = M; rowH = 0; }
+      pdf.addImage(s.img, "PNG", x, y, s.w, s.h);
+      x += s.w + G; rowH = Math.max(rowH, s.h);
+    }
   }
-  pdf.save(codes.length === 1 ? `etiket-${codes[0]}.pdf` : `etiketler-${codes.length}.pdf`);
+  if (!pdf) throw new Error("Kaydedilecek etiket yok");
+  const name = codes.length === 1 ? `etiket-${codes[0]}` : `etiketler-${codes.length}`;
+  pdf.save(`${name}-${stickerSize}mm.pdf`);
+}
+
+// ---------------------------------------------------------------- baskı ölçüleri
+const SIZES = {
+  "40x60": "Küçük 40×60 mm",
+  "50x75": "Orta 50×75 mm",
+  "55x85": "Kartvizit 55×85 mm",
+  "60x90": "Standart 60×90 mm",
+  "74x105": "A7 74×105 mm",
+  "80x120": "Büyük 80×120 mm",
+  "100x150": "Etiket yazıcısı 100×150 mm (4×6 inç)",
+  "105x148": "A6 105×148 mm",
+};
+const A4 = {W: 210, H: 297, M: 10, G: 3};
+const dims = size => { const [w, h] = size.split("x").map(Number); return {w, h, k: Math.min(w / 60, h / 90)}; };
+const perA4 = ({w, h}) => Math.floor((A4.W - 2 * A4.M + A4.G) / (w + A4.G)) * Math.floor((A4.H - 2 * A4.M + A4.G) / (h + A4.G));
+
+function pref(key, fallback, allowed) {
+  try { const v = localStorage.getItem("aracqr-" + key); if (v !== null && (!allowed || allowed.includes(v))) return v; } catch (e) {}
+  return fallback;
+}
+function savePref(key, value) { try { localStorage.setItem("aracqr-" + key, value); } catch (e) {} }
+
+// Seçili ölçüyü ve kağıt tipini etiketlere ve yazdırma sayfasına uygular.
+function applySize() {
+  const {w, h, k} = dims(stickerSize), grid = document.querySelector(".grid");
+  if (grid) {
+    grid.style.cssText = `--w:${w}mm;--h:${h}mm;--k:${k}`;
+    grid.className = ["grid", printMode, paper === "tek" ? "tek" : "", k < .75 ? "small-size" : ""].join(" ").trim();
+  }
+  let st = document.getElementById("pagestyle");
+  if (!st) { st = document.createElement("style"); st.id = "pagestyle"; document.head.append(st); }
+  st.textContent = paper === "tek" ? `@page{size:${w}mm ${h}mm;margin:0}` : `@page{size:A4;margin:${A4.M}mm}`;
 }
 
 // ---------------------------------------------------------------- yönetim listesi
-let printMode = "", view = "ready", defaultDesign = "klasik";
+let view = "ready";
+let printMode = pref("mode", "", ["", "only-sticker", "only-pin"]);
+let defaultDesign = pref("design", "klasik");
+let stickerSize = pref("size", "60x90", Object.keys(SIZES));
+let paper = pref("paper", "a4", ["a4", "tek"]);
 const designOf = {};
-try { defaultDesign = localStorage.getItem("aracqr-design") || "klasik"; } catch (e) {}
 
 // Verildi işaretleri (supabase/verildi.sql). Fonksiyon kurulu değilse null döner.
 async function loadGiven() {
@@ -415,6 +477,12 @@ async function showAdmin() {
         <option value="only-sticker">Sadece stickerlar</option>
         <option value="only-pin">Sadece PIN kartları</option>
       </select>
+      <select id="size" aria-label="Baskı ölçüsü">${Object.entries(SIZES).map(([k, n]) =>
+        `<option value="${k}"${k === stickerSize ? " selected" : ""}>${n} · A4'e ${perA4(dims(k))}</option>`).join("")}</select>
+      <select id="paper" aria-label="Kağıt">
+        <option value="a4">A4 kağıda diz</option>
+        <option value="tek">Her sayfaya bir etiket (matbaa / etiket yazıcısı)</option>
+      </select>
       <select id="design" aria-label="Tümü için tasarım">${designOptions(defaultDesign, true)}</select>
       <button class="btn" id="dice" title="Hepsine rastgele tasarım">🎲 Karıştır</button>
       <button class="btn" id="print">Listedekileri yazdır</button>
@@ -424,10 +492,10 @@ async function showAdmin() {
     ${given ? "" : `<div class="msg err noprint">"Verildi" takibi kurulu değil. Supabase SQL Editor'da <b>supabase/verildi.sql</b> dosyasını bir kez çalıştırın.</div>`}
     <p class="noprint">Talep edene etiket verirken tasarımı seçip <b>Yazdır ve ver</b> ya da <b>PDF kaydet ve ver</b>'e basın; etiket verildi olarak işaretlenip bu listeden kalkar.
       Kişi QR'ı okutup numarasını ve PIN'i girdiğinde etiket o numarayı aramaya başlar.
-      Yazdırırken ölçek <b>%100 / Gerçek boyut</b> olmalı (sticker 60×90 mm).</p>
+      Yazdırırken ölçek <b>%100 / Gerçek boyut</b> olmalı. Etiket yazıcısı ya da matbaa için “Her sayfaya bir etiket”i seçin; sayfa ölçüsü sticker ölçüsü olur.</p>
     <div id="msg"></div>
     ${list.length ? "" : `<p>Bu listede etiket yok.${view === "ready" ? " Yeni etiket üretmek için “10 etiket daha üret”e basın." : ""}</p>`}
-    <div class="grid ${printMode}">
+    <div class="grid">
       ${list.map(r => `
         <div class="tag" data-code="${esc(r.code)}" data-state="${state(r)}">
           <div class="block">${stickerHtml(r.code, designOf[r.code])}
@@ -446,9 +514,12 @@ async function showAdmin() {
     </div>`, true);
   const $ = id => document.getElementById(id);
   const codes = list.map(r => r.code);
-  $("view").value = view; $("mode").value = printMode;
+  $("view").value = view; $("mode").value = printMode; $("paper").value = paper;
+  applySize();
   $("view").onchange = () => { view = $("view").value; showAdmin(); };
-  $("mode").onchange = () => { printMode = $("mode").value; document.querySelector(".grid").className = "grid " + printMode; };
+  $("mode").onchange = () => { printMode = $("mode").value; savePref("mode", printMode); applySize(); };
+  $("size").onchange = () => { stickerSize = $("size").value; savePref("size", stickerSize); applySize(); };
+  $("paper").onchange = () => { paper = $("paper").value; savePref("paper", paper); applySize(); };
   const redesign = (code, d) => {
     designOf[code] = d;
     const tag = document.querySelector(`.tag[data-code="${CSS.escape(code)}"]`);
@@ -457,7 +528,7 @@ async function showAdmin() {
   };
   $("design").onchange = () => {
     defaultDesign = $("design").value;
-    try { localStorage.setItem("aracqr-design", defaultDesign); } catch (e) {}
+    savePref("design", defaultDesign);
     codes.forEach(c => redesign(c, defaultDesign === RANDOM ? pickRandom() : defaultDesign));
   };
   $("dice").onclick = () => { codes.forEach(c => redesign(c, pickRandom())); toast("Tasarımlar karıştırıldı!", 1500); };
