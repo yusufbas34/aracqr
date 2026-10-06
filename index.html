@@ -43,20 +43,34 @@ input:focus{outline:none;border-color:var(--band)}
 .small{font-size:14px;text-align:center;margin-top:26px}
 .small a{color:var(--muted)}
 /* yönetim / baskı */
-.bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
 .bar .btn{width:auto;margin:0;padding:10px 16px;font-size:15px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px}
-.tag{break-inside:avoid;background:#fff}
-.sticker{border:2px dashed #999;padding:12px;text-align:center}
-.sticker .qr svg{width:100%;max-width:200px;height:auto;display:block;margin:6px auto}
-.sticker .head{font-weight:700;font-size:16px}
-.sticker .foot{font-weight:700;font-size:20px}
-.sticker .code{font-family:"Barlow Condensed",sans-serif;font-size:15px;letter-spacing:.1em;color:#555}
-.pin{border:2px dashed #999;border-top:0;padding:10px;text-align:center;font-size:13px}
-.pin span{display:block;font-size:26px;font-weight:700;letter-spacing:.15em;margin:4px 0}
-.pin small{color:#777}
-.state{font-size:13px;color:#555;padding:6px 2px;background:var(--bg)}
-@media print{.noprint{display:none!important}body{background:#fff;padding:0}main.wide{max-width:none}}
+.bar select,.bar label{font:inherit;font-size:15px;margin:0}
+.bar select{padding:9px;border:2px solid var(--line);border-radius:8px;background:#fff}
+.bar label{display:flex;gap:6px;align-items:center;font-weight:400}
+.grid{display:flex;flex-wrap:wrap;gap:5mm;align-items:flex-start}
+.tag{break-inside:avoid;page-break-inside:avoid;display:flex;flex-direction:column}
+/* sticker: 60x90 mm, A4'e 3x3 = 9 adet sığar */
+.sticker{width:60mm;height:90mm;background:#fff;border:.4mm dashed #9aa0a8;border-radius:3mm;padding:2.5mm;
+  display:flex;flex-direction:column;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.sticker .in{flex:1;display:flex;flex-direction:column;border:.8mm solid var(--ink);border-radius:2mm;overflow:hidden}
+.sticker .top{background:var(--band);color:#fff;text-align:center;padding:2mm 1.5mm 1.8mm;
+  font-family:"Barlow Condensed","Barlow",sans-serif;font-weight:700;font-size:11pt;line-height:1.05;letter-spacing:0}
+.sticker .msgline{text-align:center;font-weight:700;font-size:9.5pt;line-height:1.2;padding:1.5mm 2mm 0;color:var(--ink)}
+.sticker .qr{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:1mm 0}
+.sticker .qr svg{width:40mm;height:40mm;display:block}
+.sticker .how{text-align:center;font-size:7pt;line-height:1.2;color:#333;padding:0 2mm 1.2mm}
+.sticker .code{background:var(--ink);color:#fff;text-align:center;font-family:"Barlow Condensed","Barlow",sans-serif;
+  font-weight:700;font-size:10pt;letter-spacing:.12em;padding:1mm}
+.pin{width:60mm;border:.4mm dashed #9aa0a8;border-top:0;padding:2.5mm;text-align:center;font-size:9pt;background:#fff}
+.pin span{display:block;font-size:20pt;font-weight:700;letter-spacing:.15em;margin:1mm 0}
+.pin small{color:#666}
+.only-sticker .pin,.only-pin .sticker{display:none}
+.only-pin .pin{border-top:.4mm dashed #9aa0a8}
+.state{width:60mm;font-size:13px;color:#555;padding:6px 2px;background:var(--bg)}
+@page{size:A4;margin:10mm}
+@media print{.noprint{display:none!important}body{background:#fff;padding:0}main.wide{max-width:none}
+  .grid{gap:3mm}}
 </style>
 </head>
 <body>
@@ -195,35 +209,58 @@ function qrSvg(text) {
   return q.createSvgTag({cellSize: 4, margin: 2, scalable: true});
 }
 
+function stickerHtml(code) {
+  return `
+          <div class="sticker"><div class="in">
+            <div class="top">ARAÇ SAHİBİNE ULAŞIN</div>
+            <div class="msgline">Bu aracın sahibine ulaşmak için QR kodu okutun</div>
+            <div class="qr">${qrSvg(tagLink(code))}</div>
+            <div class="how">Telefon kameranızı açın, kodu okutun,<br>tek dokunuşla arayın.</div>
+            <div class="code">${esc(code)}</div>
+          </div></div>`;
+}
+
+let printMode = "only-sticker", onlyEmpty = true;
+
 async function showAdmin() {
   show("<p>Etiketler yükleniyor…</p>");
   let rows;
   try { rows = await rpc("admin_list", {p_key: adminKey}); }
   catch (e) { return showAdminLogin(e.status ? "Şifre hatalı." : "Bağlantı hatası, tekrar deneyin."); }
+  if (!Array.isArray(rows)) return showAdminLogin("Beklenmeyen yanıt, tekrar deneyin.");
+  if (typeof qrcode !== "function") return showMessage("QR kütüphanesi yüklenemedi", "Sayfayı yenileyip tekrar deneyin.");
   const used = rows.filter(r => r.phone).length;
+  const list = onlyEmpty ? rows.filter(r => !r.phone) : rows;
   show(`
     <div class="bar noprint">
       <button class="btn" id="print">Yazdır</button>
+      <select id="mode" aria-label="Ne yazdırılsın">
+        <option value="only-sticker">Sadece stickerlar</option>
+        <option value="only-pin">Sadece PIN kartları</option>
+        <option value="">Sticker + PIN kartı</option>
+      </select>
+      <label><input type="checkbox" id="empty" style="width:auto"> Sadece boş etiketler</label>
       <button class="btn" id="add">10 etiket daha üret</button>
     </div>
-    <p class="noprint">${rows.length} etiket, ${used} tanesi bir numaraya bağlı. Yazdırırken kesik çizgilerden kes; PIN kartını araç sahibine ayrı ver.</p>
-    <div class="grid">
-      ${rows.map(r => `
-        <div class="tag">
-          <div class="sticker">
-            <div class="head">Aracım yanlış mı park etti?</div>
-            <div class="qr">${qrSvg(tagLink(r.code))}</div>
-            <div class="foot">Okut, beni ara</div>
-            <div class="code">${esc(r.code)}</div>
-          </div>
+    <p class="noprint">${rows.length} etiket, ${used} tanesi bir numaraya bağlı. Gösterilen: ${list.length}.
+      Yazdırırken ölçek <b>%100 / Gerçek boyut</b> seçin (sticker 60×90 mm, A4'e 9 adet). Kesik çizgilerden kesin; PIN kartını araç sahibine ayrı verin.</p>
+    <div id="msg"></div>
+    <div class="grid ${printMode}">
+      ${list.map(r => `
+        <div class="tag">${stickerHtml(r.code)}
           <div class="pin"><b>${esc(r.code)}</b> etiketinin PIN'i<span>${esc(r.pin)}</span><small>Bu kartı araçta bırakmayın.</small></div>
           <div class="state noprint">Durum: ${r.phone ? esc(prettyPhone(r.phone)) : "boş"}</div>
         </div>`).join("")}
     </div>`, true);
+  const mode = document.getElementById("mode"), empty = document.getElementById("empty");
+  mode.value = printMode; empty.checked = onlyEmpty;
+  mode.onchange = () => { printMode = mode.value; document.querySelector(".grid").className = "grid " + printMode; };
+  empty.onchange = () => { onlyEmpty = empty.checked; showAdmin(); };
   document.getElementById("print").onclick = () => print();
   document.getElementById("add").onclick = async ev => {
     ev.target.disabled = true;
-    try { await rpc("admin_add", {p_key: adminKey, p_count: 10}); } catch (e) {}
+    try { await rpc("admin_add", {p_key: adminKey, p_count: 10}); }
+    catch (e) { ev.target.disabled = false; document.getElementById("msg").innerHTML = `<div class="msg err noprint">Etiket üretilemedi: ${esc(e.message)}</div>`; return; }
     showAdmin();
   };
 }
@@ -242,7 +279,7 @@ async function route() {
   try { tag = await rpc("tag_lookup", {p_code: code}); }
   catch (e) { return showMessage("Bağlantı hatası", "Sayfayı yenileyip tekrar deneyin."); }
 
-  if (!tag.exists) return showMessage("Etiket bulunamadı", "Bu QR kod geçerli bir etikete ait değil.");
+  if (!tag?.exists) return showMessage("Etiket bulunamadı", "Bu QR kod geçerli bir etikete ait değil.");
   if (params.has("degistir")) return showForm(code, CHANGE);
   if (!tag.phone) return showForm(code, CLAIM);
   showCall(code, tag.phone);
