@@ -617,7 +617,7 @@ async function showAdmin() {
       <button class="btn" id="pdf">Listedekileri PDF kaydet</button>
       <button class="btn" id="add">10 etiket daha üret</button>
     </div>
-    ${given ? "" : `<div class="msg err noprint">"Verildi" takibi kurulu değil. Supabase SQL Editor'da <b>supabase/verildi.sql</b> dosyasını bir kez çalıştırın.</div>`}
+    ${given ? "" : setupHtml('"Verildi" takibi kurulu değil.', "verildi.sql")}
     <p class="noprint">Talep edene etiket verirken tasarımı seçip <b>Yazdır ve ver</b> ya da <b>PDF kaydet ve ver</b>'e basın; etiket verildi olarak işaretlenip bu listeden kalkar.
       Kişi QR'ı okutup numarasını ve PIN'i girdiğinde etiket o numarayı aramaya başlar.
       Yazdırırken ölçek <b>%100 / Gerçek boyut</b> olmalı. Etiket yazıcısı ya da matbaa için “Her sayfaya bir etiket”i seçin; sayfa ölçüsü sticker ölçüsü olur.</p>
@@ -804,6 +804,46 @@ function bindRequestForm() {
   });
 }
 
+// ---------------------------------------------------------------- kurulum yardımı
+// Eksik veritabanı kurulumunu telefondan da yapabilmek için SQL'i panoya kopyalar.
+const SQL_EDITOR = `https://supabase.com/dashboard/project/${new URL(SUPABASE_URL).hostname.split(".")[0]}/sql/new`;
+
+function setupHtml(text, file) {
+  return `<div class="msg err noprint setup">${esc(text)} Kurmak için: <b>1.</b> SQL'i kopyalayın, <b>2.</b> Supabase SQL Editor'ı açın,
+    <b>3.</b> yapıştırıp <b>Run</b>'a basın, <b>4.</b> bu sayfayı yenileyin.
+    <div class="bar" style="margin:10px 0 0">
+      <button class="btn" type="button" data-sql="supabase/${esc(file)}">1. SQL'i kopyala</button>
+      <a class="btn" href="${esc(SQL_EDITOR)}" target="_blank" rel="noopener">2. SQL Editor'ı aç</a>
+    </div></div>`;
+}
+
+document.addEventListener("click", async ev => {
+  const btn = ev.target.closest("button[data-sql]");
+  if (!btn) return;
+  const box = btn.closest(".setup");
+  let sql;
+  try {
+    const r = await fetch(btn.dataset.sql, {cache: "no-store"});
+    if (!r.ok) throw new Error(r.status);
+    sql = await r.text();
+  } catch (e) {
+    const url = `https://raw.githubusercontent.com/yusufbas34/aracqr/main/${btn.dataset.sql}`;
+    return box.insertAdjacentHTML("beforeend", `<p style="margin:10px 0 0">SQL yüklenemedi. <a href="${esc(url)}" target="_blank" rel="noopener">Buradan açıp</a> tümünü seçerek kopyalayın.</p>`);
+  }
+  try {
+    await navigator.clipboard.writeText(sql);
+    btn.textContent = "✓ Kopyalandı";
+    toast("SQL kopyalandı. Şimdi SQL Editor'ı açıp yapıştırın.");
+  } catch (e) {
+    // Pano izni yoksa: metni seçili halde göster, kullanıcı “Kopyala” desin
+    box.querySelector("textarea")?.remove();
+    const ta = Object.assign(document.createElement("textarea"), {value: sql, rows: 8, readOnly: true});
+    ta.style.marginTop = "10px";
+    box.append(ta); ta.focus(); ta.select();
+    toast("Metin seçildi; uzun basıp Kopyala deyin.");
+  }
+});
+
 // ---------------------------------------------------------------- yönetim: talepler
 let adminTab = "tags", reqFilter = "yeni";
 
@@ -831,7 +871,7 @@ async function showRequests(rows, given, requests) {
   const digits = p => String(p || "").replace(/\D/g, "");
   show(`
     ${tabsHtml(newCount)}
-    ${requests ? "" : `<div class="msg err">Talep formu kurulu değil. Supabase SQL Editor'da <b>supabase/talepler.sql</b> dosyasını bir kez çalıştırın.</div>`}
+    ${requests ? "" : setupHtml("Talep formu kurulu değil.", "talepler.sql")}
     <div class="bar">
       <select id="rfilter" aria-label="Talep durumu">
         <option value="yeni">Yeni talepler (${newCount})</option>
