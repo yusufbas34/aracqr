@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Araç QR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=Barlow+Condensed:wght@700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script>
+  // ==================== AYARLAR (Supabase > Project Settings > API) ====================
+  const SUPABASE_URL = "https://icedhptvywmqsiarxpio.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_IEPlZ5oNcsrQt7_8DK_QKQ_1s9UMT6z";
+  // =====================================================================================
+</script>
+<style>
+:root{--ink:#111418;--plate:#fff;--band:#0a3a9e;--line:#c9ced6;--muted:#5b6370;
+  --ok:#0c7a43;--err:#b3261e;--bg:#eef0f3}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink);
+  min-height:100vh;padding:max(28px,env(safe-area-inset-top)) 18px 40px}
+main{max-width:420px;margin:0 auto}
+main.wide{max-width:1100px}
+.plate{display:flex;background:var(--plate);border:3px solid var(--ink);border-radius:10px;overflow:hidden;margin-bottom:26px}
+.plate .band{background:var(--band);color:#fff;width:38px;display:flex;align-items:flex-end;justify-content:center;
+  padding-bottom:6px;font-weight:700;font-size:13px}
+.plate .txt{flex:1;padding:12px 14px;font-family:"Barlow Condensed","Barlow",sans-serif;font-weight:700;
+  font-size:30px;letter-spacing:.06em;text-align:center}
+h1{font-size:24px;line-height:1.2;margin:0 0 8px}
+p{font-size:16px;line-height:1.5;margin:0 0 16px;color:var(--muted)}
+label{display:block;font-weight:600;font-size:15px;margin:18px 0 6px}
+input{width:100%;font:inherit;font-size:20px;padding:14px;border:2px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+input:focus{outline:none;border-color:var(--band)}
+.btn{display:block;width:100%;text-align:center;font:inherit;font-size:19px;font-weight:700;padding:16px;border-radius:8px;
+  border:0;background:var(--band);color:#fff;text-decoration:none;margin-top:22px;cursor:pointer}
+.btn[disabled]{opacity:.6}
+.btn.call{background:var(--ok);font-size:22px;padding:20px}
+.btn:focus-visible,a:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.msg{padding:12px 14px;border-radius:8px;font-size:15px;margin-bottom:14px}
+.msg.err{background:#fbe9e8;color:var(--err)}
+.msg.ok{background:#e6f4ec;color:var(--ok)}
+.small{font-size:14px;text-align:center;margin-top:26px}
+.small a{color:var(--muted)}
+/* yönetim / baskı */
+.bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.bar .btn{width:auto;margin:0;padding:10px 16px;font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px}
+.tag{break-inside:avoid;background:#fff}
+.sticker{border:2px dashed #999;padding:12px;text-align:center}
+.sticker .qr svg{width:100%;max-width:200px;height:auto;display:block;margin:6px auto}
+.sticker .head{font-weight:700;font-size:16px}
+.sticker .foot{font-weight:700;font-size:20px}
+.sticker .code{font-family:"Barlow Condensed",sans-serif;font-size:15px;letter-spacing:.1em;color:#555}
+.pin{border:2px dashed #999;border-top:0;padding:10px;text-align:center;font-size:13px}
+.pin span{display:block;font-size:26px;font-weight:700;letter-spacing:.15em;margin:4px 0}
+.pin small{color:#777}
+.state{font-size:13px;color:#555;padding:6px 2px;background:var(--bg)}
+@media print{.noprint{display:none!important}body{background:#fff;padding:0}main.wide{max-width:none}}
+</style>
+</head>
+<body>
+<main id="app"><p>Yükleniyor…</p></main>
+
+<script>
+const app = document.getElementById("app");
+const params = new URLSearchParams(location.search);
+const BASE = location.origin + location.pathname;
+
+// ---------------------------------------------------------------- yardımcılar
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+async function rpc(fn, args) {
+  const headers = {"Content-Type": "application/json", apikey: SUPABASE_KEY};
+  if (SUPABASE_KEY.startsWith("eyJ")) headers.Authorization = "Bearer " + SUPABASE_KEY; // eski tip anon key
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {method: "POST", headers, body: JSON.stringify(args)});
+  const data = await r.json().catch(() => null);
+  if (!r.ok) { const e = new Error(data?.message || r.statusText); e.status = r.status; throw e; }
+  return data;
+}
+
+function normalizePhone(raw) {
+  let s = String(raw || "").replace(/[^\d+]/g, "");
+  if (s.startsWith("00")) s = "+" + s.slice(2);
+  if (s.startsWith("+")) return (s.length - 1 >= 8 && s.length - 1 <= 15) ? s : null;
+  if (s.startsWith("90") && s.length === 12) return "+" + s;
+  if (s.startsWith("0") && s.length === 11) return "+9" + s;
+  if (s.startsWith("5") && s.length === 10) return "+90" + s;
+  return null;
+}
+
+function prettyPhone(p) {
+  if (p && p.startsWith("+90") && p.length === 13) {
+    const n = p.slice(3);
+    return `0${n.slice(0,3)} ${n.slice(3,6)} ${n.slice(6,8)} ${n.slice(8)}`;
+  }
+  return p || "";
+}
+
+const plate = code => `<div class="plate"><div class="band">TR</div><div class="txt">${esc(code)}</div></div>`;
+const tagLink = code => `${BASE}?k=${encodeURIComponent(code)}`;
+
+function show(html, wide = false) { app.className = wide ? "wide" : ""; app.innerHTML = html; }
+
+// ---------------------------------------------------------------- ekranlar
+function showForm(code, {title, intro, button, overwrite}, error = "", phoneVal = "") {
+  show(`
+    ${plate(code)}
+    <h1>${esc(title)}</h1>
+    <p>${esc(intro)}</p>
+    ${error ? `<div class="msg err">${esc(error)}</div>` : ""}
+    <form id="f" novalidate>
+      <label for="phone">Telefon numarası</label>
+      <input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="05xx xxx xx xx" value="${esc(phoneVal)}" required>
+      <label for="pin">Karttaki PIN</label>
+      <input id="pin" type="text" inputmode="numeric" maxlength="6" placeholder="6 haneli" autocomplete="off" required>
+      <button class="btn" type="submit">${esc(button)}</button>
+    </form>`);
+  const opts = {title, intro, button, overwrite};
+  document.getElementById("f").addEventListener("submit", async ev => {
+    ev.preventDefault();
+    const raw = document.getElementById("phone").value;
+    const pin = document.getElementById("pin").value.trim();
+    const phone = normalizePhone(raw);
+    if (!phone) return showForm(code, opts, "Numara geçersiz. Örnek: 0532 123 45 67", raw);
+    if (!/^\d{6}$/.test(pin)) return showForm(code, opts, "PIN 6 haneli olmalı.", raw);
+    ev.submitter && (ev.submitter.disabled = true);
+    try {
+      const res = await rpc("tag_save", {p_code: code, p_pin: pin, p_phone: phone, p_overwrite: overwrite});
+      if (res.ok) return showSaved(code, res.phone);
+      const errors = {
+        bad_pin: "PIN hatalı. Etiketle birlikte gelen karttaki 6 haneli PIN'i girin.",
+        locked: `Çok fazla yanlış deneme. ${res.minutes || 15} dakika sonra tekrar deneyin.`,
+        bad_phone: "Numara geçersiz. Örnek: 0532 123 45 67",
+        not_found: "Bu etiket bulunamadı.",
+      };
+      if (res.error === "already") return route(); // biri az önce kaydetmiş
+      showForm(code, opts, errors[res.error] || "Kaydedilemedi, tekrar deneyin.", raw);
+    } catch (e) {
+      showForm(code, opts, "Bağlantı hatası. İnternetinizi kontrol edip tekrar deneyin.", raw);
+    }
+  });
+}
+
+const CLAIM = {title: "Bu etiketi numaranıza bağlayın", button: "Numarayı kaydet", overwrite: false,
+  intro: "Etiket henüz kullanılmıyor. Numaranızı ve etiketle gelen karttaki PIN'i girin. Bundan sonra bu QR'ı okutan herkes sizi arayabilecek."};
+const CHANGE = {title: "Numarayı değiştir", button: "Yeni numarayı kaydet", overwrite: true,
+  intro: "Yeni numarayı ve etiketin PIN'ini girin."};
+
+function showCall(code, phone) {
+  show(`
+    ${plate(code)}
+    <h1>Araç sahibini arayın</h1>
+    <p>Arama ekranı açılmadıysa aşağıdaki butona dokunun.</p>
+    <a class="btn call" href="tel:${esc(phone)}">Ara: ${esc(prettyPhone(phone))}</a>
+    <p class="small"><a href="${esc(tagLink(code))}&degistir">Aracın sahibi misiniz? Numarayı değiştirin</a></p>`);
+  setTimeout(() => { location.href = "tel:" + phone; }, 250);
+}
+
+function showSaved(code, phone) {
+  show(`
+    ${plate(code)}
+    <div class="msg ok">Kaydedildi. Bu QR artık ${esc(prettyPhone(phone))} numarasını arar.</div>
+    <p>PIN kartını saklayın; numarayı değiştirmek için gerekecek.</p>
+    <a class="btn" href="${esc(tagLink(code))}">QR'ı test et</a>`);
+}
+
+function showMessage(title, text) {
+  show(`<h1>${esc(title)}</h1><p>${esc(text)}</p>`);
+}
+
+// ---------------------------------------------------------------- yönetim
+let adminKey = "";
+
+function showAdminLogin(error = "") {
+  show(`
+    <h1>Etiket yönetimi</h1>
+    <p>Supabase kurulumunda belirlediğin admin şifresini gir.</p>
+    ${error ? `<div class="msg err">${esc(error)}</div>` : ""}
+    <form id="lf">
+      <label for="k">Admin şifresi</label>
+      <input id="k" type="password" autocomplete="current-password" required>
+      <button class="btn" type="submit">Giriş yap</button>
+    </form>`);
+  document.getElementById("lf").addEventListener("submit", ev => {
+    ev.preventDefault();
+    adminKey = document.getElementById("k").value;
+    showAdmin();
+  });
+}
+
+function qrSvg(text) {
+  const q = qrcode(0, "H"); // yüksek hata düzeltme: çizik/solmaya dayanıklı
+  q.addData(text); q.make();
+  return q.createSvgTag({cellSize: 4, margin: 2, scalable: true});
+}
+
+async function showAdmin() {
+  show("<p>Etiketler yükleniyor…</p>");
+  let rows;
+  try { rows = await rpc("admin_list", {p_key: adminKey}); }
+  catch (e) { return showAdminLogin(e.status ? "Şifre hatalı." : "Bağlantı hatası, tekrar deneyin."); }
+  const used = rows.filter(r => r.phone).length;
+  show(`
+    <div class="bar noprint">
+      <button class="btn" id="print">Yazdır</button>
+      <button class="btn" id="add">10 etiket daha üret</button>
+    </div>
+    <p class="noprint">${rows.length} etiket, ${used} tanesi bir numaraya bağlı. Yazdırırken kesik çizgilerden kes; PIN kartını araç sahibine ayrı ver.</p>
+    <div class="grid">
+      ${rows.map(r => `
+        <div class="tag">
+          <div class="sticker">
+            <div class="head">Aracım yanlış mı park etti?</div>
+            <div class="qr">${qrSvg(tagLink(r.code))}</div>
+            <div class="foot">Okut, beni ara</div>
+            <div class="code">${esc(r.code)}</div>
+          </div>
+          <div class="pin"><b>${esc(r.code)}</b> etiketinin PIN'i<span>${esc(r.pin)}</span><small>Bu kartı araçta bırakmayın.</small></div>
+          <div class="state noprint">Durum: ${r.phone ? esc(prettyPhone(r.phone)) : "boş"}</div>
+        </div>`).join("")}
+    </div>`, true);
+  document.getElementById("print").onclick = () => print();
+  document.getElementById("add").onclick = async ev => {
+    ev.target.disabled = true;
+    try { await rpc("admin_add", {p_key: adminKey, p_count: 10}); } catch (e) {}
+    showAdmin();
+  };
+}
+
+// ---------------------------------------------------------------- yönlendirme
+async function route() {
+  if (SUPABASE_URL.includes("BURAYA") || SUPABASE_KEY.includes("BURAYA")) {
+    return showMessage("Kurulum eksik", "index.html dosyasının başındaki SUPABASE_URL ve SUPABASE_KEY değerlerini doldurun.");
+  }
+  if (params.has("admin")) return showAdminLogin();
+
+  const code = (params.get("k") || "").trim().toUpperCase();
+  if (!code) return showMessage("Araç QR", "Aracın üzerindeki QR kodu okutun.");
+
+  let tag;
+  try { tag = await rpc("tag_lookup", {p_code: code}); }
+  catch (e) { return showMessage("Bağlantı hatası", "Sayfayı yenileyip tekrar deneyin."); }
+
+  if (!tag.exists) return showMessage("Etiket bulunamadı", "Bu QR kod geçerli bir etikete ait değil.");
+  if (params.has("degistir")) return showForm(code, CHANGE);
+  if (!tag.phone) return showForm(code, CLAIM);
+  showCall(code, tag.phone);
+}
+
+route();
+</script>
+</body>
+</html>
