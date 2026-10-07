@@ -102,7 +102,8 @@ function showHome() {
         <li>Telefon numaranızı girin</li>
         <li>İstediğiniz ölçüde yazdırın, camınıza yapıştırın</li>
       </ol>
-      <a class="btn" href="#/yeni">Başlayalım</a>`);
+      <a class="btn" href="#/yeni">Başlayalım</a>
+      <button class="btn ghost" type="button" id="howto">Nasıl çalışır?</button>`), bindHowto();
   }
   show("Etiketlerim", `
     <div class="cards">
@@ -113,8 +114,15 @@ function showHome() {
         </a>`).join("")}
     </div>
     <a class="btn" href="#/yeni">+ Yeni QR etiket oluştur</a>
-    ${orders().length ? `<h2>Siparişlerim</h2><div class="cards">${orders().map(orderCardHtml).join("")}</div>` : ""}`);
+    ${orders().length ? `<h2>Siparişlerim</h2><div class="cards">${orders().map(orderCardHtml).join("")}</div>` : ""}
+    <button class="btn ghost" type="button" id="howto">Nasıl çalışır?</button>`);
+  bindHowto();
   refreshOrders();
+}
+
+function bindHowto() {
+  const b = document.getElementById("howto");
+  if (b) b.onclick = () => showOnboarding();
 }
 
 let draft = {design: store.get("lastDesign", "klasik")};
@@ -557,3 +565,4 @@ function route() {
 document.getElementById("back").onclick = () => history.length > 1 ? history.back() : (location.hash = "#/");
 addEventListener("hashchange", route);
 route();
+if (!store.get("onboarded", false)) showOnboarding();

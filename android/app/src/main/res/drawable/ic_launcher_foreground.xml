@@ -1,9 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Araç QR logosu: önden araba, ön camda QR, köşede arama rozeti. Kaynak: tek tuval 108x108, güvenli alan 21..87 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp"
     android:viewportWidth="108" android:viewportHeight="108">
-    <path android:fillColor="#FFFFFF" android:pathData="M30,26h48a4,4 0 0 1 4,4v48a4,4 0 0 1 -4,4h-48a4,4 0 0 1 -4,-4v-48a4,4 0 0 1 4,-4z" />
-    <path android:fillColor="#111418" android:pathData="M32,32h16v16h-16zM60,32h16v16h-16zM32,60h16v16h-16z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M35,35h10v10h-10zM63,35h10v10h-10zM35,63h10v10h-10z" />
-    <path android:fillColor="#111418" android:pathData="M38,38h4v4h-4zM66,38h4v4h-4zM38,66h4v4h-4zM54,32h3v3h-3zM54,40h3v6h-3zM52,54h6v3h-6zM60,52h3v6h-3zM66,56h10v3h-10zM60,62h4v4h-4zM68,64h3v3h-3zM73,62h3v14h-3zM60,70h8v3h-8zM62,74h3v2h-3zM52,62h3v14h-3z" />
+    <group android:translateX="10.80" android:translateY="11.20" android:scaleX="0.8" android:scaleY="0.8">
+    <path android:fillColor="#06276b" android:pathData="M26,74 h56 a3,3 0 0 1 0,6 h-56 a3,3 0 0 1 0,-6z" />
+    <path android:fillColor="#0B1530" android:pathData="M31,64 h11 v9 a2,2 0 0 1 -2,2 h-7 a2,2 0 0 1 -2,-2z M66,64 h11 v9 a2,2 0 0 1 -2,2 h-7 a2,2 0 0 1 -2,-2z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M38,30 Q40,26 45,26 H63 Q68,26 70,30 L76,46 H80 Q84,46 84,50 V64 Q84,68 80,68 H28 Q24,68 24,64 V50 Q24,46 28,46 H32 Z" />
+    <path android:fillColor="#CFE0FF" android:pathData="M41,32 Q42,30 45,30 H63 Q66,30 67,32 L72,46 H36 Z" />
+    <path android:fillColor="#0A3A9E" android:pathData="M46,33 h5 v5 h-5z M57,33 h5 v5 h-5z M46,39 h5 v5 h-5z M53,33 h2 v2 h-2z M53,37 h2 v4 h-2z M57,40 h2 v2 h-2z M60,41 h2 v3 h-2z M53,42 h3 v2 h-3z" />
+    <path android:fillColor="#CFE0FF" android:pathData="M47.5,34.5 h2 v2 h-2z M58.5,34.5 h2 v2 h-2z M47.5,40.5 h2 v2 h-2z" />
+    <path android:fillColor="#FFD400" android:pathData="M28,52 h10 a2,2 0 0 1 2,2 v1 a2,2 0 0 1 -2,2 h-8 a2,2 0 0 1 -2,-2z M80,52 h-10 a2,2 0 0 0 -2,2 v1 a2,2 0 0 0 2,2 h8 a2,2 0 0 0 2,-2z" />
+    <path android:fillColor="#C9D3E8" android:pathData="M45,58 h18 a2,2 0 0 1 0,4 h-18 a2,2 0 0 1 0,-4z" />
+    </group>
+    <path android:fillColor="#FFFFFF" android:pathData="M67,25 a10,10 0 1 1 0,20 a10,10 0 1 1 0,-20z" />
+    <path android:fillColor="#12A150" android:pathData="M67,27 a8,8 0 1 1 0,16 a8,8 0 1 1 0,-16z" />
+    <group android:translateX="61.25" android:translateY="29.25" android:scaleX="0.5" android:scaleY="0.5">
+        <path android:fillColor="#FFFFFF" android:pathData="M6.62,10.79c1.44,2.83 3.76,5.14 6.59,6.59l2.2,-2.2c0.27,-0.27 0.67,-0.36 1.02,-0.24 1.12,0.37 2.33,0.57 3.57,0.57 0.55,0 1,0.45 1,1V20c0,0.55 -0.45,1 -1,1 -9.39,0 -17,-7.61 -17,-17 0,-0.55 0.45,-1 1,-1h3.5c0.55,0 1,0.45 1,1 0,1.25 0.2,2.45 0.57,3.57 0.11,0.35 0.03,0.74 -0.25,1.02l-2.2,2.2z" />
+    </group>
 </vector>
