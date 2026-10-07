@@ -80,9 +80,10 @@ const stickerAt = (code, design, link, size) =>
   `<div class="grid${dims(size).k < .75 ? " small-size" : ""}" style="${sizeVars(size)}">${stickerHtml(code, design, link)}</div>`;
 
 // ---------------------------------------------------------------- ekranlar
-function show(title, html, canGoBack) {
+function show(title, html, canGoBack, cls = "") {
   document.getElementById("apptitle").textContent = title;
   document.getElementById("back").hidden = !canGoBack;
+  app.className = cls;
   app.innerHTML = html;
   scrollTo(0, 0);
 }
@@ -111,29 +112,48 @@ function showHome() {
           <div><b>${esc(t.code)}</b><span>${esc(prettyPhone(t.phone))}<br>${esc(DESIGNS[t.design]?.name || "")} · ${esc(SIZES[t.size] || "")}</span></div>
         </a>`).join("")}
     </div>
-    <a class="btn" href="#/yeni">+ Yeni QR etiket oluştur</a>`);
+    <a class="btn" href="#/yeni">+ Yeni QR etiket oluştur</a>
+    ${orders().length ? `<h2>Siparişlerim</h2><div class="cards">${orders().map(orderCardHtml).join("")}</div>` : ""}`);
+  refreshOrders();
 }
 
 let draft = {design: store.get("lastDesign", "klasik")};
 
-function showDesigns() {
-  const groups = [["Klasik", ([, d]) => !d.group], ["Eğlenceli", ([, d]) => d.group]];
-  show("1. Tasarım seçin", `
-    <div class="steps"><span class="on"></span><span></span><span></span></div>
-    <p>Beğendiğiniz tasarıma dokunun. Daha sonra istediğiniz zaman değiştirebilirsiniz.</p>
-    ${groups.map(([name, filter]) => `
-      <div class="group">${name}</div>
-      <div class="designs">
-        ${Object.entries(DESIGNS).filter(filter).map(([k, d]) => `
-          <button type="button" data-d="${k}" class="${k === draft.design ? "on" : ""}">
-            ${stickerAt("ÖRNEK", k, SITE, "40x60")}${esc(d.name)}
-          </button>`).join("")}
-      </div>`).join("")}`, true);
-  app.querySelectorAll(".designs button").forEach(b => b.onclick = () => {
-    draft.design = b.dataset.d;
-    store.set("lastDesign", draft.design);
+// Tasarımlar reels gibi: tam ekran, yukarı-aşağı kaydırarak gezilir. tagCode verilirse o etiketin tasarımı değişir.
+function showDesigns(tagCode) {
+  const t = tagCode ? findTag(tagCode) : null;
+  if (tagCode && !t) { location.replace("#/"); return; }
+  const keys = Object.keys(DESIGNS), current = t ? t.design : draft.design;
+  const code = t ? t.code : "ÖRNEK", link = t ? qrLink(t.code) : SITE;
+  show(t ? "Tasarımı değiştir" : "1. Tasarım seçin", `
+    <div class="reels" id="reels">
+      ${keys.map((k, i) => `
+        <section class="reel" data-d="${k}" aria-label="${esc(DESIGNS[k].name)}">
+          <div class="reel-top">${i + 1} / ${keys.length} · ${DESIGNS[k].group ? "Eğlenceli" : "Klasik"}</div>
+          <div class="reel-sticker">${stickerAt(code, k, link, "60x90")}</div>
+          <div class="reel-bottom">
+            <b>${esc(DESIGNS[k].name)}</b>
+            <button class="btn" type="button" data-pick="${k}">${k === current && t ? "Şu anki tasarım" : t ? "Bu tasarımı kullan" : "Bu tasarımı seç"}</button>
+            <div class="swipe">${i < keys.length - 1 ? "⌃ Sonraki tasarım için yukarı kaydırın" : "Son tasarım · ⌄ geri kaydırabilirsiniz"}</div>
+          </div>
+        </section>`).join("")}
+    </div>`, true, "full");
+  const reels = document.getElementById("reels");
+  // Sticker'ı slayta sığacak kadar büyüt
+  const fitStickers = () => {
+    const slide = reels.clientHeight, room = Math.min((slide - 200) / 340, (reels.clientWidth - 48) / 227, 1.7);
+    reels.querySelectorAll(".reel-sticker").forEach(el => el.style.zoom = Math.max(.6, room).toFixed(3));
+  };
+  fitStickers();
+  reels.scrollTop = keys.indexOf(current) * reels.clientHeight;
+  reels.onclick = ev => {
+    const pick = ev.target.closest("[data-pick]")?.dataset.pick;
+    if (!pick) return;
+    if (t) { saveTag({...t, design: pick}); toast(`Tasarım: ${DESIGNS[pick].name}`, 1500); history.back(); return; }
+    draft.design = pick;
+    store.set("lastDesign", pick);
     location.hash = "#/yeni/telefon";
-  });
+  };
 }
 
 function showPhone(error = "", value = "") {
@@ -182,10 +202,8 @@ function showTag(code, isNew) {
     <div class="preview"><div style="zoom:${fit.toFixed(3)}">${stickerAt(t.code, t.design, qrLink(t.code), t.size)}</div></div>
 
     <div class="opts">
-      <label for="design">Tasarım</label>
-      <select id="design">${[["Klasik", d => !d.group], ["Eğlenceli", d => d.group]].map(([g, f]) =>
-        `<optgroup label="${g}">${Object.entries(DESIGNS).filter(([, d]) => f(d)).map(([k, d]) =>
-          `<option value="${k}"${k === t.design ? " selected" : ""}>${esc(d.name)}</option>`).join("")}</optgroup>`).join("")}</select>
+      <label>Tasarım</label>
+      <a class="btn ghost" style="margin-top:0" href="#/etiket/${encodeURIComponent(t.code)}/tasarim">🎨 ${esc(DESIGNS[t.design]?.name || "")} · kaydırarak değiştir</a>
       <label for="size">Baskı ölçüsü</label>
       <select id="size">${Object.entries(SIZES).map(([k, n]) =>
         `<option value="${k}"${k === t.size ? " selected" : ""}>${n}</option>`).join("")}</select>
@@ -202,6 +220,13 @@ function showTag(code, isNew) {
       <div class="hint">Yazdırırken ölçeği <b>%100 / Gerçek boyut</b> seçin; “Sayfaya sığdır” ölçüleri bozar.</div>
     </div>
 
+    <h2>Biz basıp kargolayalım</h2>
+    <a class="ordercard" href="#/etiket/${encodeURIComponent(t.code)}/siparis">
+      <span class="oc-icon" aria-hidden="true">📦</span>
+      <span><b>Su geçirmez vinil sticker seti</b>Aynı QR, 6 farklı ölçüde 9 sticker · kargo ile kapınızda</span>
+      <strong id="oc-price">…</strong>
+    </a>
+
     <h2>Etiket bilgileri</h2>
     <div class="opts" style="padding-top:14px">
       <dl class="kv">
@@ -216,7 +241,6 @@ function showTag(code, isNew) {
     </div>`, true);
 
   const update = patch => { saveTag({...t, ...patch}); showTag(code, isNew); };
-  document.getElementById("design").onchange = ev => update({design: ev.target.value});
   document.getElementById("size").onchange = ev => update({size: ev.target.value});
   app.querySelectorAll('input[name="paper"]').forEach(r => r.onchange = () => update({paper: r.value}));
   const copies = () => Math.max(1, Math.min(maxCopies, parseInt(document.getElementById("copies").value, 10) || 1));
@@ -239,6 +263,10 @@ function showTag(code, isNew) {
     location.replace("#/");
   };
   if (isNew && celebrated !== code) { celebrated = code; confetti(); }
+  loadShop().then(shop => {
+    const el = document.getElementById("oc-price");
+    if (el) el.textContent = shop?.active ? `${shop.price} TL` : "Yakında";
+  });
 }
 
 function showChangeNumber(code, error = "", value = "") {
@@ -326,12 +354,202 @@ async function sharePdf(t, copies) {
   else pdf.save(fileName);
 }
 
+// ---------------------------------------------------------------- basılı sticker siparişi
+const STATUS = {
+  odeme_bekleniyor: "Ödeme bekleniyor", odeme_bildirildi: "Ödemeniz kontrol ediliyor", onaylandi: "Ödeme onaylandı, baskıya hazırlanıyor",
+  baskida: "Baskıda", kargolandi: "Kargoya verildi", iptal: "İptal edildi",
+};
+const orders = () => store.get("orders", []);
+const findOrder = code => orders().find(o => o.code === code);
+function saveOrder(o) { store.set("orders", [o, ...orders().filter(x => x.code !== o.code)]); }
+
+let shopCache;
+async function loadShop() {
+  try { shopCache = await rpc("shop_info", {}); store.set("shop", shopCache); }
+  catch (e) { shopCache = shopCache || store.get("shop", null); }
+  return shopCache;
+}
+
+function orderCardHtml(o) {
+  return `<a class="card order st-${esc(o.status)}" href="#/odeme/${encodeURIComponent(o.code)}" data-order="${esc(o.code)}">
+    <span class="oc-icon" aria-hidden="true">📦</span>
+    <div><b>${esc(o.code)} · ${esc(o.amount)} TL</b><span class="ostatus">${esc(STATUS[o.status] || o.status)}${o.tracking ? ` · Takip no: ${esc(o.tracking)}` : ""}</span></div>
+  </a>`;
+}
+
+// Sunucudan güncel sipariş durumlarını alır, listeyi yerinde günceller
+async function refreshOrders() {
+  const list = orders();
+  if (!list.length) return;
+  let rows;
+  try { rows = await rpc("order_status", {p_codes: list.map(o => o.code), p_tokens: list.map(o => o.token)}); } catch (e) { return; }
+  for (const r of rows || []) {
+    const o = findOrder(r.code);
+    if (!o) continue;
+    saveOrder({...o, status: r.status, tracking: r.tracking});
+    const card = document.querySelector(`[data-order="${CSS.escape(r.code)}"]`);
+    if (card) card.outerHTML = orderCardHtml(findOrder(r.code));
+  }
+}
+
+const PRODUCT_FEATURES = [
+  ["💧", "Yağmura dayanıklı", "Su geçirmez vinil; yağmur, araç yıkama ve nemden etkilenmez."],
+  ["☀️", "Güneşe dayanıklı", "UV dayanımlı baskı: renkler ve QR kod kolay kolay solmaz."],
+  ["📐", "6 farklı ölçü, 9 sticker", "Aynı QR'ınız A4 sayfada: 80×120, 74×105, 60×90, 55×85, 50×75 mm ve 4 adet 40×60 mm. Cam, tampon, kask, bisiklet…"],
+  ["✂️", "Kesime hazır", "Her sticker'ın kesim çizgisi var; makasla kolayca ayırırsınız."],
+  ["🔒", "Numaranız güvende", "Numaranız sticker'da yazmaz; dilediğiniz zaman uygulamadan değiştirirsiniz, yeniden basmanız gerekmez."],
+];
+
+async function showOrder(tagCode, error = "", v = null) {
+  const t = findTag(tagCode);
+  if (!t) { location.replace("#/"); return; }
+  show("Basılı sticker siparişi", "<p>Yükleniyor…</p>", true);
+  const shop = await loadShop();
+  if (!shop?.active) {
+    return show("Basılı sticker siparişi", `
+      <div class="msg info"><b>Basılı sipariş şu an kapalı.</b><br>Kısa süre içinde açılacak. Bu sırada etiketinizi kendiniz yazdırabilirsiniz.</div>
+      <a class="btn" href="#/etiket/${encodeURIComponent(t.code)}">Etikete dön</a>`, true);
+  }
+  v = v || store.get("lastAddress", {}) || {};
+  const val = k => `value="${esc(v[k] || "")}"`;
+  const fit = Math.min(1, (Math.min(innerWidth, 560) - 64) / (190 * 96 / 25.4));
+  show("Basılı sticker siparişi", `
+    ${error ? `<div class="msg err" role="alert">${esc(error)}</div>` : ""}
+    <div class="preview sheetprev"><div style="zoom:${fit.toFixed(3)}">${orderSheetHtml(t.code, t.design, qrLink(t.code))}</div></div>
+    <div class="price"><span>A4 vinil sticker seti</span><strong>${esc(shop.price)} TL</strong></div>
+    <div class="hint" style="text-align:center">${esc(shop.shipping_text)} Ödeme havale / EFT ile.</div>
+    <ul class="features">${PRODUCT_FEATURES.map(([i, h, d]) => `<li><span aria-hidden="true">${i}</span><div><b>${h}</b>${d}</div></li>`).join("")}</ul>
+    <a class="btn ghost" href="#/etiket/${encodeURIComponent(t.code)}/tasarim">🎨 Tasarım: ${esc(DESIGNS[t.design]?.name || "")} · değiştir</a>
+
+    <h2>Teslimat adresi</h2>
+    <form id="of" class="opts" style="padding-top:2px" novalidate>
+      <label for="o-name">Ad soyad</label><input id="o-name" autocomplete="name" ${val("name")}>
+      <label for="o-phone">Telefon (kargo için)</label>
+      <input id="o-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="05xx xxx xx xx" value="${esc(v.phone || prettyPhone(t.phone))}">
+      <label for="o-email">E-posta <span style="font-weight:400;color:var(--muted)">(isteğe bağlı)</span></label>
+      <input id="o-email" type="email" inputmode="email" autocomplete="email" ${val("email")}>
+      <div class="row">
+        <div><label for="o-city">İl</label><input id="o-city" autocomplete="address-level1" ${val("city")}></div>
+        <div><label for="o-district">İlçe</label><input id="o-district" autocomplete="address-level2" ${val("district")}></div>
+      </div>
+      <label for="o-address">Açık adres</label>
+      <textarea id="o-address" rows="3" autocomplete="street-address" placeholder="Mahalle, cadde/sokak, bina no, daire">${esc(v.address || "")}</textarea>
+      <label for="o-note">Not <span style="font-weight:400;color:var(--muted)">(isteğe bağlı)</span></label>
+      <input id="o-note" ${val("note")}>
+      <label class="check"><input type="checkbox" id="o-ok"${v.ok ? " checked" : ""}> Bilgilerimin siparişimin basılıp kargolanması için kullanılmasını kabul ediyorum.</label>
+      <button class="btn" type="submit">Ödemeye geç · ${esc(shop.price)} TL</button>
+    </form>`, true);
+  document.getElementById("of").addEventListener("submit", async ev => {
+    ev.preventDefault();
+    const g = id => document.getElementById(id).value.trim();
+    const v2 = {name: g("o-name"), phone: g("o-phone"), email: g("o-email"), city: g("o-city"), district: g("o-district"),
+      address: g("o-address"), note: g("o-note"), ok: document.getElementById("o-ok").checked};
+    const phone = normalizePhone(v2.phone);
+    const err = v2.name.length < 3 ? "Ad soyad yazın." : !phone ? "Telefon numarası geçersiz. Örnek: 0532 123 45 67"
+      : v2.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v2.email) ? "E-posta adresi geçersiz."
+      : !v2.city || !v2.district ? "İl ve ilçe yazın." : v2.address.length < 10 ? "Açık adresi eksiksiz yazın."
+      : !v2.ok ? "Devam etmek için onay kutusunu işaretleyin." : "";
+    if (err) return showOrder(tagCode, err, v2);
+    store.set("lastAddress", {...v2, ok: false});
+    ev.submitter && (ev.submitter.disabled = true, ev.submitter.textContent = "Sipariş oluşturuluyor…");
+    let res;
+    try {
+      res = await rpc("order_create", {p_tag_code: t.code, p_design: t.design, p_full_name: v2.name, p_phone: phone, p_email: v2.email || null,
+        p_city: v2.city, p_district: v2.district, p_address: v2.address, p_note: v2.note || null, p_device: deviceId()});
+    } catch (e) { return showOrder(tagCode, "Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.", v2); }
+    if (!res?.ok) {
+      return showOrder(tagCode, {closed: "Basılı sipariş şu an kapalı.", no_tag: "Bu etiket sunucuda bulunamadı.",
+        missing: "Adres bilgileri eksik.", bad_phone: "Telefon numarası geçersiz.", bad_email: "E-posta adresi geçersiz.",
+        too_many: "Bugün çok fazla sipariş oluşturdunuz. Siparişlerim'den mevcut siparişinize devam edin.",
+        busy: "Şu an çok yoğun, birkaç dakika sonra tekrar deneyin."}[res?.error] || "Sipariş oluşturulamadı.", v2);
+    }
+    saveOrder({code: res.code, token: res.token, amount: res.amount, status: res.status, tagCode: t.code, design: t.design, created: Date.now()});
+    location.replace(`#/odeme/${encodeURIComponent(res.code)}`);
+  });
+}
+
+function copyText(text) {
+  const done = () => toast("Kopyalandı", 1500);
+  if (navigator.clipboard && isSecureContext) return navigator.clipboard.writeText(text).then(done, () => fallback());
+  fallback();
+  function fallback() {
+    const ta = Object.assign(document.createElement("textarea"), {value: text});
+    ta.style.cssText = "position:fixed;opacity:0";
+    document.body.append(ta); ta.select();
+    try { document.execCommand("copy"); done(); } catch (e) { toast("Kopyalanamadı; uzun basıp kopyalayın"); }
+    ta.remove();
+  }
+}
+
+async function showPayment(orderCode) {
+  const o = findOrder(orderCode);
+  if (!o) { location.replace("#/"); return; }
+  show(`Sipariş ${o.code}`, "<p>Yükleniyor…</p>", true);
+  const [shop] = await Promise.all([loadShop(), refreshOrders()]);
+  const cur = findOrder(orderCode);
+  if (cur.status !== "odeme_bekleniyor") {
+    return show(`Sipariş ${cur.code}`, `
+      <div class="msg ${cur.status === "iptal" ? "err" : "ok"}"><b>${esc(STATUS[cur.status] || cur.status)}</b>${cur.tracking ? `<br>Kargo takip no: <b>${esc(cur.tracking)}</b>` : ""}</div>
+      <ol class="timeline">${["odeme_bildirildi", "onaylandi", "baskida", "kargolandi"].map(st => {
+        const order = ["odeme_bekleniyor", "odeme_bildirildi", "onaylandi", "baskida", "kargolandi"];
+        return `<li class="${order.indexOf(cur.status) >= order.indexOf(st) ? "on" : ""}">${esc(STATUS[st])}</li>`;
+      }).join("")}</ol>
+      <p>Tutar: <b>${esc(cur.amount)} TL</b>. Sorunuz olursa sipariş numaranızla bize ulaşın.</p>
+      <a class="btn ghost" href="#/">Ana sayfa</a>`, true);
+  }
+  const iban = (shop?.iban || "").replace(/(.{4})/g, "$1 ").trim();
+  show("Ödeme", `
+    <div class="price"><span>Ödenecek tutar</span><strong>${esc(cur.amount)} TL</strong></div>
+    <ol class="paysteps">
+      <li>Aşağıdaki IBAN'a <b>${esc(cur.amount)} TL</b> havale / EFT yapın.</li>
+      <li>Açıklamaya sipariş numaranızı yazın: <b>${esc(cur.code)}</b></li>
+      <li>Ödemeyi yaptıktan sonra aşağıdaki butona basın.</li>
+    </ol>
+    <div class="opts paybox">
+      <dl class="kv">
+        <dt>Alıcı</dt><dd>${esc(shop?.account_name || "")}</dd>
+        ${shop?.bank_name ? `<dt>Banka</dt><dd>${esc(shop.bank_name)}</dd>` : ""}
+        <dt>IBAN</dt><dd class="iban">${esc(iban)}</dd>
+        <dt>Açıklama</dt><dd>${esc(cur.code)}</dd>
+      </dl>
+      <div class="row">
+        <button class="btn ghost" type="button" id="cp-iban">IBAN'ı kopyala</button>
+        <button class="btn ghost" type="button" id="cp-code">Sipariş no kopyala</button>
+      </div>
+    </div>
+    <button class="btn" type="button" id="paid" style="background:var(--ok)">✅ Ödemeyi yaptım</button>
+    <a class="btn ghost" href="#/">Daha sonra öderim</a>
+    <div class="hint">Ödemeniz kontrol edildikten sonra stickerlarınız basılıp kargoya verilir. Durumu ana sayfadaki Siparişlerim bölümünden takip edebilirsiniz.</div>`, true);
+  document.getElementById("cp-iban").onclick = () => copyText(shop?.iban || "");
+  document.getElementById("cp-code").onclick = () => copyText(cur.code);
+  document.getElementById("paid").onclick = async ev => {
+    if (!confirm(`${cur.amount} TL ödemeyi ${cur.code} açıklamasıyla yaptığınızı onaylıyor musunuz?`)) return;
+    ev.target.disabled = true;
+    let res;
+    try { res = await rpc("order_paid", {p_code: cur.code, p_token: cur.token}); }
+    catch (e) { ev.target.disabled = false; return toast("Sunucuya ulaşılamadı, tekrar deneyin."); }
+    if (!res?.ok) { ev.target.disabled = false; return toast("Sipariş bulunamadı."); }
+    saveOrder({...cur, status: res.status});
+    show("Sipariş iletildi", `
+      <div class="empty" style="padding-top:10px">
+        <div style="font-size:64px" aria-hidden="true">🎉</div>
+        <h1>Siparişiniz iletildi!</h1>
+        <p>Ödemeniz kontrol edildikten sonra stickerlarınız basılıp kargoya verilir. Sipariş no: <b>${esc(cur.code)}</b></p>
+      </div>
+      <a class="btn" href="#/">Siparişlerim</a>`, false);
+    confetti();
+  };
+}
+
 // ---------------------------------------------------------------- yönlendirme
 function route() {
   const parts = location.hash.replace(/^#\/?/, "").split("/").map(decodeURIComponent);
   if (parts[0] === "yeni" && parts[1] === "telefon") return showPhone();
   if (parts[0] === "yeni") return showDesigns();
   if (parts[0] === "etiket" && parts[2] === "numara") return showChangeNumber(parts[1]);
+  if (parts[0] === "etiket" && parts[2] === "tasarim") return showDesigns(parts[1]);
+  if (parts[0] === "etiket" && parts[2] === "siparis") return showOrder(parts[1]);
+  if (parts[0] === "odeme") return showPayment(parts[1]);
   if (parts[0] === "etiket") return showTag(parts[1], parts[2] === "yeni");
   showHome();
 }

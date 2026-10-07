@@ -86,3 +86,49 @@ input:focus,select:focus{outline:none;border-color:var(--band)}
   .appbar,main,.toast,.confetti{display:none!important}
   #printarea{position:static}
 }
+
+/* reels: tasarımlar tam ekran, yukarı-aşağı kaydırılarak */
+main.full{max-width:none;padding:0}
+.reels{height:calc(100vh - 56px);height:calc(100dvh - 56px);overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain;
+  background:#0f1115;scrollbar-width:none}
+.reels::-webkit-scrollbar{display:none}
+.reel{height:100%;scroll-snap-align:start;scroll-snap-stop:always;display:flex;flex-direction:column;align-items:center;
+  justify-content:space-between;padding:14px 16px 18px;color:#fff;background:radial-gradient(circle at 50% 42%,#2b3557,#0f1115 70%)}
+.reel-top{font-size:14px;font-weight:600;letter-spacing:.04em;opacity:.75}
+.reel-sticker .sticker{border-color:transparent;box-shadow:0 18px 50px #0008;border-radius:3mm}
+.reel-bottom{width:100%;max-width:420px;text-align:center}
+.reel-bottom b{display:block;font-size:24px}
+.reel-bottom .btn{margin-top:10px}
+.swipe{margin-top:10px;font-size:14px;opacity:.75;animation:bob 1.6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-4px)}}
+
+/* sipariş */
+.ordercard{display:flex;align-items:center;gap:12px;background:#fff;border-radius:12px;padding:14px;text-decoration:none;color:var(--ink);
+  border:2px solid #d8e2fb}
+.ordercard b{display:block;font-size:17px}
+.ordercard span{color:var(--muted);font-size:14px;line-height:1.35}
+.ordercard strong{margin-left:auto;font-size:20px;color:var(--band);white-space:nowrap}
+.oc-icon{font-size:30px;flex:none}
+.card.order{gap:12px}
+.card.order.st-odeme_bekleniyor .ostatus{color:var(--err)}
+.card.order.st-kargolandi .ostatus{color:var(--ok)}
+.sheetprev{padding:10px}
+.sheetprev .sheet{box-shadow:0 0 0 1px var(--line)}
+.price{display:flex;justify-content:space-between;align-items:baseline;background:#fff;border-radius:12px;padding:14px 16px;margin-top:14px}
+.price span{color:var(--muted);font-weight:600}
+.price strong{font-size:30px;color:var(--band)}
+.features{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:8px}
+.features li{display:flex;gap:12px;background:#fff;border-radius:12px;padding:12px 14px;font-size:15px;line-height:1.4;color:var(--muted)}
+.features li > span{font-size:24px;flex:none}
+.features b{display:block;color:var(--ink)}
+textarea{width:100%;font:inherit;font-size:17px;padding:12px 13px;border:2px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);resize:vertical}
+textarea:focus{outline:none;border-color:var(--band)}
+.check{display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:14px;line-height:1.45;color:var(--muted);margin-top:16px}
+.check input{width:22px;height:22px;flex:none;margin:0}
+.paysteps{background:#fff;border-radius:12px;padding:14px 14px 14px 34px;margin:14px 0 0;line-height:1.55;font-size:16px}
+.paybox .iban{font-family:"Barlow Condensed","Barlow",sans-serif;font-size:21px;letter-spacing:.04em;word-break:break-word}
+.timeline{list-style:none;padding:0;margin:0 0 16px;display:grid;gap:6px}
+.timeline li{background:#fff;border-radius:10px;padding:11px 14px;color:var(--muted);font-weight:600}
+.timeline li::before{content:"○ ";color:var(--line)}
+.timeline li.on{color:var(--ok)}
+.timeline li.on::before{content:"● ";color:var(--ok)}

@@ -76,6 +76,9 @@ details p{margin:8px 0 0}
 .reqs{display:grid;gap:12px}
 .req{background:#fff;border-radius:10px;padding:14px 16px;display:grid;grid-template-columns:1fr auto;gap:10px 18px;border-left:5px solid var(--line)}
 .req.st-yeni{border-left-color:var(--err)}.req.st-verildi{border-left-color:var(--ok)}
+.req.order.st-odeme_bildirildi{border-left-color:var(--err)}.req.order.st-onaylandi{border-left-color:#e0a100}
+.req.order.st-baskida{border-left-color:var(--band)}.req.order.st-kargolandi{border-left-color:var(--ok)}
+.tabs{overflow-x:auto}.tabs button{white-space:nowrap}
 .req h3{margin:0;font-size:18px}
 .req .meta{font-size:14px;color:var(--muted);line-height:1.6}
 .req .meta a{color:var(--band)}
@@ -414,9 +417,12 @@ async function showAdmin() {
   catch (e) { return showAdminLogin(e.status ? "Şifre hatalı." : "Bağlantı hatası, tekrar deneyin."); }
   if (!Array.isArray(rows)) return showAdminLogin("Beklenmeyen yanıt, tekrar deneyin.");
   if (typeof qrcode !== "function") return showMessage("QR kütüphanesi yüklenemedi", "Sayfayı yenileyip tekrar deneyin.");
-  const [given, requests, appReady] = await Promise.all([loadGiven(), loadRequests(),
-    rpc("aracqr_app_version", {}).then(v => v >= 1, () => false)]);
+  const [given, requests, appReady, orderRows] = await Promise.all([loadGiven(), loadRequests(),
+    rpc("aracqr_app_version", {}).then(v => v >= 1, () => false), loadOrders()]);
+  orderBadge = orderRows ? orderRows.filter(o => o.status === "odeme_bildirildi").length : 0;
   if (adminTab === "requests") return showRequests(rows, given, requests);
+  if (adminTab === "orders") return showOrders(orderRows, requests);
+  if (adminTab === "settings") return showSettings(requests);
   const state = r => r.phone ? "used" : given?.has(String(r.code).toUpperCase()) ? "given" : "ready";
   const count = {ready: 0, given: 0, used: 0};
   rows.forEach(r => count[state(r)]++);
@@ -682,10 +688,12 @@ document.addEventListener("click", async ev => {
 // ---------------------------------------------------------------- yönetim: talepler
 let adminTab = "tags", reqFilter = "yeni";
 
+let orderBadge = 0;
+
 function tabsHtml(newCount) {
+  const tab = (id, name, n) => `<button data-tab="${id}" class="${adminTab === id ? "on" : ""}">${name}${n ? `<span class="badge">${n}</span>` : ""}</button>`;
   return `<div class="tabs noprint">
-    <button data-tab="tags" class="${adminTab === "tags" ? "on" : ""}">Etiketler</button>
-    <button data-tab="requests" class="${adminTab === "requests" ? "on" : ""}">QR talepleri${newCount ? `<span class="badge">${newCount}</span>` : ""}</button>
+    ${tab("tags", "Etiketler")}${tab("requests", "QR talepleri", newCount)}${tab("orders", "Siparişler", orderBadge)}${tab("settings", "Ayarlar")}
   </div>`;
 }
 
@@ -782,6 +790,230 @@ async function showRequests(rows, given, requests) {
       msg.innerHTML = `<div class="msg err">Kaydedilemedi: ${esc(e.message)}</div>`;
     }
   };
+}
+
+// ---------------------------------------------------------------- yönetim: basılı sticker siparişleri (supabase/siparis.sql)
+const ORDER_STATUS = {
+  odeme_bildirildi: "Ödeme yapıldı, kontrol edilecek", odeme_bekleniyor: "Ödeme bekleniyor (henüz havale yapılmadı)",
+  onaylandi: "Onaylandı, baskıcıya gönderilecek", baskida: "Baskıda", kargolandi: "Kargolandı", iptal: "İptal",
+};
+const SELF_SITE = "https://yusufbas34.github.io/aracqr/";
+const selfLink = code => `${SELF_SITE}?s=${encodeURIComponent(code)}`;
+let orderFilter = "odeme_bildirildi";
+
+async function loadOrders() {
+  try { const r = await rpc("admin_orders", {p_key: adminKey}); return Array.isArray(r) ? r : null; }
+  catch (e) { return null; }
+}
+
+async function loadShopAdmin() {
+  try { const r = await rpc("admin_shop_get", {p_key: adminKey}); return Array.isArray(r) ? r[0] : r; }
+  catch (e) { return null; }
+}
+
+// Siparişin A4 baskı PDF'i: 6 farklı ölçü, 9 sticker (shared/sticker.js orderSheetHtml)
+async function orderPdf(o) {
+  await loadPdfLibs();
+  const box = document.createElement("div");
+  box.style.cssText = "position:fixed;left:-30000px;top:0;background:#fff";
+  box.innerHTML = orderSheetHtml(o.tag_code, o.design, selfLink(o.tag_code));
+  document.body.append(box);
+  try {
+    await document.fonts?.ready;
+    const canvas = await html2canvas(box.firstElementChild, {scale: 4, backgroundColor: "#ffffff", logging: false});
+    const pdf = new window.jspdf.jsPDF({unit: "mm", format: "a4"});
+    pdf.addImage(canvas.toDataURL("image/png"), "PNG", 10, 10, 190, 277);
+    return pdf.output("blob");
+  } finally { box.remove(); }
+}
+
+function downloadBlob(blob, name) {
+  const a = Object.assign(document.createElement("a"), {href: URL.createObjectURL(blob), download: name});
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+function printerMail(o) {
+  const subject = `Baskı siparişi ${o.code}`;
+  const body = `Merhaba,
+
+Ekteki A4 sayfayı su geçirmez, UV dayanımlı vinil sticker olarak 1 adet basmanızı rica ederim. Kesim çizgileri dosyadadır.
+
+Sipariş no: ${o.code}
+Teslimat adresi:
+${o.full_name}
+${o.address}
+${o.district} / ${o.city}
+Tel: ${prettyPhone(o.phone)}
+
+Teşekkürler.`;
+  return {subject, body};
+}
+
+function waLink(o, text) {
+  return `https://wa.me/${String(o.phone).replace(/\D/g, "")}?text=${encodeURIComponent(text)}`;
+}
+
+function customerMessage(o) {
+  const first = o.full_name.split(" ")[0];
+  return {
+    odeme_bekleniyor: `Merhaba ${first}, Araç QR siparişiniz (${o.code}) için ${o.amount} TL ödemenizi bekliyoruz.`,
+    odeme_bildirildi: `Merhaba ${first}, Araç QR siparişinizin (${o.code}) ödemesini kontrol ediyoruz.`,
+    onaylandi: `Merhaba ${first}, Araç QR siparişinizin (${o.code}) ödemesi alındı, stickerlarınız baskıya hazırlanıyor.`,
+    baskida: `Merhaba ${first}, Araç QR stickerlarınız (${o.code}) baskıda. Kargoya verilince takip numarasını ileteceğiz.`,
+    kargolandi: `Merhaba ${first}, Araç QR siparişiniz (${o.code}) kargoya verildi.${o.tracking ? ` Takip no: ${o.tracking}` : ""} İyi kullanımlar!`,
+    iptal: `Merhaba ${first}, Araç QR siparişiniz (${o.code}) iptal edildi.`,
+  }[o.status] || `Merhaba ${first}, Araç QR siparişiniz (${o.code}) hakkında yazıyoruz.`;
+}
+
+async function showOrders(orders, requests) {
+  const shop = await loadShopAdmin();
+  const list = (orders || []).filter(o => orderFilter === "all" || o.status === orderFilter);
+  const count = st => (orders || []).filter(o => o.status === st).length;
+  const date = t => t ? new Date(t).toLocaleString("tr-TR", {dateStyle: "medium", timeStyle: "short"}) : "";
+  const canShareFiles = !!(navigator.canShare && navigator.canShare({files: [new File([""], "x.pdf", {type: "application/pdf"})]}));
+  show(`
+    ${tabsHtml(requests ? requests.filter(r => r.status === "yeni").length : 0)}
+    ${orders ? "" : setupHtml("Sipariş sistemi kurulu değil.", "siparis.sql")}
+    ${orders && shop && !(shop.active && shop.iban && shop.account_name) ? `<div class="msg err">Satış kapalı: uygulamada sipariş alınmıyor. <b>Ayarlar</b> sekmesinden IBAN ve alıcı adını girip satışı açın.</div>` : ""}
+    <div class="bar">
+      <select id="ofilter" aria-label="Sipariş durumu">
+        ${[...Object.entries(ORDER_STATUS).map(([k, n]) => [k, `${n} (${count(k)})`]), ["all", `Tümü (${orders?.length || 0})`]]
+          .map(([k, n]) => `<option value="${k}"${k === orderFilter ? " selected" : ""}>${esc(n)}</option>`).join("")}
+      </select>
+    </div>
+    <div id="msg"></div>
+    ${orders && !list.length ? "<p>Bu listede sipariş yok.</p>" : ""}
+    <div class="reqs">
+      ${list.map(o => `
+        <div class="req order st-${esc(o.status)}" data-id="${esc(o.id)}">
+          <div>
+            <h3>${esc(o.code)} · ${esc(o.amount)} TL</h3>
+            <div class="meta">
+              <b>${esc(ORDER_STATUS[o.status] || o.status)}</b> · ${esc(date(o.created_at))}${o.paid_at ? ` · ödeme bildirimi: ${esc(date(o.paid_at))}` : ""}<br>
+              <b>${esc(o.full_name)}</b> · <a href="tel:${esc(o.phone)}">${esc(prettyPhone(o.phone))}</a>
+              · <a href="${esc(waLink(o, customerMessage(o)))}" target="_blank" rel="noopener">WhatsApp</a>
+              ${o.email ? ` · <a href="mailto:${esc(o.email)}">${esc(o.email)}</a>` : ""}<br>
+              ${esc(o.address)}, ${esc(o.district)} / ${esc(o.city)}<br>
+              Tasarım: ${esc(DESIGNS[o.design]?.name || o.design)} · QR: <a href="${esc(selfLink(o.tag_code))}" target="_blank" rel="noopener">${esc(o.tag_code)}</a>
+              ${o.tracking ? ` · Takip no: <b>${esc(o.tracking)}</b>` : ""}
+            </div>
+            ${o.note ? `<div class="note">Müşteri notu: ${esc(o.note)}</div>` : ""}
+            ${o.admin_note ? `<div class="note">Notunuz: ${esc(o.admin_note)}</div>` : ""}
+          </div>
+          <div class="act">
+            ${["odeme_bekleniyor", "odeme_bildirildi"].includes(o.status) ? `<button data-act="approve" style="background:var(--ok)">✓ Ödeme geldi, onayla</button>` : ""}
+            <button data-act="pdf">Baskı PDF'i indir</button>
+            ${["onaylandi", "baskida"].includes(o.status) ? `<button data-act="mail">Baskıcıya e-posta</button>
+              ${canShareFiles ? `<button data-act="share">PDF'i paylaş (e-posta ekli)</button>` : ""}` : ""}
+            <input data-f="tracking" placeholder="Kargo takip no" value="${esc(o.tracking || "")}" aria-label="Kargo takip no">
+            ${["onaylandi", "baskida"].includes(o.status) ? `<button data-act="shipped">Kargolandı</button>` : ""}
+            <select data-f="status" aria-label="Durum">${Object.entries(ORDER_STATUS).map(([k, n]) =>
+              `<option value="${k}"${k === o.status ? " selected" : ""}>${esc(n)}</option>`).join("")}</select>
+            <input data-f="note" placeholder="Kendi notunuz" value="${esc(o.admin_note || "")}" aria-label="Not">
+            <button data-act="save" style="background:#2b3240">Kaydet</button>
+          </div>
+        </div>`).join("")}
+    </div>`, true);
+  bindTabs();
+  const filter = document.getElementById("ofilter");
+  filter.onchange = () => { orderFilter = filter.value; showOrders(orders, requests); };
+  document.querySelector(".reqs").onclick = async ev => {
+    const btn = ev.target.closest("button[data-act]");
+    if (!btn) return;
+    const box = btn.closest(".req"), o = orders.find(x => String(x.id) === box.dataset.id), act = btn.dataset.act;
+    const f = name => box.querySelector(`[data-f="${name}"]`).value.trim();
+    const msg = document.getElementById("msg");
+    const update = async (status, done) => {
+      await rpc("admin_order_update", {p_key: adminKey, p_id: o.id, p_status: status, p_tracking: f("tracking") || null, p_admin_note: f("note") || null});
+      await showAdmin();
+      if (done) done();
+    };
+    const fileName = `baski-${o.code}.pdf`;
+    btn.disabled = true;
+    try {
+      if (act === "approve") {
+        if (!confirm(`${o.code}: ${o.amount} TL hesabınıza geldi mi? Onaylanınca sipariş baskıya gönderilecekler listesine geçer.`)) return;
+        await update("onaylandi", () => { confetti(); toast("Ödeme onaylandı. Müşteriye WhatsApp'tan haber verebilirsiniz."); });
+      } else if (act === "pdf") {
+        toast("Baskı PDF'i hazırlanıyor…", 30000);
+        downloadBlob(await orderPdf(o), fileName);
+        toast("PDF indirildi.");
+      } else if (act === "mail") {
+        toast("Baskı PDF'i hazırlanıyor…", 30000);
+        downloadBlob(await orderPdf(o), fileName);
+        const m = printerMail(o);
+        location.href = `mailto:${encodeURIComponent(shop?.printer_email || "")}?subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.body)}`;
+        toast(`PDF indirildi: ${fileName}. Açılan e-postaya ekleyip gönderin.`, 6000);
+        if (o.status === "onaylandi" && confirm("E-postayı gönderdiyseniz sipariş “Baskıda” olarak işaretlensin mi?")) await update("baskida");
+      } else if (act === "share") {
+        toast("Baskı PDF'i hazırlanıyor…", 30000);
+        const m = printerMail(o);
+        await navigator.share({files: [new File([await orderPdf(o)], fileName, {type: "application/pdf"})], title: m.subject,
+          text: `${shop?.printer_email ? `Alıcı: ${shop.printer_email}\n\n` : ""}${m.body}`});
+        document.querySelector(".toast")?.remove();
+        if (o.status === "onaylandi" && confirm("Gönderdiyseniz sipariş “Baskıda” olarak işaretlensin mi?")) await update("baskida");
+      } else if (act === "shipped") {
+        if (!f("tracking") && !confirm("Takip numarası girmeden kargolandı olarak işaretlensin mi?")) return;
+        await update("kargolandi", () => toast("Kargolandı. Müşteriye WhatsApp'tan takip numarasını iletebilirsiniz."));
+      } else if (act === "save") {
+        if (f("status") === "iptal" && o.status !== "iptal" && !confirm(`${o.code} iptal edilsin mi?`)) return;
+        await update(f("status"), () => toast("Kaydedildi."));
+      }
+    } catch (e) {
+      if (e.name !== "AbortError") msg.innerHTML = `<div class="msg err">İşlem yapılamadı: ${esc(e.message)}</div>`;
+    } finally { btn.disabled = false; }
+  };
+}
+
+// TR IBAN: TR + 24 rakam, mod 97 kontrolü
+function validIban(iban) {
+  const s = iban.replace(/\s/g, "").toUpperCase();
+  if (!/^TR\d{24}$/.test(s)) return false;
+  const num = (s.slice(4) + s.slice(0, 4)).replace(/[A-Z]/g, c => c.charCodeAt(0) - 55);
+  let r = 0;
+  for (const ch of num) r = (r * 10 + Number(ch)) % 97;
+  return r === 1;
+}
+
+async function showSettings(requests, error = "") {
+  const shop = await loadShopAdmin();
+  show(`
+    ${tabsHtml(requests ? requests.filter(r => r.status === "yeni").length : 0)}
+    ${shop ? "" : setupHtml("Sipariş sistemi kurulu değil.", "siparis.sql")}
+    ${error ? `<div class="msg err">${esc(error)}</div>` : ""}
+    ${shop ? `
+    <form id="sf" class="card" style="max-width:560px" novalidate>
+      <h2 style="margin-top:0">Basılı sticker satışı</h2>
+      <label class="check"><input type="checkbox" id="s-active"${shop.active ? " checked" : ""}> Satış açık (uygulamada sipariş alınsın)</label>
+      <label for="s-price">Fiyat (TL)</label><input id="s-price" type="number" inputmode="numeric" min="0" value="${esc(shop.price)}">
+      <label for="s-iban">IBAN</label><input id="s-iban" autocomplete="off" placeholder="TR00 0000 0000 0000 0000 0000 00" value="${esc((shop.iban || "").replace(/(.{4})/g, "$1 ").trim())}">
+      <label for="s-name">Alıcı adı (hesap sahibi)</label><input id="s-name" value="${esc(shop.account_name || "")}">
+      <label for="s-bank">Banka adı <span style="font-weight:400;color:var(--muted)">(isteğe bağlı)</span></label><input id="s-bank" value="${esc(shop.bank_name || "")}">
+      <label for="s-ship">Kargo bilgisi (uygulamada görünür)</label><input id="s-ship" value="${esc(shop.shipping_text || "")}">
+      <label for="s-printer">Baskıcının e-postası <span style="font-weight:400;color:var(--muted)">(yalnızca burada görünür)</span></label>
+      <input id="s-printer" type="email" value="${esc(shop.printer_email || "")}">
+      <button class="btn" type="submit">Kaydet</button>
+      <p class="hint" style="margin-top:12px">IBAN ve alıcı adı girilmeden satış açılmaz. Değişiklikler uygulamaya hemen yansır; uygulamayı güncellemek gerekmez.</p>
+    </form>` : ""}`, true);
+  bindTabs();
+  const form = document.getElementById("sf");
+  if (!form) return;
+  form.addEventListener("submit", async ev => {
+    ev.preventDefault();
+    const g = id => document.getElementById(id).value.trim();
+    const active = document.getElementById("s-active").checked, iban = g("s-iban").replace(/\s/g, "").toUpperCase();
+    if (iban && !validIban(iban)) return showSettings(requests, "IBAN hatalı görünüyor: TR ile başlayan 26 karakter olmalı ve kontrol hanesi tutmalı.");
+    if (active && (!iban || !g("s-name"))) return showSettings(requests, "Satışı açmak için IBAN ve alıcı adı gerekli.");
+    const price = parseInt(g("s-price"), 10);
+    if (!(price >= 0)) return showSettings(requests, "Fiyat geçersiz.");
+    try {
+      await rpc("admin_shop_set", {p_key: adminKey, p_active: active, p_price: price, p_iban: iban, p_account_name: g("s-name"),
+        p_bank_name: g("s-bank"), p_printer_email: g("s-printer"), p_shipping_text: g("s-ship")});
+      await showSettings(requests);
+      toast(active ? "Kaydedildi. Satış açık." : "Kaydedildi. Satış kapalı.");
+    } catch (e) { showSettings(requests, "Kaydedilemedi: " + e.message); }
+  });
 }
 
 // ---------------------------------------------------------------- yönlendirme

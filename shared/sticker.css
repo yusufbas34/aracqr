@@ -93,3 +93,7 @@
 .only-pin .pin{border-top:calc(var(--k)*.4mm) dashed #9aa0a8}
 .small-size .sticker .how{display:none}
 .tek .sticker,.tek .pin{border-color:transparent;border-radius:0}
+/* basılı sipariş: A4 baskı alanı 190x277 mm */
+.sheet{width:190mm;height:277mm;display:flex;flex-direction:column;gap:3mm;background:#fff}
+.sheet-row{display:flex;gap:3mm;align-items:flex-start}
+.sheet .grid{display:block}

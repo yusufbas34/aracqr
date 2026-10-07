@@ -89,3 +89,15 @@ const SIZES = {
 const A4 = {W: 210, H: 297, M: 10, G: 3};
 const dims = size => { const [w, h] = size.split("x").map(Number); return {w, h, k: Math.min(w / 60, h / 90)}; };
 const perA4 = ({w, h}) => Math.floor((A4.W - 2 * A4.M + A4.G) / (w + A4.G)) * Math.floor((A4.H - 2 * A4.M + A4.G) / (h + A4.G));
+
+// ---------------------------------------------------------------- basılı sipariş sayfası
+// A4 vinil sayfa: aynı QR 6 farklı ölçüde, toplam 9 sticker. 190×277 mm baskı alanına sığar (10 mm kenar boşluğu).
+const ORDER_SHEET = [["80x120", "74x105"], ["60x90", "55x85", "50x75"], ["40x60", "40x60", "40x60", "40x60"]];
+const ORDER_SIZES = [...new Set(ORDER_SHEET.flat())];
+
+function orderSheetHtml(code, design, link) {
+  return `<div class="sheet">${ORDER_SHEET.map(row => `<div class="sheet-row">${row.map(size => {
+    const {w, h, k} = dims(size);
+    return `<div class="grid${k < .75 ? " small-size" : ""}" style="--w:${w}mm;--h:${h}mm;--k:${k}">${stickerHtml(code, design, link)}</div>`;
+  }).join("")}</div>`).join("")}</div>`;
+}
