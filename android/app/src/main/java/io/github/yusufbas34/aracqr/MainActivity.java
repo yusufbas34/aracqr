@@ -72,8 +72,9 @@ public class MainActivity extends Activity {
         if (state != null) web.restoreState(state);
         else web.loadUrl(START_URL + (route != null && route.startsWith("#/") ? route : ""));
 
-        Notifier.schedule(this);
-        askNotificationPermission();
+        // Bildirim altyapısı uygulamanın açılmasını asla engellememeli
+        try { Notifier.schedule(this); } catch (Exception e) { /* bildirimler çalışmaz, uygulama çalışır */ }
+        try { askNotificationPermission(); } catch (Exception e) { }
     }
 
     /** Bildirime dokunulunca uygulama açıksa ilgili sayfaya geç (ör. #/siparis/AQ-…). */
