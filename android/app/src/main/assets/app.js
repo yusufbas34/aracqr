@@ -525,7 +525,16 @@ const STATUS = {
 };
 const orders = () => store.get("orders", []);
 const findOrder = code => orders().find(o => o.code === code);
-function saveOrder(o) { store.set("orders", [o, ...orders().filter(x => x.code !== o.code)]); }
+function saveOrder(o) { store.set("orders", [o, ...orders().filter(x => x.code !== o.code)]); syncOrdersToAndroid(); }
+
+// Arka plan bildirimleri için siparişleri Android tarafına bildirir (durum değişince bildirim gelsin)
+function syncOrdersToAndroid() {
+  try {
+    if (bridge && typeof bridge.syncOrders === "function") {
+      bridge.syncOrders(JSON.stringify(orders().map(o => ({code: o.code, token: o.token, status: o.status}))));
+    }
+  } catch (e) {}
+}
 
 let shopCache;
 async function loadShop() {
@@ -744,4 +753,5 @@ function route() {
 document.getElementById("back").onclick = () => history.length > 1 ? history.back() : (location.hash = "#/");
 addEventListener("hashchange", route);
 route();
+syncOrdersToAndroid();
 if (!store.get("onboarded", false)) showOnboarding();

@@ -3,6 +3,7 @@ package io.github.yusufbas34.aracqr;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Insets;
 import android.net.Uri;
@@ -67,8 +68,30 @@ public class MainActivity extends Activity {
             }
         });
 
+        String route = getIntent().getStringExtra(Notifier.EXTRA_ROUTE);
         if (state != null) web.restoreState(state);
-        else web.loadUrl(START_URL);
+        else web.loadUrl(START_URL + (route != null && route.startsWith("#/") ? route : ""));
+
+        Notifier.schedule(this);
+        askNotificationPermission();
+    }
+
+    /** Bildirime dokunulunca uygulama açıksa ilgili sayfaya geç (ör. #/siparis/AQ-…). */
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        String route = intent.getStringExtra(Notifier.EXTRA_ROUTE);
+        if (route != null && route.matches("#/[A-Za-z0-9/_-]+")) web.evaluateJavascript("location.hash='" + route + "'", null);
+    }
+
+    /** Android 13+: sipariş ve güncelleme bildirimleri için izin (bir kez sorulur). */
+    private void askNotificationPermission() {
+        if (Build.VERSION.SDK_INT < 33) return;
+        if (checkSelfPermission("android.permission.POST_NOTIFICATIONS") == PackageManager.PERMISSION_GRANTED) return;
+        android.content.SharedPreferences p = getSharedPreferences("aracqr", MODE_PRIVATE);
+        if (p.getBoolean("askedNotif", false)) return;
+        p.edit().putBoolean("askedNotif", true).apply();
+        requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 1);
     }
 
     /**
@@ -142,6 +165,12 @@ public class MainActivity extends Activity {
         public long versionCode() {
             try { return getPackageManager().getPackageInfo(getPackageName(), 0).getLongVersionCode(); }
             catch (Exception e) { return 0; }
+        }
+
+        /** Siparişler değişince web arayüzü bildirir: arka plan kontrolü bunlara bakar. */
+        @JavascriptInterface
+        public void syncOrders(String json) {
+            Notifier.syncOrders(MainActivity.this, json);
         }
 
         @JavascriptInterface
