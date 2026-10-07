@@ -81,6 +81,7 @@ details p{margin:8px 0 0}
 .req.order.st-odeme_bildirildi{border-left-color:var(--err)}.req.order.st-onaylandi{border-left-color:#e0a100}
 .req.order.st-baskida{border-left-color:var(--band)}.req.order.st-kargolandi{border-left-color:var(--ok)}
 .tabs{overflow-x:auto}.tabs button{white-space:nowrap}
+.req .act button.cancel{background:#fff;color:var(--err);border:2px solid #f0c7c4}
 details.howto{background:#f4f6fa;margin:12px 0 0}
 details.howto ol{margin:8px 0 0;padding-left:20px;line-height:1.6;font-size:15px}
 .req h3{margin:0;font-size:18px}
@@ -918,7 +919,7 @@ async function showOrders(orders, requests) {
   show(`
     ${tabsHtml(requests ? requests.filter(r => r.status === "yeni").length : 0)}
     ${orders ? "" : setupHtml("Sipariş sistemi kurulu değil.", "siparis.sql")}
-    ${orders && shopVersion < 3 ? setupHtml("Sipariş sistemi güncellemesi var: ödeme adımı kalktı, yeni siparişler size Telegram'dan gelir.", "siparis.sql") : ""}
+    ${orders && shopVersion < 4 ? setupHtml("Sipariş sistemi güncellemesi var: ödemesiz sipariş, Telegram bildirimi ve sipariş iptali.", "siparis.sql") : ""}
     ${orders && shop && !shop.active ? `<div class="msg err">Satış kapalı: uygulamada sipariş alınmıyor. <b>Ayarlar</b> sekmesinden açabilirsiniz.</div>` : ""}
     <div class="bar">
       <select id="ofilter" aria-label="Sipariş durumu">
@@ -934,7 +935,7 @@ async function showOrders(orders, requests) {
           <div>
             <h3>${esc(o.code)} · ${esc(o.amount)} TL</h3>
             <div class="meta">
-              <b>${esc(ORDER_STATUS[o.status] || o.status)}</b> · ${esc(date(o.created_at))}<br>
+              <b>${esc(ORDER_STATUS[o.status] || o.status)}</b>${o.status === "iptal" && o.cancelled_by ? ` (${o.cancelled_by === "musteri" ? "müşteri uygulamadan iptal etti" : "siz iptal ettiniz"})` : ""} · ${esc(date(o.created_at))}<br>
               <b>${esc(o.full_name)}</b> · <a href="tel:${esc(o.phone)}">${esc(prettyPhone(o.phone))}</a>
               · <a href="${esc(waLink(o, customerMessage(o)))}" target="_blank" rel="noopener">WhatsApp</a>
               ${o.email ? ` · <a href="mailto:${esc(o.email)}">${esc(o.email)}</a>` : ""}<br>
@@ -956,6 +957,7 @@ async function showOrders(orders, requests) {
               `<option value="${k}"${k === o.status ? " selected" : ""}>${esc(n)}</option>`).join("")}</select>
             <input data-f="note" placeholder="Kendi notunuz" value="${esc(o.admin_note || "")}" aria-label="Not">
             <button data-act="save" style="background:#2b3240">Kaydet</button>
+            ${!["iptal", "kargolandi"].includes(o.status) ? `<button data-act="cancel" class="cancel">İptal et</button>` : ""}
           </div>
         </div>`).join("")}
     </div>`, true);
@@ -1000,6 +1002,9 @@ async function showOrders(orders, requests) {
       } else if (act === "shipped") {
         if (!f("tracking") && !confirm("Takip numarası girmeden kargolandı olarak işaretlensin mi?")) return;
         await update("kargolandi", () => toast("Kargolandı. Müşteriye WhatsApp'tan takip numarasını iletebilirsiniz."));
+      } else if (act === "cancel") {
+        if (!confirm(`${o.code} (${o.full_name}) iptal edilsin mi? Müşteri uygulamada “Sipariş tarafımızdan iptal edildi” görür.`)) return;
+        await update("iptal", () => toast("Sipariş iptal edildi. İsterseniz müşteriye WhatsApp'tan haber verin."));
       } else if (act === "save") {
         if (f("status") === "iptal" && o.status !== "iptal" && !confirm(`${o.code} iptal edilsin mi?`)) return;
         await update(f("status"), () => toast("Kaydedildi."));

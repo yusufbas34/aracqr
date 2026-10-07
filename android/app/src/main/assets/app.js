@@ -574,7 +574,7 @@ async function refreshOrders() {
   for (const r of rows || []) {
     const o = findOrder(r.code);
     if (!o) continue;
-    saveOrder({...o, status: r.status, tracking: r.tracking});
+    saveOrder({...o, status: r.status, tracking: r.tracking, cancelledBy: r.cancelled_by});
     const card = document.querySelector(`[data-order="${CSS.escape(r.code)}"]`);
     if (card) card.outerHTML = orderCardHtml(findOrder(r.code));
   }
@@ -696,12 +696,33 @@ async function showOrderStatus(orderCode, isNew) {
   await refreshOrders();
   const cur = findOrder(orderCode);
   const steps = ["yeni", "onaylandi", "baskida", "kargolandi"];
+  const cancellable = ["yeni", "odeme_bekleniyor", "odeme_bildirildi"].includes(cur.status);
   const at = steps.indexOf(["odeme_bekleniyor", "odeme_bildirildi"].includes(cur.status) ? "yeni" : cur.status);
   show(`Sipariş ${cur.code}`, `
-    <div class="msg ${cur.status === "iptal" ? "err" : "ok"}"><b>${esc(STATUS[cur.status] || cur.status)}</b>${cur.tracking ? `<br>Kargo takip no: <b>${esc(cur.tracking)}</b>` : ""}</div>
+    <div class="msg ${cur.status === "iptal" ? "err" : "ok"}"><b>${esc(STATUS[cur.status] || cur.status)}</b>${
+      cur.status === "iptal" ? `<br>${cur.cancelledBy === "musteri" ? "Siparişinizi siz iptal ettiniz." : "Sipariş tarafımızdan iptal edildi."}` : ""}${
+      cur.tracking ? `<br>Kargo takip no: <b>${esc(cur.tracking)}</b>` : ""}</div>
     ${cur.status === "iptal" ? "" : `<ol class="timeline">${steps.map((st, i) => `<li class="${at >= i ? "on" : ""}">${esc(STATUS[st])}</li>`).join("")}</ol>`}
     <p>Tutar: <b>${esc(cur.amount)} TL</b>. Sorunuz olursa sipariş numaranızla bize ulaşın.</p>
-    <a class="btn ghost" href="#/siparisler">Siparişlerim</a>`, true);
+    <a class="btn ghost" href="#/siparisler">Siparişlerim</a>
+    ${cancellable ? `<button class="btn danger" type="button" id="cancel">Siparişi iptal et</button>
+      <div class="hint">Siparişiniz onaylanana kadar iptal edebilirsiniz.</div>`
+      : cur.status !== "iptal" && cur.status !== "kargolandi" ? `<div class="hint">Sipariş onaylandığı için uygulamadan iptal edilemez; iptal için sipariş numaranızla bize ulaşın.</div>` : ""}`, true);
+  const cancel = document.getElementById("cancel");
+  if (cancel) cancel.onclick = async () => {
+    if (!confirm(`${cur.code} numaralı sipariş iptal edilsin mi?`)) return;
+    cancel.disabled = true;
+    let res;
+    try { res = await rpc("order_cancel", {p_code: cur.code, p_token: cur.token}); }
+    catch (e) {
+      cancel.disabled = false;
+      return toast(e.status === 404 ? "İptal şu an yapılamıyor; sipariş numaranızla bize ulaşın." : "Sunucuya ulaşılamadı, tekrar deneyin.");
+    }
+    if (res?.ok) { saveOrder({...cur, status: "iptal", cancelledBy: "musteri"}); toast("Siparişiniz iptal edildi."); }
+    else if (res?.error === "too_late") { saveOrder({...cur, status: res.status}); toast("Sipariş onaylandığı için uygulamadan iptal edilemiyor; bize ulaşın.", 5000); }
+    else toast("Sipariş bulunamadı.");
+    showOrderStatus(orderCode);
+  };
 }
 
 // ---------------------------------------------------------------- yönlendirme

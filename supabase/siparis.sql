@@ -63,10 +63,13 @@ alter table public.orders alter column district drop not null;
 alter table public.orders alter column address drop not null;
 alter table public.orders alter column status set default 'yeni';
 alter table public.orders drop constraint if exists orders_status_check;
+-- sürüm 4: iptal bilgisi (müşteri uygulamadan ya da yönetici panelden)
+alter table public.orders add column if not exists cancelled_by text;   -- 'musteri' | 'yonetici'
+alter table public.orders add column if not exists cancelled_at timestamptz;
 alter table public.orders add constraint orders_status_check
   check (status in ('yeni', 'odeme_bekleniyor', 'odeme_bildirildi', 'onaylandi', 'baskida', 'kargolandi', 'iptal'));
 
-create or replace function public.aracqr_shop_version() returns integer language sql immutable as 'select 3';
+create or replace function public.aracqr_shop_version() returns integer language sql immutable as 'select 4';
 
 -- ---------------------------------------------------------------- bildirim
 -- Telegram ve/veya e-posta (Resend) gönderir. Hata olursa siparişi bozmaz, yalnızca uyarı yazar.
@@ -218,11 +221,31 @@ begin
 end $$;
 
 -- Müşteri kendi siparişlerinin durumunu sorgular: [{code, status, tracking}]
+-- Müşteri kendi siparişini iptal eder: yalnızca henüz onaylanmamışsa. {ok, status} ya da {ok:false, error:'too_late'|'not_found'}
+create or replace function public.order_cancel(p_code text, p_token uuid)
+returns json
+language plpgsql security definer set search_path = public
+as $$
+declare o orders;
+begin
+  select * into o from orders where code = upper(trim(coalesce(p_code, ''))) and token = p_token for update;
+  if not found then return json_build_object('ok', false, 'error', 'not_found'); end if;
+  if o.status = 'iptal' then return json_build_object('ok', true, 'status', 'iptal'); end if;
+  if o.status not in ('yeni', 'odeme_bekleniyor', 'odeme_bildirildi') then
+    return json_build_object('ok', false, 'error', 'too_late', 'status', o.status);
+  end if;
+  update orders set status = 'iptal', cancelled_by = 'musteri', cancelled_at = now(), updated_at = now() where id = o.id;
+  perform public.aracqr_notify('Araç QR: sipariş iptal edildi ' || o.code,
+    o.full_name || ' (' || o.phone || ') ' || o.code || ' numaralı siparişini uygulamadan iptal etti.' || E'\n\n' ||
+    'Panel: https://yusufbas34.github.io/aracqr/?admin');
+  return json_build_object('ok', true, 'status', 'iptal');
+end $$;
+
 create or replace function public.order_status(p_codes text[], p_tokens uuid[])
 returns json
 language sql stable security definer set search_path = public
 as $$
-  select coalesce(json_agg(json_build_object('code', o.code, 'status', o.status, 'tracking', o.tracking)), '[]'::json)
+  select coalesce(json_agg(json_build_object('code', o.code, 'status', o.status, 'tracking', o.tracking, 'cancelled_by', o.cancelled_by)), '[]'::json)
   from unnest(p_codes, p_tokens) as q(code, token)
   join orders o on o.code = upper(trim(q.code)) and o.token = q.token;
 $$;
@@ -290,7 +313,9 @@ as $$
 begin
   perform public.admin_list(p_key);  -- şifre kontrolü
   update orders set status = p_status, tracking = nullif(trim(coalesce(p_tracking, '')), ''),
-    admin_note = nullif(trim(coalesce(p_admin_note, '')), ''), updated_at = now()
+    admin_note = nullif(trim(coalesce(p_admin_note, '')), ''), updated_at = now(),
+    cancelled_by = case when p_status = 'iptal' then coalesce(cancelled_by, 'yonetici') else null end,
+    cancelled_at = case when p_status = 'iptal' then coalesce(cancelled_at, now()) else null end
   where id = p_id;
 end $$;
 
@@ -298,6 +323,7 @@ revoke all on function public.shop_info() from public;
 revoke all on function public.order_create(text, text, text, text, text, text, text, text, text, text) from public;
 revoke all on function public.order_paid(text, uuid) from public;
 revoke all on function public.order_status(text[], uuid[]) from public;
+revoke all on function public.order_cancel(text, uuid) from public;
 revoke all on function public.admin_shop_get(text) from public;
 revoke all on function public.admin_shop_set(text, boolean, integer, text, text, text, text, text, text, text, text, text) from public;
 revoke all on function public.admin_notify_test(text) from public;
@@ -308,6 +334,7 @@ grant execute on function public.shop_info() to anon, authenticated;
 grant execute on function public.order_create(text, text, text, text, text, text, text, text, text, text) to anon, authenticated;
 grant execute on function public.order_paid(text, uuid) to anon, authenticated;
 grant execute on function public.order_status(text[], uuid[]) to anon, authenticated;
+grant execute on function public.order_cancel(text, uuid) to anon, authenticated;
 grant execute on function public.admin_shop_get(text) to anon, authenticated;
 grant execute on function public.admin_shop_set(text, boolean, integer, text, text, text, text, text, text, text, text, text) to anon, authenticated;
 grant execute on function public.admin_notify_test(text) to anon, authenticated;
