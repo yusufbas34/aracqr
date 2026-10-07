@@ -318,7 +318,7 @@ async function savePdf(codes) {
         if (!el.offsetParent) continue; // seçili modda gizli
         const s = await snap(el);
         if (pdf) pdf.addPage(fmt, "portrait"); else pdf = new jsPDF({unit: "mm", format: fmt, orientation: "portrait"});
-        pdf.addImage(s.img, "PNG", (w - s.w) / 2, el.classList.contains("pin") ? 0 : (h - s.h) / 2, s.w, s.h);
+        pdf.addImage(s.img, "PNG", (w - s.w) / 2, el.classList.contains("pin") ? 0 : (h - s.h) / 2, s.w, s.h, undefined, "FAST");
       }
     }
   } else {
@@ -329,7 +329,7 @@ async function savePdf(codes) {
       const s = await snap(tag.querySelector(".block"));
       if (x + s.w > W - M + .1) { x = M; y += rowH + G; rowH = 0; }
       if (y + s.h > H - M + .1) { pdf.addPage(); x = M; y = M; rowH = 0; }
-      pdf.addImage(s.img, "PNG", x, y, s.w, s.h);
+      pdf.addImage(s.img, "PNG", x, y, s.w, s.h, undefined, "FAST");
       x += s.w + G; rowH = Math.max(rowH, s.h);
     }
   }
@@ -822,7 +822,7 @@ async function orderPdf(o) {
     await document.fonts?.ready;
     const canvas = await html2canvas(box.firstElementChild, {scale: 4, backgroundColor: "#ffffff", logging: false});
     const pdf = new window.jspdf.jsPDF({unit: "mm", format: "a4"});
-    pdf.addImage(canvas.toDataURL("image/png"), "PNG", 10, 10, 190, 277);
+    pdf.addImage(canvas.toDataURL("image/png"), "PNG", 10, 10, 190, 277, undefined, "FAST");
     return pdf.output("blob");
   } finally { box.remove(); }
 }
