@@ -3,6 +3,7 @@ package io.github.yusufbas34.aracqr;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.Insets;
 import android.net.Uri;
 import android.os.Build;
@@ -71,11 +72,21 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * Android 15 (API 35) uygulamayı ekranın tamamına yayar: üst çubuk saat/bildirim alanının, form alanları
-     * klavyenin altına girer. Sistem çubukları ve klavye kadar boşluk bırakır; üstteki şeridi marka rengine boyar.
+     * Uygulama her Android sürümünde ekranın tamamına çizilir ve sistem çubukları (saat/bildirim, gezinme) ile
+     * klavye kadar boşluğu kendisi bırakır. Böylece üst çubuk bildirim perdesinin altına girmez; Android 15'in
+     * zorunlu tam ekran davranışıyla da eski sürümlerle de aynı görünür. Üstteki şerit marka rengine boyanır.
      */
+    @SuppressWarnings("deprecation")
     private View edgeToEdgeSafe(WebView content) {
-        if (Build.VERSION.SDK_INT < 35) return content;  // eski sürümlerde sistem bunu zaten yapar
+        getWindow().setStatusBarColor(Color.TRANSPARENT);
+        getWindow().setNavigationBarColor(Color.TRANSPARENT);
+        if (Build.VERSION.SDK_INT >= 30) {
+            getWindow().setDecorFitsSystemWindows(false);
+        } else {
+            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+        }
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(0xFFEEF0F3);
         View statusBar = new View(this);
@@ -83,12 +94,20 @@ public class MainActivity extends Activity {
         root.addView(content, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         root.addView(statusBar, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0));
         root.setOnApplyWindowInsetsListener((v, insets) -> {
-            Insets bars = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
-            Insets ime = insets.getInsets(WindowInsets.Type.ime());
+            int left, top, right, bottom;
+            if (Build.VERSION.SDK_INT >= 30) {
+                Insets bars = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
+                Insets ime = insets.getInsets(WindowInsets.Type.ime());
+                left = bars.left; top = bars.top; right = bars.right; bottom = Math.max(bars.bottom, ime.bottom);
+            } else {
+                // Android 10: klavye yüksekliği de sistem pencere boşluğunun içindedir
+                left = insets.getSystemWindowInsetLeft(); top = insets.getSystemWindowInsetTop();
+                right = insets.getSystemWindowInsetRight(); bottom = insets.getSystemWindowInsetBottom();
+            }
             FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) content.getLayoutParams();
-            lp.setMargins(bars.left, bars.top, bars.right, Math.max(bars.bottom, ime.bottom));
+            lp.setMargins(left, top, right, bottom);
             content.setLayoutParams(lp);
-            statusBar.getLayoutParams().height = bars.top;
+            statusBar.getLayoutParams().height = top;
             statusBar.requestLayout();
             return WindowInsets.CONSUMED;
         });
@@ -118,6 +137,19 @@ public class MainActivity extends Activity {
 
     /** JavaScript'ten window.AndroidBridge olarak çağrılır. */
     private class Bridge {
+        /** Kurulu sürüm (GitHub derleme numarası): güncelleme kontrolü ve Profilim ekranı için. */
+        @JavascriptInterface
+        public long versionCode() {
+            try { return getPackageManager().getPackageInfo(getPackageName(), 0).getLongVersionCode(); }
+            catch (Exception e) { return 0; }
+        }
+
+        @JavascriptInterface
+        public String versionName() {
+            try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; }
+            catch (Exception e) { return ""; }
+        }
+
         /** Sayfanın baskı görünümünü Android yazdırma ekranına gönderir (oradan "PDF olarak kaydet" de seçilebilir). */
         @JavascriptInterface
         public void print(String jobName, double widthMm, double heightMm) {

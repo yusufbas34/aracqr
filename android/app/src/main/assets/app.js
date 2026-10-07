@@ -80,12 +80,43 @@ const stickerAt = (code, design, link, size) =>
   `<div class="grid${dims(size).k < .75 ? " small-size" : ""}" style="${sizeVars(size)}">${stickerHtml(code, design, link)}</div>`;
 
 // ---------------------------------------------------------------- ekranlar
-function show(title, html, canGoBack, cls = "") {
+// tab: alt menüde seçili sekme ("qr" | "orders" | "profile"); verilmezse alt menü gizlenir
+function show(title, html, canGoBack, cls = "", tab = "") {
   document.getElementById("apptitle").textContent = title;
   document.getElementById("back").hidden = !canGoBack;
+  const bar = document.getElementById("tabbar");
+  bar.hidden = !tab;
+  bar.querySelectorAll("a").forEach(a => a.classList.toggle("on", a.dataset.tab === tab));
+  document.body.classList.toggle("has-tabbar", !!tab);
   app.className = cls;
   app.innerHTML = html;
   scrollTo(0, 0);
+}
+
+// ---------------------------------------------------------------- sürüm ve güncelleme
+const APK_URL = "https://github.com/yusufbas34/aracqr/releases/download/apk-son/arac-qr.apk";
+const myVersion = () => { try { return bridge ? Number(bridge.versionCode()) || 0 : 0; } catch (e) { return 0; } };
+const myVersionName = () => { try { return bridge ? bridge.versionName() : "tarayıcı"; } catch (e) { return ""; } };
+let latestCheck;
+// GitHub'daki son APK'nın derleme numarası (sürüm notunda "Derleme N")
+function latestVersion() {
+  return latestCheck ||= fetch("https://api.github.com/repos/yusufbas34/aracqr/releases/tags/apk-son")
+    .then(r => r.json()).then(j => Number((/Derleme (\d+)/.exec(j.body || "") || [])[1]) || 0).catch(() => 0);
+}
+async function updateBanner(slotId) {
+  const latest = await latestVersion(), mine = myVersion();
+  const slot = document.getElementById(slotId);
+  if (slot && mine && latest > mine) {
+    slot.innerHTML = `<a class="update" href="${APK_URL}?v=${latest}">🔔 <span><b>Yeni sürüm var (1.0.${latest})</b>Güncellemek için dokunun, inen dosyayı açın.</span></a>`;
+  }
+}
+
+// ---------------------------------------------------------------- profil (bu telefonda saklanır, sipariş formunu doldurur)
+function profile() {
+  const p = store.get("profile", null);
+  if (p) return p;
+  const old = store.get("lastAddress", {}) || {};  // eski sürümden
+  return {name: old.name || "", phone: old.phone || "", email: old.email || "", city: old.city || "", district: old.district || "", address: old.address || ""};
 }
 
 function showHome() {
@@ -103,9 +134,10 @@ function showHome() {
         <li>İstediğiniz ölçüde yazdırın, camınıza yapıştırın</li>
       </ol>
       <a class="btn" href="#/yeni">Başlayalım</a>
-      <button class="btn ghost" type="button" id="howto">Nasıl çalışır?</button>`), bindHowto();
+      <button class="btn ghost" type="button" id="howto">Nasıl çalışır?</button>`, false, "", "qr"), bindHowto();
   }
-  show("Etiketlerim", `
+  show("QR'larım", `
+    <div id="update-slot"></div>
     <div id="promo-slot"></div>
     <div class="cards">
       ${list.map(t => `
@@ -115,16 +147,74 @@ function showHome() {
             <span class="scan" data-scan="${esc(t.code)}">${scanChip(store.get("stats", {})[t.code])}</span></div>
         </a>`).join("")}
     </div>
-    <a class="btn" href="#/yeni">+ Yeni QR etiket oluştur</a>
-    ${orders().length ? `<h2>Siparişlerim</h2><div class="cards">${orders().map(orderCardHtml).join("")}</div>` : ""}
-    <button class="btn ghost" type="button" id="howto">Nasıl çalışır?</button>`);
-  bindHowto();
-  refreshOrders();
+    <a class="btn" href="#/yeni">+ Yeni QR etiket oluştur</a>`, false, "", "qr");
+  updateBanner("update-slot");
   loadShop().then(shop => {
     const slot = document.getElementById("promo-slot");
     if (slot && shop?.active) slot.innerHTML = promoHtml(list[0], shop, true);
   });
   loadStats(list).then(st => document.querySelectorAll("[data-scan]").forEach(el => { el.innerHTML = scanChip(st[el.dataset.scan]); }));
+}
+
+function showOrders() {
+  const list = orders();
+  show("Siparişlerim", list.length ? `
+    <div class="cards">${list.map(orderCardHtml).join("")}</div>
+    <p class="hint" style="margin-top:14px">Durumlar otomatik güncellenir. Sorunuz olursa sipariş numaranızla bize ulaşın.</p>` : `
+    <div class="empty">
+      <div style="font-size:56px" aria-hidden="true">📦</div>
+      <h1>Henüz siparişiniz yok</h1>
+      <p>Yazıcıyla uğraşmayın: su geçirmez sticker setinizi biz basıp kapınıza gönderelim.</p>
+    </div>
+    ${tags().length ? `<a class="btn order-go" href="#/etiket/${encodeURIComponent(tags()[0].code)}/siparis">Sticker seti sipariş et</a>` : `<a class="btn" href="#/yeni">Önce QR'ınızı oluşturun</a>`}`,
+    false, "", "orders");
+  refreshOrders();
+}
+
+function showProfile(saved = false) {
+  const p = profile(), val = k => `value="${esc(p[k] || "")}"`;
+  show("Profilim", `
+    ${saved ? `<div class="msg ok" role="status">Kaydedildi. Sipariş formu bu bilgilerle otomatik dolar.</div>` : ""}
+    <h2 style="margin-top:4px">Kayıtlı bilgilerim</h2>
+    <form id="pf" class="opts" style="padding-top:2px" novalidate>
+      <div id="pf-msg"></div>
+      <label for="p-name">Ad soyad</label><input id="p-name" autocomplete="name" ${val("name")}>
+      <label for="p-phone">Telefon</label><input id="p-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="05xx xxx xx xx" ${val("phone")}>
+      <label for="p-email">E-posta</label><input id="p-email" type="email" inputmode="email" autocomplete="email" ${val("email")}>
+      <div class="row">
+        <div><label for="p-city">İl</label><input id="p-city" autocomplete="address-level1" ${val("city")}></div>
+        <div><label for="p-district">İlçe</label><input id="p-district" autocomplete="address-level2" ${val("district")}></div>
+      </div>
+      <label for="p-address">Açık adres</label>
+      <textarea id="p-address" rows="3" autocomplete="street-address" placeholder="Mahalle, cadde/sokak, bina no, daire">${esc(p.address || "")}</textarea>
+      <div class="hint">Bu bilgiler yalnızca bu telefonda saklanır; sipariş verdiğinizde gönderilir.</div>
+      <button class="btn" type="submit">Kaydet</button>
+    </form>
+
+    <h2>Uygulama</h2>
+    <div class="opts" style="padding-top:14px">
+      <dl class="kv"><dt>Sürüm</dt><dd id="ver">${esc(myVersionName() || "-")}</dd></dl>
+      <div id="update-slot"></div>
+      <button class="btn ghost" type="button" id="howto">Nasıl çalışır?</button>
+      <a class="btn ghost" href="${SITE}">Web sitesi</a>
+    </div>`, false, "", "profile");
+  bindHowto();
+  latestVersion().then(latest => {
+    const mine = myVersion(), el = document.getElementById("update-slot");
+    if (!el) return;
+    if (mine && latest > mine) updateBanner("update-slot");
+    else if (mine && latest) el.innerHTML = `<div class="hint" style="margin:6px 0 0">✓ En güncel sürümü kullanıyorsunuz.</div>`;
+  });
+  document.getElementById("pf").addEventListener("submit", ev => {
+    ev.preventDefault();
+    const g = id => document.getElementById(id).value.trim();
+    const v = {name: g("p-name"), phone: g("p-phone"), email: g("p-email"), city: g("p-city"), district: g("p-district"), address: g("p-address")};
+    const fail = t => { document.getElementById("pf-msg").innerHTML = `<div class="msg err" role="alert">${esc(t)}</div>`; };
+    if (v.phone && !normalizePhone(v.phone)) return fail("Telefon numarası geçersiz. Örnek: 0532 123 45 67");
+    if (v.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.email)) return fail("E-posta adresi geçersiz.");
+    store.set("profile", v);
+    showProfile(true);
+  });
 }
 
 const scanChip = st => st ? `👀 ${st.last30} okutma / 30 gün` : "";
@@ -526,7 +616,7 @@ async function showOrder(tagCode, error = "", v = null) {
       <div class="msg info"><b>Basılı sipariş şu an kapalı.</b><br>Kısa süre içinde açılacak. Bu sırada etiketinizi kendiniz yazdırabilirsiniz.</div>
       <a class="btn" href="#/etiket/${encodeURIComponent(t.code)}">Etikete dön</a>`, true);
   }
-  v = v || store.get("lastAddress", {}) || {};
+  v = v || profile();
   const val = k => `value="${esc(v[k] || "")}"`;
   const zoom = (Math.min(innerWidth, 560) - 64) / (190 * 96 / 25.4);
   show("Biz basalım, gönderelim", `
@@ -569,7 +659,8 @@ async function showOrder(tagCode, error = "", v = null) {
       : !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v2.email) ? "E-posta adresinizi yazın. Örnek: ornek@mail.com"
       : !v2.ok ? "Devam etmek için onay kutusunu işaretleyin." : "";
     if (err) return showOrder(tagCode, err, v2);
-    store.set("lastAddress", {...v2, ok: false});
+    store.set("profile", {...profile(), name: v2.name, phone: v2.phone, email: v2.email,
+      city: v2.city || profile().city, district: v2.district || profile().district, address: v2.address || profile().address});
     ev.submitter && (ev.submitter.disabled = true, ev.submitter.textContent = "Gönderiliyor…");
     let res;
     try {
@@ -597,7 +688,7 @@ async function showOrderStatus(orderCode, isNew) {
         <h1>Siparişiniz alındı!</h1>
         <p>En kısa sürede sizi arayıp ödeme ve teslimatı konuşacağız. Sipariş no: <b>${esc(o.code)}</b></p>
       </div>
-      <a class="btn" href="#/">Ana sayfa</a>`, false);
+      <a class="btn" href="#/siparisler">Siparişlerim</a>`, false);
     confetti();
     return;
   }
@@ -610,7 +701,7 @@ async function showOrderStatus(orderCode, isNew) {
     <div class="msg ${cur.status === "iptal" ? "err" : "ok"}"><b>${esc(STATUS[cur.status] || cur.status)}</b>${cur.tracking ? `<br>Kargo takip no: <b>${esc(cur.tracking)}</b>` : ""}</div>
     ${cur.status === "iptal" ? "" : `<ol class="timeline">${steps.map((st, i) => `<li class="${at >= i ? "on" : ""}">${esc(STATUS[st])}</li>`).join("")}</ol>`}
     <p>Tutar: <b>${esc(cur.amount)} TL</b>. Sorunuz olursa sipariş numaranızla bize ulaşın.</p>
-    <a class="btn ghost" href="#/">Ana sayfa</a>`, true);
+    <a class="btn ghost" href="#/siparisler">Siparişlerim</a>`, true);
 }
 
 // ---------------------------------------------------------------- yönlendirme
@@ -621,6 +712,8 @@ function route() {
   if (parts[0] === "etiket" && parts[2] === "numara") return showChangeNumber(parts[1]);
   if (parts[0] === "etiket" && parts[2] === "tasarim") return showDesigns(parts[1]);
   if (parts[0] === "etiket" && parts[2] === "siparis") return showOrder(parts[1]);
+  if (parts[0] === "siparisler") return showOrders();
+  if (parts[0] === "profil") return showProfile();
   if (parts[0] === "siparis") return showOrderStatus(parts[1], parts[2] === "yeni");
   if (parts[0] === "odeme") return showOrderStatus(parts[1]);  // eski bağlantılar
   if (parts[0] === "etiket") return showTag(parts[1], parts[2] === "yeni");
