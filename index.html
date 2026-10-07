@@ -40,7 +40,9 @@ input:focus,textarea:focus{outline:none;border-color:var(--band)}
 .hero{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;margin-bottom:34px}
 .hero h1{font-size:34px;line-height:1.1;margin-bottom:12px}
 .hero .lead{font-size:18px}
-.hero .cta{display:inline-block;width:auto;padding:14px 22px;margin-top:6px}
+.hero .cta{display:inline-block;width:auto;padding:14px 22px;margin:6px 8px 0 0}
+.hero .cta.alt{background:#2b3240}
+.hero .hint{font-size:14px;margin-top:10px}
 .showcase{display:flex;flex-direction:column;align-items:center;gap:8px}
 .showcase .grid{gap:0}
 .showcase button{font:inherit;font-size:14px;font-weight:600;color:var(--band);background:#fff;border:2px solid var(--line);
@@ -412,7 +414,8 @@ async function showAdmin() {
   catch (e) { return showAdminLogin(e.status ? "Şifre hatalı." : "Bağlantı hatası, tekrar deneyin."); }
   if (!Array.isArray(rows)) return showAdminLogin("Beklenmeyen yanıt, tekrar deneyin.");
   if (typeof qrcode !== "function") return showMessage("QR kütüphanesi yüklenemedi", "Sayfayı yenileyip tekrar deneyin.");
-  const [given, requests] = await Promise.all([loadGiven(), loadRequests()]);
+  const [given, requests, appReady] = await Promise.all([loadGiven(), loadRequests(),
+    rpc("aracqr_app_version", {}).then(v => v >= 1, () => false)]);
   if (adminTab === "requests") return showRequests(rows, given, requests);
   const state = r => r.phone ? "used" : given?.has(String(r.code).toUpperCase()) ? "given" : "ready";
   const count = {ready: 0, given: 0, used: 0};
@@ -446,6 +449,7 @@ async function showAdmin() {
       <button class="btn" id="add">10 etiket daha üret</button>
     </div>
     ${given ? "" : setupHtml('"Verildi" takibi kurulu değil.', "verildi.sql")}
+    ${appReady ? "" : setupHtml("Android uygulaması için veritabanı kurulumu eksik; kurulmadan uygulamada QR oluşturulamaz.", "uygulama.sql")}
     <p class="noprint">Talep edene etiket verirken tasarımı seçip <b>Yazdır ve ver</b> ya da <b>PDF kaydet ve ver</b>'e basın; etiket verildi olarak işaretlenip bu listeden kalkar.
       Kişi QR'ı okutup numarasını ve PIN'i girdiğinde etiket o numarayı aramaya başlar.
       Yazdırırken ölçek <b>%100 / Gerçek boyut</b> olmalı. Etiket yazıcısı ya da matbaa için “Her sayfaya bir etiket”i seçin; sayfa ölçüsü sticker ölçüsü olur.</p>
@@ -518,6 +522,8 @@ async function showAdmin() {
 }
 
 // ---------------------------------------------------------------- ana sayfa ve talep formu
+const APK_URL = "https://github.com/yusufbas34/aracqr/releases/download/apk-son/arac-qr.apk";
+
 function showcaseHtml() {
   if (typeof qrcode !== "function") return "";
   const keys = Object.keys(DESIGNS), d = keys[Math.floor(Math.random() * keys.length)];
@@ -529,8 +535,10 @@ function showHome() {
     <div class="hero">
       <div>
         <h1>Aracınızın önünü kapatan sizi tek dokunuşla arasın</h1>
-        <p class="lead">Camınıza yapıştırdığınız QR etiketi okutan kişi, numaranızı camda görmeden sizi doğrudan arar. Uygulama yok, üyelik yok.</p>
+        <p class="lead">Camınıza yapıştırdığınız QR etiketi okutan kişi, numaranızı camda görmeden sizi doğrudan arar. Okutan kişinin uygulama indirmesine ya da üye olmasına gerek yok.</p>
         <a class="btn cta" href="#talep">QR etiketi iste</a>
+        <a class="btn cta alt" href="${APK_URL}">📱 Android uygulamasını indir</a>
+        <p class="hint">Uygulamayla tasarımınızı seçip kendi QR'ınızı hemen oluşturabilir, istediğiniz ölçüde yazdırabilirsiniz.</p>
       </div>
       <div class="showcase" aria-label="Örnek etiket">
         <div id="sample">${showcaseHtml()}</div>
