@@ -460,7 +460,7 @@ async function showAdmin() {
   if (typeof qrcode !== "function") return showMessage("QR kütüphanesi yüklenemedi", "Sayfayı yenileyip tekrar deneyin.");
   const [given, requests, appReady, orderRows] = await Promise.all([loadGiven(), loadRequests(),
     rpc("aracqr_app_version", {}).then(v => v >= 2, () => false), loadOrders()]);
-  orderBadge = orderRows ? orderRows.filter(o => o.status === "odeme_bildirildi").length : 0;
+  orderBadge = orderRows ? orderRows.filter(o => NEW_ORDER.includes(o.status)).length : 0;
   if (adminTab === "requests") return showRequests(rows, given, requests);
   if (adminTab === "orders") return showOrders(orderRows, requests);
   if (adminTab === "settings") return showSettings(requests);
@@ -835,12 +835,13 @@ async function showRequests(rows, given, requests) {
 
 // ---------------------------------------------------------------- yönetim: basılı sticker siparişleri (supabase/siparis.sql)
 const ORDER_STATUS = {
-  odeme_bildirildi: "Ödeme yapıldı, kontrol edilecek", odeme_bekleniyor: "Ödeme bekleniyor (henüz havale yapılmadı)",
-  onaylandi: "Onaylandı, baskıcıya gönderilecek", baskida: "Baskıda", kargolandi: "Kargolandı", iptal: "İptal",
+  yeni: "Yeni: iletişime geçilecek", onaylandi: "Görüşüldü, baskıcıya gönderilecek", baskida: "Baskıda", kargolandi: "Kargolandı", iptal: "İptal",
+  odeme_bildirildi: "Eski: ödeme bildirildi", odeme_bekleniyor: "Eski: ödeme bekleniyor",
 };
+const NEW_ORDER = ["yeni", "odeme_bildirildi", "odeme_bekleniyor"];
 const SELF_SITE = "https://yusufbas34.github.io/aracqr/";
 const selfLink = code => `${SELF_SITE}?s=${encodeURIComponent(code)}`;
-let orderFilter = "odeme_bildirildi";
+let orderFilter = "yeni";
 
 async function loadOrders() {
   try { const r = await rpc("admin_orders", {p_key: adminKey}); return Array.isArray(r) ? r : null; }
@@ -883,8 +884,8 @@ Ekteki A4 sayfayı su geçirmez, UV dayanımlı vinil sticker olarak 1 adet basm
 Sipariş no: ${o.code}
 Teslimat adresi:
 ${o.full_name}
-${o.address}
-${o.district} / ${o.city}
+${o.address || "(adres eklenecek)"}
+${[o.district, o.city].filter(Boolean).join(" / ")}
 Tel: ${prettyPhone(o.phone)}
 
 Teşekkürler.`;
@@ -898,6 +899,7 @@ function waLink(o, text) {
 function customerMessage(o) {
   const first = o.full_name.split(" ")[0];
   return {
+    yeni: `Merhaba ${first}, Araç QR sticker siparişinizi (${o.code}) aldık, teşekkürler! Ödeme ve teslimat için size ulaşıyoruz.`,
     odeme_bekleniyor: `Merhaba ${first}, Araç QR siparişiniz (${o.code}) için ${o.amount} TL ödemenizi bekliyoruz.`,
     odeme_bildirildi: `Merhaba ${first}, Araç QR siparişinizin (${o.code}) ödemesini kontrol ediyoruz.`,
     onaylandi: `Merhaba ${first}, Araç QR siparişinizin (${o.code}) ödemesi alındı, stickerlarınız baskıya hazırlanıyor.`,
@@ -908,7 +910,7 @@ function customerMessage(o) {
 }
 
 async function showOrders(orders, requests) {
-  const shop = await loadShopAdmin();
+  const [shop, shopVersion] = await Promise.all([loadShopAdmin(), rpc("aracqr_shop_version", {}).catch(() => 0)]);
   const list = (orders || []).filter(o => orderFilter === "all" || o.status === orderFilter);
   const count = st => (orders || []).filter(o => o.status === st).length;
   const date = t => t ? new Date(t).toLocaleString("tr-TR", {dateStyle: "medium", timeStyle: "short"}) : "";
@@ -916,7 +918,8 @@ async function showOrders(orders, requests) {
   show(`
     ${tabsHtml(requests ? requests.filter(r => r.status === "yeni").length : 0)}
     ${orders ? "" : setupHtml("Sipariş sistemi kurulu değil.", "siparis.sql")}
-    ${orders && shop && !(shop.active && shop.iban && shop.account_name) ? `<div class="msg err">Satış kapalı: uygulamada sipariş alınmıyor. <b>Ayarlar</b> sekmesinden IBAN ve alıcı adını girip satışı açın.</div>` : ""}
+    ${orders && shopVersion < 3 ? setupHtml("Sipariş sistemi güncellemesi var: ödeme adımı kalktı, yeni siparişler size Telegram'dan gelir.", "siparis.sql") : ""}
+    ${orders && shop && !shop.active ? `<div class="msg err">Satış kapalı: uygulamada sipariş alınmıyor. <b>Ayarlar</b> sekmesinden açabilirsiniz.</div>` : ""}
     <div class="bar">
       <select id="ofilter" aria-label="Sipariş durumu">
         ${[...Object.entries(ORDER_STATUS).map(([k, n]) => [k, `${n} (${count(k)})`]), ["all", `Tümü (${orders?.length || 0})`]]
@@ -931,11 +934,11 @@ async function showOrders(orders, requests) {
           <div>
             <h3>${esc(o.code)} · ${esc(o.amount)} TL</h3>
             <div class="meta">
-              <b>${esc(ORDER_STATUS[o.status] || o.status)}</b> · ${esc(date(o.created_at))}${o.paid_at ? ` · ödeme bildirimi: ${esc(date(o.paid_at))}` : ""}<br>
+              <b>${esc(ORDER_STATUS[o.status] || o.status)}</b> · ${esc(date(o.created_at))}<br>
               <b>${esc(o.full_name)}</b> · <a href="tel:${esc(o.phone)}">${esc(prettyPhone(o.phone))}</a>
               · <a href="${esc(waLink(o, customerMessage(o)))}" target="_blank" rel="noopener">WhatsApp</a>
               ${o.email ? ` · <a href="mailto:${esc(o.email)}">${esc(o.email)}</a>` : ""}<br>
-              ${esc(o.address)}, ${esc(o.district)} / ${esc(o.city)}<br>
+              ${o.address || o.city ? `${esc([o.address, [o.district, o.city].filter(Boolean).join(" / ")].filter(Boolean).join(", "))}<br>` : "Adres: görüşmede alınacak<br>"}
               Tasarım: ${esc(DESIGNS[o.design]?.name || o.design)} · QR: <a href="${esc(selfLink(o.tag_code))}" target="_blank" rel="noopener">${esc(o.tag_code)}</a>
               ${o.tracking ? ` · Takip no: <b>${esc(o.tracking)}</b>` : ""}
             </div>
@@ -943,7 +946,7 @@ async function showOrders(orders, requests) {
             ${o.admin_note ? `<div class="note">Notunuz: ${esc(o.admin_note)}</div>` : ""}
           </div>
           <div class="act">
-            ${["odeme_bekleniyor", "odeme_bildirildi"].includes(o.status) ? `<button data-act="approve" style="background:var(--ok)">✓ Ödeme geldi, onayla</button>` : ""}
+            ${NEW_ORDER.includes(o.status) ? `<button data-act="approve" style="background:var(--ok)">✓ Görüşüldü, onayla</button>` : ""}
             <button data-act="pdf">Baskı PDF'i indir</button>
             ${["onaylandi", "baskida"].includes(o.status) ? `<button data-act="mail">Baskıcıya e-posta</button>
               ${canShareFiles ? `<button data-act="share">PDF'i paylaş (e-posta ekli)</button>` : ""}` : ""}
@@ -974,8 +977,8 @@ async function showOrders(orders, requests) {
     btn.disabled = true;
     try {
       if (act === "approve") {
-        if (!confirm(`${o.code}: ${o.amount} TL hesabınıza geldi mi? Onaylanınca sipariş baskıya gönderilecekler listesine geçer.`)) return;
-        await update("onaylandi", () => { confetti(); toast("Ödeme onaylandı. Müşteriye WhatsApp'tan haber verebilirsiniz."); });
+        if (!confirm(`${o.code}: müşteriyle görüşüp ödemeyi aldınız mı? Onaylanınca sipariş baskıya gönderilecekler listesine geçer.`)) return;
+        await update("onaylandi", () => { confetti(); toast("Onaylandı. Sırada baskı PDF'i ve baskıcıya e-posta var."); });
       } else if (act === "pdf") {
         toast("Baskı PDF'i hazırlanıyor…", 30000);
         downloadBlob(await orderPdf(o), fileName);
@@ -1007,16 +1010,6 @@ async function showOrders(orders, requests) {
   };
 }
 
-// TR IBAN: TR + 24 rakam, mod 97 kontrolü
-function validIban(iban) {
-  const s = iban.replace(/\s/g, "").toUpperCase();
-  if (!/^TR\d{24}$/.test(s)) return false;
-  const num = (s.slice(4) + s.slice(0, 4)).replace(/[A-Z]/g, c => c.charCodeAt(0) - 55);
-  let r = 0;
-  for (const ch of num) r = (r * 10 + Number(ch)) % 97;
-  return r === 1;
-}
-
 async function showSettings(requests, error = "") {
   const shop = await loadShopAdmin();
   show(`
@@ -1028,15 +1021,12 @@ async function showSettings(requests, error = "") {
       <h2 style="margin-top:0">Basılı sticker satışı</h2>
       <label class="check"><input type="checkbox" id="s-active"${shop.active ? " checked" : ""}> Satış açık (uygulamada sipariş alınsın)</label>
       <label for="s-price">Fiyat (TL)</label><input id="s-price" type="number" inputmode="numeric" min="0" value="${esc(shop.price)}">
-      <label for="s-iban">IBAN</label><input id="s-iban" autocomplete="off" placeholder="TR00 0000 0000 0000 0000 0000 00" value="${esc((shop.iban || "").replace(/(.{4})/g, "$1 ").trim())}">
-      <label for="s-name">Alıcı adı (hesap sahibi)</label><input id="s-name" value="${esc(shop.account_name || "")}">
-      <label for="s-bank">Banka adı <span style="font-weight:400;color:var(--muted)">(isteğe bağlı)</span></label><input id="s-bank" value="${esc(shop.bank_name || "")}">
       <label for="s-ship">Kargo bilgisi (uygulamada görünür)</label><input id="s-ship" value="${esc(shop.shipping_text || "")}">
       <label for="s-printer">Baskıcının e-postası <span style="font-weight:400;color:var(--muted)">(yalnızca burada görünür)</span></label>
       <input id="s-printer" type="email" value="${esc(shop.printer_email || "")}">
 
-      <h2>Ödeme bildirimi</h2>
-      <p class="hint">Müşteri “Ödemeyi yaptım” deyince size anında haber gelir. Telegram, e-posta ya da ikisi birden.</p>
+      <h2>Sipariş bildirimi</h2>
+      <p class="hint">Uygulamadan sipariş gelince müşterinin adı, telefonu, e-postası ve adresi size anında gelir. Telegram, e-posta ya da ikisi birden.</p>
       ${"telegram_bot_token" in shop ? `
       <details class="howto"><summary>Telegram nasıl kurulur? (2 dakika)</summary>
         <ol>
@@ -1062,7 +1052,7 @@ async function showSettings(requests, error = "") {
 
       <button class="btn" type="submit">Kaydet</button>
       ${"telegram_bot_token" in shop ? `<button class="btn ghost" type="button" id="notify-test">Deneme bildirimi gönder</button>` : ""}
-      <p class="hint" style="margin-top:12px">IBAN ve alıcı adı girilmeden satış açılmaz. Değişiklikler uygulamaya hemen yansır; uygulamayı güncellemek gerekmez.</p>
+      <p class="hint" style="margin-top:12px">Değişiklikler uygulamaya hemen yansır; uygulamayı güncellemek gerekmez.</p>
     </form>` : ""}`, true);
   bindTabs();
   const form = document.getElementById("sf");
@@ -1094,17 +1084,15 @@ async function showSettings(requests, error = "") {
   form.addEventListener("submit", async ev => {
     ev.preventDefault();
     const g = id => document.getElementById(id).value.trim();
-    const active = document.getElementById("s-active").checked, iban = g("s-iban").replace(/\s/g, "").toUpperCase();
-    if (iban && !validIban(iban)) return showSettings(requests, "IBAN hatalı görünüyor: TR ile başlayan 26 karakter olmalı ve kontrol hanesi tutmalı.");
-    if (active && (!iban || !g("s-name"))) return showSettings(requests, "Satışı açmak için IBAN ve alıcı adı gerekli.");
+    const active = document.getElementById("s-active").checked;
     const price = parseInt(g("s-price"), 10);
     if (!(price >= 0)) return showSettings(requests, "Fiyat geçersiz.");
     try {
       const notify = document.getElementById("s-tg-token") ? {p_telegram_bot_token: g("s-tg-token"), p_telegram_chat_id: g("s-tg-chat"),
         p_resend_api_key: g("s-resend"), p_notify_email: g("s-notify")} : {};
       if (notify.p_notify_email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(notify.p_notify_email)) return showSettings(requests, "Bildirim e-postası geçersiz.");
-      await rpc("admin_shop_set", {p_key: adminKey, p_active: active, p_price: price, p_iban: iban, p_account_name: g("s-name"),
-        p_bank_name: g("s-bank"), p_printer_email: g("s-printer"), p_shipping_text: g("s-ship"), ...notify});
+      await rpc("admin_shop_set", {p_key: adminKey, p_active: active, p_price: price, p_iban: shop.iban, p_account_name: shop.account_name,
+        p_bank_name: shop.bank_name, p_printer_email: g("s-printer"), p_shipping_text: g("s-ship"), ...notify});
       await showSettings(requests);
       toast(active ? "Kaydedildi. Satış açık." : "Kaydedildi. Satış kapalı.");
     } catch (e) { showSettings(requests, "Kaydedilemedi: " + e.message); }

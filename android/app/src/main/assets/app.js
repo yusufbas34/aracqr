@@ -106,6 +106,7 @@ function showHome() {
       <button class="btn ghost" type="button" id="howto">Nasıl çalışır?</button>`), bindHowto();
   }
   show("Etiketlerim", `
+    <div id="promo-slot"></div>
     <div class="cards">
       ${list.map(t => `
         <a class="card" href="#/etiket/${encodeURIComponent(t.code)}">
@@ -119,6 +120,10 @@ function showHome() {
     <button class="btn ghost" type="button" id="howto">Nasıl çalışır?</button>`);
   bindHowto();
   refreshOrders();
+  loadShop().then(shop => {
+    const slot = document.getElementById("promo-slot");
+    if (slot && shop?.active) slot.innerHTML = promoHtml(list[0], shop, true);
+  });
   loadStats(list).then(st => document.querySelectorAll("[data-scan]").forEach(el => { el.innerHTML = scanChip(st[el.dataset.scan]); }));
 }
 
@@ -234,7 +239,9 @@ function showTag(code, isNew) {
     ${isNew ? `<div class="steps"><span class="on"></span><span class="on"></span><span class="on"></span></div>
       <div class="msg ok"><b>QR'ınız hazır!</b> Bu etiket ${esc(prettyPhone(t.phone))} numarasını arar.</div>` : ""}
     <div class="preview"><div style="zoom:${fit.toFixed(3)}">${stickerAt(t.code, t.design, qrLink(t.code), t.size)}</div></div>
+    <div id="promo-slot"></div>
 
+    <h2>Kendiniz yazdırın</h2>
     <div class="opts">
       <label>Tasarım</label>
       <a class="btn ghost" style="margin-top:0" href="#/etiket/${encodeURIComponent(t.code)}/tasarim">🎨 ${esc(DESIGNS[t.design]?.name || "")} · kaydırarak değiştir</a>
@@ -254,13 +261,6 @@ function showTag(code, isNew) {
       <div class="hint">Yazdırırken ölçeği <b>%100 / Gerçek boyut</b> seçin; “Sayfaya sığdır” ölçüleri bozar.</div>
     </div>
 
-    <h2>Biz basıp kargolayalım</h2>
-    <a class="ordercard" href="#/etiket/${encodeURIComponent(t.code)}/siparis">
-      <span class="oc-icon" aria-hidden="true">📦</span>
-      <span><b>Su geçirmez vinil sticker seti</b>Aynı QR, 6 farklı ölçüde 9 sticker · kargo ile kapınızda</span>
-      <strong id="oc-price">…</strong>
-    </a>
-
     <h2>Etiket bilgileri</h2>
     <div class="opts" style="padding-top:14px">
       <div class="stat" id="stat">${statText(store.get("stats", {})[t.code])}</div>
@@ -278,11 +278,6 @@ function showTag(code, isNew) {
     <h2>Arama ayarları</h2>
     <form class="opts" id="cs" novalidate style="padding-top:4px">
       <div id="cs-msg"></div>
-      <label for="b-name">Yedek kişi <span class="opt">(isteğe bağlı)</span></label>
-      <input id="b-name" maxlength="40" placeholder="Örn. Eşim, Babam" value="${esc(t.backupName || "")}">
-      <label for="b-phone">Yedek numara</label>
-      <input id="b-phone" type="tel" inputmode="tel" placeholder="05xx xxx xx xx" value="${esc(t.backupPhone ? prettyPhone(t.backupPhone) : "")}">
-      <div class="hint">QR'ı okutan kişi size ulaşamazsa bu numarayı da görür ve arayabilir.</div>
       <label class="check"><input type="checkbox" id="q-on"${t.quietStart != null ? " checked" : ""}> Sessiz saatler (bu saatlerde otomatik arama yapılmaz, SMS önerilir)</label>
       <div class="row" id="q-times"${t.quietStart != null ? "" : " hidden"}>
         <div><label for="q-start">Başlangıç</label><input id="q-start" type="time" value="${hhmm(t.quietStart ?? 1380)}"></div>
@@ -298,27 +293,23 @@ function showTag(code, isNew) {
     ev.preventDefault();
     const box = document.getElementById("cs-msg");
     const fail = text => { box.innerHTML = `<div class="msg err" role="alert">${esc(text)}</div>`; box.scrollIntoView({block: "center"}); };
-    const rawB = document.getElementById("b-phone").value.trim(), backup = rawB ? normalizePhone(rawB) : null;
-    if (rawB && !backup) return fail("Yedek numara geçersiz. Örnek: 0532 123 45 67");
-    if (backup && backup === t.phone) return fail("Yedek numara asıl numarayla aynı olamaz.");
     const quiet = document.getElementById("q-on").checked;
     const qs = quiet ? toMinutes(document.getElementById("q-start").value) : null;
     const qe = quiet ? toMinutes(document.getElementById("q-end").value) : null;
     if (quiet && (qs == null || qe == null || qs === qe)) return fail("Sessiz saatlerin başlangıç ve bitişini farklı seçin.");
-    const name = document.getElementById("b-name").value.trim();
     ev.submitter && (ev.submitter.disabled = true);
     let res;
-    try { res = await rpc("self_tag_settings", {p_code: t.code, p_pin: t.pin, p_backup_phone: backup, p_backup_name: name || null, p_quiet_start: qs, p_quiet_end: qe}); }
+    try { res = await rpc("self_tag_settings", {p_code: t.code, p_pin: t.pin, p_backup_phone: null, p_backup_name: null, p_quiet_start: qs, p_quiet_end: qe}); }
     catch (e) {
       ev.submitter && (ev.submitter.disabled = false);
       return fail(e.status === 404 ? "Bu özellik için sunucu güncellemesi gerekiyor; kısa süre içinde açılacak." : "Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edin.");
     }
     if (!res?.ok) {
       ev.submitter && (ev.submitter.disabled = false);
-      return fail({bad_phone: "Yedek numara geçersiz.", bad_hours: "Sessiz saatler geçersiz.", bad_pin: "PIN eşleşmedi.",
+      return fail({bad_hours: "Sessiz saatler geçersiz.", bad_pin: "PIN eşleşmedi.",
         locked: "Çok fazla deneme. 15 dakika sonra tekrar deneyin.", not_found: "Etiket sunucuda bulunamadı."}[res?.error] || "Kaydedilemedi.");
     }
-    saveTag({...findTag(code), backupPhone: backup, backupName: backup ? name : "", quietStart: qs, quietEnd: qe});
+    saveTag({...findTag(code), backupPhone: null, backupName: "", quietStart: qs, quietEnd: qe});
     toast("Arama ayarları kaydedildi.");
     showTag(code, isNew);
   });
@@ -345,8 +336,8 @@ function showTag(code, isNew) {
   };
   if (isNew && celebrated !== code) { celebrated = code; confetti(); }
   loadShop().then(shop => {
-    const el = document.getElementById("oc-price");
-    if (el) el.textContent = shop?.active ? `${shop.price} TL` : "Yakında";
+    const slot = document.getElementById("promo-slot");
+    if (slot && shop?.active) slot.innerHTML = promoHtml(t, shop);
   });
 }
 
@@ -436,9 +427,11 @@ async function sharePdf(t, copies) {
 }
 
 // ---------------------------------------------------------------- basılı sticker siparişi
+// Uygulamada ödeme yok: sipariş kaydedilir, yöneticiye Telegram / e-posta gider, müşteriyle iletişime geçilir.
 const STATUS = {
-  odeme_bekleniyor: "Ödeme bekleniyor", odeme_bildirildi: "Ödemeniz kontrol ediliyor", onaylandi: "Ödeme onaylandı, baskıya hazırlanıyor",
-  baskida: "Baskıda", kargolandi: "Kargoya verildi", iptal: "İptal edildi",
+  yeni: "Sipariş alındı, sizi arayacağız", onaylandi: "Onaylandı, baskıya hazırlanıyor", baskida: "Baskıda",
+  kargolandi: "Kargoya verildi", iptal: "İptal edildi",
+  odeme_bekleniyor: "Sipariş alındı, sizi arayacağız", odeme_bildirildi: "Sipariş alındı, sizi arayacağız",  // eski siparişler
 };
 const orders = () => store.get("orders", []);
 const findOrder = code => orders().find(o => o.code === code);
@@ -451,8 +444,32 @@ async function loadShop() {
   return shopCache;
 }
 
+// Dikkat çekici sipariş kartı. compact: ana sayfa bandı
+function promoHtml(t, shop, compact = false) {
+  if (!t) return "";
+  const href = `#/etiket/${encodeURIComponent(t.code)}/siparis`;
+  if (compact) {
+    return `<a class="promo compact" href="${href}">
+      <span class="promo-emoji" aria-hidden="true">📦</span>
+      <span><b>Yazıcıyla uğraşmayın!</b>Su geçirmez sticker setiniz kapınıza gelsin</span>
+      <strong>${esc(shop.price)} TL</strong>
+    </a>`;
+  }
+  return `<a class="promo" href="${href}">
+    <span class="promo-tag">Yazıcıyla uğraşmayın</span>
+    <b class="promo-title">Biz basalım, kapınıza gönderelim</b>
+    <ul>
+      <li>💧 Yağmura ve güneşe dayanıklı vinil</li>
+      <li>📐 6 farklı ölçüde 9 sticker</li>
+      <li>✂️ Kesime hazır, kolay yapıştırılır</li>
+    </ul>
+    <span class="promo-foot"><span class="promo-price">${esc(shop.price)} TL</span><span class="promo-cta">Hemen sipariş ver →</span></span>
+    <span class="promo-ship">${esc(shop.shipping_text || "")}</span>
+  </a>`;
+}
+
 function orderCardHtml(o) {
-  return `<a class="card order st-${esc(o.status)}" href="#/odeme/${encodeURIComponent(o.code)}" data-order="${esc(o.code)}">
+  return `<a class="card order st-${esc(o.status)}" href="#/siparis/${encodeURIComponent(o.code)}" data-order="${esc(o.code)}">
     <span class="oc-icon" aria-hidden="true">📦</span>
     <div><b>${esc(o.code)} · ${esc(o.amount)} TL</b><span class="ostatus">${esc(STATUS[o.status] || o.status)}${o.tracking ? ` · Takip no: ${esc(o.tracking)}` : ""}</span></div>
   </a>`;
@@ -481,45 +498,67 @@ const PRODUCT_FEATURES = [
   ["🔒", "Numaranız güvende", "Numaranız sticker'da yazmaz; dilediğiniz zaman uygulamadan değiştirirsiniz, yeniden basmanız gerekmez."],
 ];
 
+// Örnek baskı sayfası: gerçek QR yerine çalışmayan örnek QR ve "ÖRNEK" filigranı (ekran görüntüsü alınsa da işe yaramaz)
+function sampleSheetHtml(design, zoom) {
+  return `<div class="sample" style="zoom:${zoom.toFixed(3)}" aria-label="Örnek baskı sayfası">
+    ${orderSheetHtml("ÖRNEK", design, SITE + "#ornek")}
+    <div class="watermark" aria-hidden="true">${"<span>ÖRNEK</span>".repeat(24)}</div>
+  </div>`;
+}
+
+function openSample(design) {
+  const box = document.createElement("div");
+  box.className = "viewer";
+  const zoom = (Math.min(innerWidth, 700) - 24) / (190 * 96 / 25.4);
+  box.innerHTML = `<button class="viewer-close" type="button" aria-label="Kapat">✕</button>
+    <div class="viewer-body">${sampleSheetHtml(design, zoom)}<p>Gerçek baskıda sizin QR'ınız olur. Sayfa A4, stickerlar gerçek ölçüsünde basılır.</p></div>`;
+  box.querySelector(".viewer-close").onclick = () => box.remove();
+  document.body.append(box);
+}
+
 async function showOrder(tagCode, error = "", v = null) {
   const t = findTag(tagCode);
   if (!t) { location.replace("#/"); return; }
-  show("Basılı sticker siparişi", "<p>Yükleniyor…</p>", true);
+  show("Biz basalım, gönderelim", "<p>Yükleniyor…</p>", true);
   const shop = await loadShop();
   if (!shop?.active) {
-    return show("Basılı sticker siparişi", `
+    return show("Biz basalım, gönderelim", `
       <div class="msg info"><b>Basılı sipariş şu an kapalı.</b><br>Kısa süre içinde açılacak. Bu sırada etiketinizi kendiniz yazdırabilirsiniz.</div>
       <a class="btn" href="#/etiket/${encodeURIComponent(t.code)}">Etikete dön</a>`, true);
   }
   v = v || store.get("lastAddress", {}) || {};
   const val = k => `value="${esc(v[k] || "")}"`;
-  const fit = Math.min(1, (Math.min(innerWidth, 560) - 64) / (190 * 96 / 25.4));
-  show("Basılı sticker siparişi", `
+  const zoom = (Math.min(innerWidth, 560) - 64) / (190 * 96 / 25.4);
+  show("Biz basalım, gönderelim", `
     ${error ? `<div class="msg err" role="alert">${esc(error)}</div>` : ""}
-    <div class="preview sheetprev"><div style="zoom:${fit.toFixed(3)}">${orderSheetHtml(t.code, t.design, qrLink(t.code))}</div></div>
-    <div class="price"><span>A4 vinil sticker seti</span><strong>${esc(shop.price)} TL</strong></div>
-    <div class="hint" style="text-align:center">${esc(shop.shipping_text)} Ödeme havale / EFT ile.</div>
+    <div class="price big"><span>Su geçirmez vinil sticker seti<small>6 ölçüde 9 sticker · A4 sayfa</small></span><strong>${esc(shop.price)} TL</strong></div>
+    <div class="hint" style="text-align:center">${esc(shop.shipping_text)}</div>
+    <button type="button" class="preview sheetprev" id="sample" aria-label="Örnek baskıyı büyüt">${sampleSheetHtml(t.design, zoom)}<span class="zoomhint">🔍 Örneği büyüt</span></button>
     <ul class="features">${PRODUCT_FEATURES.map(([i, h, d]) => `<li><span aria-hidden="true">${i}</span><div><b>${h}</b>${d}</div></li>`).join("")}</ul>
     <a class="btn ghost" href="#/etiket/${encodeURIComponent(t.code)}/tasarim">🎨 Tasarım: ${esc(DESIGNS[t.design]?.name || "")} · değiştir</a>
 
-    <h2>Teslimat adresi</h2>
+    <h2>Sipariş bilgileri</h2>
+    <div class="msg info">Uygulamada ödeme yok. Siparişinizi aldıktan sonra sizi arayıp ödeme ve teslimatı birlikte ayarlıyoruz.</div>
     <form id="of" class="opts" style="padding-top:2px" novalidate>
       <label for="o-name">Ad soyad</label><input id="o-name" autocomplete="name" ${val("name")}>
-      <label for="o-phone">Telefon (kargo için)</label>
+      <label for="o-phone">Telefon</label>
       <input id="o-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="05xx xxx xx xx" value="${esc(v.phone || prettyPhone(t.phone))}">
-      <label for="o-email">E-posta <span style="font-weight:400;color:var(--muted)">(isteğe bağlı)</span></label>
-      <input id="o-email" type="email" inputmode="email" autocomplete="email" ${val("email")}>
-      <div class="row">
-        <div><label for="o-city">İl</label><input id="o-city" autocomplete="address-level1" ${val("city")}></div>
-        <div><label for="o-district">İlçe</label><input id="o-district" autocomplete="address-level2" ${val("district")}></div>
-      </div>
-      <label for="o-address">Açık adres</label>
-      <textarea id="o-address" rows="3" autocomplete="street-address" placeholder="Mahalle, cadde/sokak, bina no, daire">${esc(v.address || "")}</textarea>
-      <label for="o-note">Not <span style="font-weight:400;color:var(--muted)">(isteğe bağlı)</span></label>
-      <input id="o-note" ${val("note")}>
-      <label class="check"><input type="checkbox" id="o-ok"${v.ok ? " checked" : ""}> Bilgilerimin siparişimin basılıp kargolanması için kullanılmasını kabul ediyorum.</label>
-      <button class="btn" type="submit">Ödemeye geç · ${esc(shop.price)} TL</button>
+      <label for="o-email">E-posta</label>
+      <input id="o-email" type="email" inputmode="email" autocomplete="email" placeholder="ornek@mail.com" ${val("email")}>
+      <details class="addr"${v.address || v.city ? " open" : ""}><summary>Teslimat adresi <span class="opt">(isteğe bağlı, görüşmede de alabiliriz)</span></summary>
+        <div class="row">
+          <div><label for="o-city">İl</label><input id="o-city" autocomplete="address-level1" ${val("city")}></div>
+          <div><label for="o-district">İlçe</label><input id="o-district" autocomplete="address-level2" ${val("district")}></div>
+        </div>
+        <label for="o-address">Açık adres</label>
+        <textarea id="o-address" rows="3" autocomplete="street-address" placeholder="Mahalle, cadde/sokak, bina no, daire">${esc(v.address || "")}</textarea>
+      </details>
+      <label for="o-note">Not <span class="opt">(isteğe bağlı)</span></label>
+      <input id="o-note" placeholder="Örn. akşam arayın" ${val("note")}>
+      <label class="check"><input type="checkbox" id="o-ok"${v.ok ? " checked" : ""}> Bilgilerimin siparişim için benimle iletişime geçilmesi ve siparişin gönderilmesi amacıyla kullanılmasını kabul ediyorum.</label>
+      <button class="btn order-go" type="submit">Siparişi gönder · ${esc(shop.price)} TL</button>
     </form>`, true);
+  document.getElementById("sample").onclick = () => openSample(t.design);
   document.getElementById("of").addEventListener("submit", async ev => {
     ev.preventDefault();
     const g = id => document.getElementById(id).value.trim();
@@ -527,99 +566,51 @@ async function showOrder(tagCode, error = "", v = null) {
       address: g("o-address"), note: g("o-note"), ok: document.getElementById("o-ok").checked};
     const phone = normalizePhone(v2.phone);
     const err = v2.name.length < 3 ? "Ad soyad yazın." : !phone ? "Telefon numarası geçersiz. Örnek: 0532 123 45 67"
-      : v2.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v2.email) ? "E-posta adresi geçersiz."
-      : !v2.city || !v2.district ? "İl ve ilçe yazın." : v2.address.length < 10 ? "Açık adresi eksiksiz yazın."
+      : !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v2.email) ? "E-posta adresinizi yazın. Örnek: ornek@mail.com"
       : !v2.ok ? "Devam etmek için onay kutusunu işaretleyin." : "";
     if (err) return showOrder(tagCode, err, v2);
     store.set("lastAddress", {...v2, ok: false});
-    ev.submitter && (ev.submitter.disabled = true, ev.submitter.textContent = "Sipariş oluşturuluyor…");
+    ev.submitter && (ev.submitter.disabled = true, ev.submitter.textContent = "Gönderiliyor…");
     let res;
     try {
-      res = await rpc("order_create", {p_tag_code: t.code, p_design: t.design, p_full_name: v2.name, p_phone: phone, p_email: v2.email || null,
-        p_city: v2.city, p_district: v2.district, p_address: v2.address, p_note: v2.note || null, p_device: deviceId()});
+      res = await rpc("order_create", {p_tag_code: t.code, p_design: t.design, p_full_name: v2.name, p_phone: phone, p_email: v2.email,
+        p_city: v2.city || null, p_district: v2.district || null, p_address: v2.address || null, p_note: v2.note || null, p_device: deviceId()});
     } catch (e) { return showOrder(tagCode, "Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.", v2); }
     if (!res?.ok) {
       return showOrder(tagCode, {closed: "Basılı sipariş şu an kapalı.", no_tag: "Bu etiket sunucuda bulunamadı.",
-        missing: "Adres bilgileri eksik.", bad_phone: "Telefon numarası geçersiz.", bad_email: "E-posta adresi geçersiz.",
-        too_many: "Bugün çok fazla sipariş oluşturdunuz. Siparişlerim'den mevcut siparişinize devam edin.",
-        busy: "Şu an çok yoğun, birkaç dakika sonra tekrar deneyin."}[res?.error] || "Sipariş oluşturulamadı.", v2);
+        missing: "Ad soyad yazın.", bad_phone: "Telefon numarası geçersiz.", bad_email: "E-posta adresi geçersiz.",
+        too_many: "Bugün çok fazla sipariş oluşturdunuz. Siparişlerim'den mevcut siparişinizi görebilirsiniz.",
+        busy: "Şu an çok yoğun, birkaç dakika sonra tekrar deneyin."}[res?.error] || "Sipariş gönderilemedi.", v2);
     }
     saveOrder({code: res.code, token: res.token, amount: res.amount, status: res.status, tagCode: t.code, design: t.design, created: Date.now()});
-    location.replace(`#/odeme/${encodeURIComponent(res.code)}`);
+    location.replace(`#/siparis/${encodeURIComponent(res.code)}/yeni`);
   });
 }
 
-function copyText(text) {
-  const done = () => toast("Kopyalandı", 1500);
-  if (navigator.clipboard && isSecureContext) return navigator.clipboard.writeText(text).then(done, () => fallback());
-  fallback();
-  function fallback() {
-    const ta = Object.assign(document.createElement("textarea"), {value: text});
-    ta.style.cssText = "position:fixed;opacity:0";
-    document.body.append(ta); ta.select();
-    try { document.execCommand("copy"); done(); } catch (e) { toast("Kopyalanamadı; uzun basıp kopyalayın"); }
-    ta.remove();
-  }
-}
-
-async function showPayment(orderCode) {
+async function showOrderStatus(orderCode, isNew) {
   const o = findOrder(orderCode);
   if (!o) { location.replace("#/"); return; }
-  show(`Sipariş ${o.code}`, "<p>Yükleniyor…</p>", true);
-  const [shop] = await Promise.all([loadShop(), refreshOrders()]);
-  const cur = findOrder(orderCode);
-  if (cur.status !== "odeme_bekleniyor") {
-    return show(`Sipariş ${cur.code}`, `
-      <div class="msg ${cur.status === "iptal" ? "err" : "ok"}"><b>${esc(STATUS[cur.status] || cur.status)}</b>${cur.tracking ? `<br>Kargo takip no: <b>${esc(cur.tracking)}</b>` : ""}</div>
-      <ol class="timeline">${["odeme_bildirildi", "onaylandi", "baskida", "kargolandi"].map(st => {
-        const order = ["odeme_bekleniyor", "odeme_bildirildi", "onaylandi", "baskida", "kargolandi"];
-        return `<li class="${order.indexOf(cur.status) >= order.indexOf(st) ? "on" : ""}">${esc(STATUS[st])}</li>`;
-      }).join("")}</ol>
-      <p>Tutar: <b>${esc(cur.amount)} TL</b>. Sorunuz olursa sipariş numaranızla bize ulaşın.</p>
-      <a class="btn ghost" href="#/">Ana sayfa</a>`, true);
-  }
-  const iban = (shop?.iban || "").replace(/(.{4})/g, "$1 ").trim();
-  show("Ödeme", `
-    <div class="price"><span>Ödenecek tutar</span><strong>${esc(cur.amount)} TL</strong></div>
-    <ol class="paysteps">
-      <li>Aşağıdaki IBAN'a <b>${esc(cur.amount)} TL</b> havale / EFT yapın.</li>
-      <li>Açıklamaya sipariş numaranızı yazın: <b>${esc(cur.code)}</b></li>
-      <li>Ödemeyi yaptıktan sonra aşağıdaki butona basın.</li>
-    </ol>
-    <div class="opts paybox">
-      <dl class="kv">
-        <dt>Alıcı</dt><dd>${esc(shop?.account_name || "")}</dd>
-        ${shop?.bank_name ? `<dt>Banka</dt><dd>${esc(shop.bank_name)}</dd>` : ""}
-        <dt>IBAN</dt><dd class="iban">${esc(iban)}</dd>
-        <dt>Açıklama</dt><dd>${esc(cur.code)}</dd>
-      </dl>
-      <div class="row">
-        <button class="btn ghost" type="button" id="cp-iban">IBAN'ı kopyala</button>
-        <button class="btn ghost" type="button" id="cp-code">Sipariş no kopyala</button>
-      </div>
-    </div>
-    <button class="btn" type="button" id="paid" style="background:var(--ok)">✅ Ödemeyi yaptım</button>
-    <a class="btn ghost" href="#/">Daha sonra öderim</a>
-    <div class="hint">Ödemeniz kontrol edildikten sonra stickerlarınız basılıp kargoya verilir. Durumu ana sayfadaki Siparişlerim bölümünden takip edebilirsiniz.</div>`, true);
-  document.getElementById("cp-iban").onclick = () => copyText(shop?.iban || "");
-  document.getElementById("cp-code").onclick = () => copyText(cur.code);
-  document.getElementById("paid").onclick = async ev => {
-    if (!confirm(`${cur.amount} TL ödemeyi ${cur.code} açıklamasıyla yaptığınızı onaylıyor musunuz?`)) return;
-    ev.target.disabled = true;
-    let res;
-    try { res = await rpc("order_paid", {p_code: cur.code, p_token: cur.token}); }
-    catch (e) { ev.target.disabled = false; return toast("Sunucuya ulaşılamadı, tekrar deneyin."); }
-    if (!res?.ok) { ev.target.disabled = false; return toast("Sipariş bulunamadı."); }
-    saveOrder({...cur, status: res.status});
-    show("Sipariş iletildi", `
+  if (isNew) {
+    show("Sipariş alındı", `
       <div class="empty" style="padding-top:10px">
         <div style="font-size:64px" aria-hidden="true">🎉</div>
-        <h1>Siparişiniz iletildi!</h1>
-        <p>Ödemeniz kontrol edildikten sonra stickerlarınız basılıp kargoya verilir. Sipariş no: <b>${esc(cur.code)}</b></p>
+        <h1>Siparişiniz alındı!</h1>
+        <p>En kısa sürede sizi arayıp ödeme ve teslimatı konuşacağız. Sipariş no: <b>${esc(o.code)}</b></p>
       </div>
-      <a class="btn" href="#/">Siparişlerim</a>`, false);
+      <a class="btn" href="#/">Ana sayfa</a>`, false);
     confetti();
-  };
+    return;
+  }
+  show(`Sipariş ${o.code}`, "<p>Yükleniyor…</p>", true);
+  await refreshOrders();
+  const cur = findOrder(orderCode);
+  const steps = ["yeni", "onaylandi", "baskida", "kargolandi"];
+  const at = steps.indexOf(["odeme_bekleniyor", "odeme_bildirildi"].includes(cur.status) ? "yeni" : cur.status);
+  show(`Sipariş ${cur.code}`, `
+    <div class="msg ${cur.status === "iptal" ? "err" : "ok"}"><b>${esc(STATUS[cur.status] || cur.status)}</b>${cur.tracking ? `<br>Kargo takip no: <b>${esc(cur.tracking)}</b>` : ""}</div>
+    ${cur.status === "iptal" ? "" : `<ol class="timeline">${steps.map((st, i) => `<li class="${at >= i ? "on" : ""}">${esc(STATUS[st])}</li>`).join("")}</ol>`}
+    <p>Tutar: <b>${esc(cur.amount)} TL</b>. Sorunuz olursa sipariş numaranızla bize ulaşın.</p>
+    <a class="btn ghost" href="#/">Ana sayfa</a>`, true);
 }
 
 // ---------------------------------------------------------------- yönlendirme
@@ -630,7 +621,8 @@ function route() {
   if (parts[0] === "etiket" && parts[2] === "numara") return showChangeNumber(parts[1]);
   if (parts[0] === "etiket" && parts[2] === "tasarim") return showDesigns(parts[1]);
   if (parts[0] === "etiket" && parts[2] === "siparis") return showOrder(parts[1]);
-  if (parts[0] === "odeme") return showPayment(parts[1]);
+  if (parts[0] === "siparis") return showOrderStatus(parts[1], parts[2] === "yeni");
+  if (parts[0] === "odeme") return showOrderStatus(parts[1]);  // eski bağlantılar
   if (parts[0] === "etiket") return showTag(parts[1], parts[2] === "yeni");
   showHome();
 }

@@ -3,7 +3,9 @@ package io.github.yusufbas34.aracqr;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.graphics.Insets;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.print.PrintAttributes;
@@ -11,12 +13,16 @@ import android.print.PrintDocumentAdapter;
 import android.print.PrintManager;
 import android.provider.MediaStore;
 import android.util.Base64;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowInsets;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import java.io.OutputStream;
@@ -34,7 +40,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle state) {
         super.onCreate(state);
         web = new WebView(this);
-        setContentView(web);
+        setContentView(edgeToEdgeSafe(web));
 
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
@@ -62,6 +68,31 @@ public class MainActivity extends Activity {
 
         if (state != null) web.restoreState(state);
         else web.loadUrl(START_URL);
+    }
+
+    /**
+     * Android 15 (API 35) uygulamayı ekranın tamamına yayar: üst çubuk saat/bildirim alanının, form alanları
+     * klavyenin altına girer. Sistem çubukları ve klavye kadar boşluk bırakır; üstteki şeridi marka rengine boyar.
+     */
+    private View edgeToEdgeSafe(WebView content) {
+        if (Build.VERSION.SDK_INT < 35) return content;  // eski sürümlerde sistem bunu zaten yapar
+        FrameLayout root = new FrameLayout(this);
+        root.setBackgroundColor(0xFFEEF0F3);
+        View statusBar = new View(this);
+        statusBar.setBackgroundColor(0xFF0A3A9E);
+        root.addView(content, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        root.addView(statusBar, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0));
+        root.setOnApplyWindowInsetsListener((v, insets) -> {
+            Insets bars = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
+            Insets ime = insets.getInsets(WindowInsets.Type.ime());
+            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) content.getLayoutParams();
+            lp.setMargins(bars.left, bars.top, bars.right, Math.max(bars.bottom, ime.bottom));
+            content.setLayoutParams(lp);
+            statusBar.getLayoutParams().height = bars.top;
+            statusBar.requestLayout();
+            return WindowInsets.CONSUMED;
+        });
+        return root;
     }
 
     @Override

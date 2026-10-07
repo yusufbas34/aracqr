@@ -1,4 +1,5 @@
--- Basılı etiket siparişi: uygulamadan sipariş, IBAN ile ödeme bildirimi, yönetim panelinden takip.
+-- Basılı etiket siparişi: uygulamadan sipariş, size anında Telegram / e-posta bildirimi, yönetim panelinden takip.
+-- Sürüm 3: uygulamada ödeme adımı yok; sipariş kaydedilir, siz müşteriyle iletişime geçersiniz.
 -- Supabase > SQL Editor'da çalıştırın. Önce uygulama.sql kurulu olmalı. Mevcut tablolara dokunmaz; tekrar çalıştırmak güvenlidir.
 -- Admin şifresi kontrolü için mevcut admin_list(p_key) fonksiyonunu kullanır.
 
@@ -46,8 +47,7 @@ create table if not exists public.orders (
   address text not null,
   note text,
   amount integer not null,
-  status text not null default 'odeme_bekleniyor'
-    check (status in ('odeme_bekleniyor', 'odeme_bildirildi', 'onaylandi', 'baskida', 'kargolandi', 'iptal')),
+  status text not null default 'yeni',
   paid_at timestamptz,                            -- müşterinin "ödemeyi yaptım" dediği an
   tracking text,
   admin_note text,
@@ -57,8 +57,16 @@ create table if not exists public.orders (
 create index if not exists orders_created_idx on public.orders (created_at);
 alter table public.orders enable row level security;
 revoke all on public.orders from anon, authenticated;
+-- sürüm 3: adres isteğe bağlı, yeni durum 'yeni' (iletişime geçilecek). Eski durumlar eski siparişler için geçerli kalır.
+alter table public.orders alter column city drop not null;
+alter table public.orders alter column district drop not null;
+alter table public.orders alter column address drop not null;
+alter table public.orders alter column status set default 'yeni';
+alter table public.orders drop constraint if exists orders_status_check;
+alter table public.orders add constraint orders_status_check
+  check (status in ('yeni', 'odeme_bekleniyor', 'odeme_bildirildi', 'onaylandi', 'baskida', 'kargolandi', 'iptal'));
 
-create or replace function public.aracqr_shop_version() returns integer language sql immutable as 'select 2';
+create or replace function public.aracqr_shop_version() returns integer language sql immutable as 'select 3';
 
 -- ---------------------------------------------------------------- bildirim
 -- Telegram ve/veya e-posta (Resend) gönderir. Hata olursa siparişi bozmaz, yalnızca uyarı yazar.
@@ -108,6 +116,30 @@ begin
   return new;
 end $$;
 
+-- Yeni sipariş gelince size haber verir: müşteriyle iletişime geçmeniz için tüm bilgiler
+create or replace function public.orders_notify_new()
+returns trigger
+language plpgsql security definer set search_path = public
+as $$
+declare v_wa text := 'https://wa.me/' || regexp_replace(new.phone, '[^0-9]', '', 'g');
+begin
+  perform public.aracqr_notify('Araç QR: yeni sipariş ' || new.code || ' · ' || new.amount || ' TL',
+    '👤 ' || new.full_name || E'\n' ||
+    '📞 ' || new.phone || '  (WhatsApp: ' || v_wa || ')' || E'\n' ||
+    '✉️ ' || coalesce(new.email, '-') || E'\n' ||
+    case when coalesce(new.address, '') <> '' or coalesce(new.city, '') <> '' then
+      '📍 ' || concat_ws(', ', nullif(new.address, ''), nullif(concat_ws(' / ', nullif(new.district, ''), nullif(new.city, '')), '')) || E'\n'
+    else '' end ||
+    '🎨 Tasarım: ' || new.design || ' · QR: ' || new.tag_code || E'\n' ||
+    case when new.note is not null then '📝 ' || new.note || E'\n' else '' end ||
+    E'\nPanel: https://yusufbas34.github.io/aracqr/?admin');
+  return new;
+end $$;
+
+drop trigger if exists orders_new_notify on public.orders;
+create trigger orders_new_notify after insert on public.orders
+  for each row execute function public.orders_notify_new();
+
 drop trigger if exists orders_paid_notify on public.orders;
 create trigger orders_paid_notify after update of status on public.orders
   for each row when (new.status = 'odeme_bildirildi' and old.status is distinct from new.status)
@@ -119,7 +151,7 @@ create or replace function public.shop_info()
 returns json
 language sql stable security definer set search_path = public
 as $$
-  select json_build_object('active', active and coalesce(iban, '') <> '' and coalesce(account_name, '') <> '',
+  select json_build_object('active', active,
     'price', price, 'iban', iban, 'account_name', account_name, 'bank_name', bank_name, 'shipping_text', shipping_text)
   from shop_settings where id = 1;
 $$;
@@ -136,26 +168,22 @@ declare
   v_design text := left(lower(trim(coalesce(p_design, ''))), 20);
   v_name text := left(trim(coalesce(p_full_name, '')), 80);
   v_phone text := regexp_replace(coalesce(p_phone, ''), '[^0-9+]', '', 'g');
-  v_email text := nullif(lower(left(trim(coalesce(p_email, '')), 120)), '');
-  v_city text := left(trim(coalesce(p_city, '')), 40);
-  v_district text := left(trim(coalesce(p_district, '')), 60);
-  v_address text := left(trim(coalesce(p_address, '')), 400);
+  v_email text := lower(left(trim(coalesce(p_email, '')), 120));
+  v_city text := nullif(left(trim(coalesce(p_city, '')), 40), '');
+  v_district text := nullif(left(trim(coalesce(p_district, '')), 60), '');
+  v_address text := nullif(left(trim(coalesce(p_address, '')), 400), '');
   v_note text := nullif(left(trim(coalesce(p_note, '')), 300), '');
   v_device text := nullif(left(trim(coalesce(p_device, '')), 64), '');
   v_code text;
   o orders;
 begin
   select * into s from shop_settings where id = 1;
-  if not (s.active and coalesce(s.iban, '') <> '' and coalesce(s.account_name, '') <> '') then
-    return json_build_object('ok', false, 'error', 'closed');
-  end if;
+  if not s.active then return json_build_object('ok', false, 'error', 'closed'); end if;
   if not exists (select 1 from self_tags where code = v_tag) then return json_build_object('ok', false, 'error', 'no_tag'); end if;
   if v_design !~ '^[a-z]{2,20}$' then v_design := 'klasik'; end if;
-  if length(v_name) < 3 or v_city = '' or v_district = '' or length(v_address) < 10 then
-    return json_build_object('ok', false, 'error', 'missing');
-  end if;
+  if length(v_name) < 3 then return json_build_object('ok', false, 'error', 'missing'); end if;
   if v_phone !~ '^\+[0-9]{10,15}$' then return json_build_object('ok', false, 'error', 'bad_phone'); end if;
-  if v_email is not null and v_email !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' then return json_build_object('ok', false, 'error', 'bad_email'); end if;
+  if v_email !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' then return json_build_object('ok', false, 'error', 'bad_email'); end if;
   -- kötüye kullanım sınırları: cihaz / telefon başına günde 5, genelde dakikada 20 sipariş
   if (select count(*) from orders where (phone = v_phone or (v_device is not null and device = v_device))
         and created_at > now() - interval '1 day') >= 5
