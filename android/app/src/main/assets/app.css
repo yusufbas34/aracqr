@@ -1,0 +1,88 @@
+@font-face{font-family:"Barlow";font-weight:400;src:url(fonts/barlow-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow";font-weight:400;src:url(fonts/barlow-latin-ext-400-normal.woff2) format("woff2");unicode-range:U+0100-02AF,U+1E00-1EFF}
+@font-face{font-family:"Barlow";font-weight:600;src:url(fonts/barlow-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow";font-weight:600;src:url(fonts/barlow-latin-ext-600-normal.woff2) format("woff2");unicode-range:U+0100-02AF,U+1E00-1EFF}
+@font-face{font-family:"Barlow";font-weight:700;src:url(fonts/barlow-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow";font-weight:700;src:url(fonts/barlow-latin-ext-700-normal.woff2) format("woff2");unicode-range:U+0100-02AF,U+1E00-1EFF}
+@font-face{font-family:"Barlow Condensed";font-weight:700;src:url(fonts/barlow-condensed-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-weight:700;src:url(fonts/barlow-condensed-latin-ext-700-normal.woff2) format("woff2");unicode-range:U+0100-02AF,U+1E00-1EFF}
+
+:root{--ink:#111418;--band:#0a3a9e;--line:#c9ced6;--muted:#5b6370;--ok:#0c7a43;--err:#b3261e;--bg:#eef0f3}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{font-family:"Barlow",system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+.appbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:6px;background:var(--band);color:#fff;
+  padding:12px 16px;font-weight:700;font-size:20px;min-height:56px}
+.appbar .icon{font:inherit;font-size:24px;line-height:1;background:none;border:0;color:#fff;padding:4px 10px 4px 0;cursor:pointer}
+main{max-width:560px;margin:0 auto;padding:18px 16px 40px}
+h1{font-size:24px;line-height:1.2;margin:0 0 8px}
+h2{font-size:19px;margin:22px 0 10px}
+p{font-size:16px;line-height:1.5;margin:0 0 14px;color:var(--muted)}
+label{display:block;font-weight:600;font-size:15px;margin:16px 0 6px}
+input,select{width:100%;font:inherit;font-size:19px;padding:13px;border:2px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+select{font-size:17px}
+input:focus,select:focus{outline:none;border-color:var(--band)}
+.btn{display:block;width:100%;text-align:center;font:inherit;font-size:18px;font-weight:700;padding:15px;border-radius:10px;
+  border:0;background:var(--band);color:#fff;text-decoration:none;margin-top:14px;cursor:pointer}
+.btn.alt{background:#2b3240}
+.btn.ghost{background:#fff;color:var(--band);border:2px solid var(--line)}
+.btn.danger{background:#fff;color:var(--err);border:2px solid #f0c7c4}
+.btn[disabled]{opacity:.6}
+.msg{padding:12px 14px;border-radius:8px;font-size:15px;line-height:1.45;margin-bottom:14px}
+.msg.err{background:#fbe9e8;color:var(--err)}
+.msg.ok{background:#e6f4ec;color:var(--ok)}
+.msg.info{background:#fff;color:var(--ink);border-left:4px solid var(--band)}
+.hint{font-size:14px;color:var(--muted);margin-top:6px;line-height:1.4}
+.steps{display:flex;gap:6px;margin:0 0 16px}
+.steps span{flex:1;height:5px;border-radius:3px;background:var(--line)}
+.steps span.on{background:var(--band)}
+
+/* tasarım seçimi */
+.designs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.designs button{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;background:#fff;border:3px solid transparent;
+  border-radius:12px;font:inherit;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer}
+.designs button.on{border-color:var(--band)}
+.designs .grid{--w:40mm;--h:60mm;--k:.6667;pointer-events:none}
+.designs .sticker{border-color:transparent}
+.group{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px}
+
+/* etiketlerim */
+.cards{display:grid;gap:12px}
+.card{display:flex;gap:14px;align-items:center;background:#fff;border-radius:12px;padding:12px;text-decoration:none;color:var(--ink)}
+.card .grid{--w:30mm;--h:45mm;--k:.5;pointer-events:none;flex:none}
+.card .sticker{border-color:transparent;padding:0}
+.card b{display:block;font-size:18px}
+.card span{color:var(--muted);font-size:15px}
+.empty{text-align:center;padding:10px 0 4px}
+.empty .grid{justify-content:center;margin:6px 0 14px}
+
+/* etiket ayrıntısı */
+.preview{display:flex;justify-content:center;background:#fff;border-radius:12px;padding:14px;overflow:hidden}
+.preview .sticker{border-color:transparent}
+.opts{background:#fff;border-radius:12px;padding:4px 14px 16px;margin-top:14px}
+.seg{display:flex;gap:8px}
+.seg label{flex:1;margin:0;display:flex;align-items:center;gap:8px;padding:12px;border:2px solid var(--line);border-radius:8px;
+  font-weight:600;font-size:15px;background:#fff}
+.seg input{width:auto;margin:0}
+.seg label:has(input:checked){border-color:var(--band);background:#eef3ff}
+.row{display:flex;gap:10px}.row > *{flex:1}
+.secret{font-family:"Barlow Condensed","Barlow",sans-serif;font-size:28px;font-weight:700;letter-spacing:.18em}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:baseline;font-size:16px}
+.kv dt{color:var(--muted)}.kv dd{margin:0;font-weight:600}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;
+  border-radius:10px;font-weight:600;z-index:20;max-width:calc(100% - 32px);text-align:center}
+.confetti{position:fixed;top:-12px;width:9px;height:14px;z-index:19;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(105vh) rotate(720deg)}}
+
+/* baskı alanı: ekranda görünmez, html2canvas için yerleşimde kalır */
+#printarea{position:fixed;left:-30000px;top:0;background:#fff}
+#printarea .grid{display:flex;flex-wrap:wrap;gap:3mm;align-items:flex-start}
+#printarea.tek .grid{display:block}
+#printarea.tek .sticker{break-after:page;page-break-after:always}
+#printarea .sticker{break-inside:avoid}
+@media print{
+  body{background:#fff}
+  .appbar,main,.toast,.confetti{display:none!important}
+  #printarea{position:static}
+}

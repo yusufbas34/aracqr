@@ -1,0 +1,95 @@
+/* Araç QR sticker tasarımları: web sitesi ve Android uygulaması ortak kullanır. */
+.grid{--w:60mm;--h:90mm;--k:1}
+/* sticker: boyut .grid üzerindeki --w/--h ile seçilir; iç ölçüler --k ile ölçeklenir (60x90 mm = 1) */
+.block{background:#fff}
+.sticker{width:var(--w);height:var(--h);background:#fff;border:calc(var(--k)*.4mm) dashed #9aa0a8;border-radius:calc(var(--k)*3mm);padding:calc(var(--k)*2.5mm);
+  display:flex;flex-direction:column;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.sticker .in{position:relative;flex:1;display:flex;flex-direction:column;border:calc(var(--k)*.8mm) solid var(--ink);border-radius:calc(var(--k)*2mm);
+  overflow:hidden;background:#fff;color:var(--ink)}
+.sticker .in > *{position:relative}
+.sticker .top{background:var(--band);color:#fff;text-align:center;padding:calc(var(--k)*2mm) calc(var(--k)*1.5mm) calc(var(--k)*1.8mm);display:flex;align-items:center;
+  justify-content:center;gap:calc(var(--k)*1.5mm);font-family:"Barlow Condensed","Barlow",sans-serif;font-weight:700;font-size:calc(var(--k)*11pt);line-height:1.05}
+.sticker .top svg{flex:none}
+.sticker .ic-cat{width:calc(var(--k)*11mm);height:calc(var(--k)*9.3mm)}.sticker .ic-smile{width:calc(var(--k)*6mm);height:calc(var(--k)*6mm)}.sticker .ic-moon{width:calc(var(--k)*4.5mm);height:calc(var(--k)*4.5mm)}
+.sticker .msgline{text-align:center;font-weight:700;font-size:calc(var(--k)*9pt);line-height:1.2;padding:calc(var(--k)*1.5mm) calc(var(--k)*2mm) 0}
+.sticker .qr{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:calc(var(--k)*1mm) 0}
+.sticker .qr .box{background:#fff;padding:calc(var(--k)*1mm);border-radius:calc(var(--k)*1.5mm);line-height:0}
+.sticker .qr svg{width:calc(var(--k)*38mm);height:calc(var(--k)*38mm);display:block}
+.sticker .how{text-align:center;font-size:calc(var(--k)*7pt);line-height:1.2;opacity:.85;padding:0 calc(var(--k)*2mm) calc(var(--k)*1.2mm)}
+.sticker .code{background:var(--ink);color:#fff;text-align:center;font-family:"Barlow Condensed","Barlow",sans-serif;
+  font-weight:700;font-size:calc(var(--k)*10pt);letter-spacing:.12em;padding:calc(var(--k)*1mm)}
+.sticker .deco{position:absolute;inset:0;width:100%;height:100%}
+/* plaka */
+.d-plaka .top{background:#fff;color:var(--ink);padding:0;border-bottom:calc(var(--k)*.8mm) solid var(--ink);gap:0;align-items:stretch}
+.d-plaka .top .tr{background:var(--band);color:#fff;width:calc(var(--k)*7mm);font-size:calc(var(--k)*7pt);display:flex;align-items:flex-end;justify-content:center;padding-bottom:calc(var(--k)*1mm)}
+.d-plaka .top .t{flex:1;padding:calc(var(--k)*1.8mm) calc(var(--k)*1mm);font-size:calc(var(--k)*13pt);letter-spacing:.06em}
+/* dikkat */
+.d-dikkat .in{background:#ffd400}
+.d-dikkat .top{background:#111;color:#ffd400;font-size:calc(var(--k)*12pt);letter-spacing:.04em}
+.d-dikkat .stripe{line-height:0}.d-dikkat .stripe svg{width:100%;height:calc(var(--k)*3.5mm);display:block}
+.d-dikkat .code{background:#111;color:#ffd400}
+/* kedi */
+.d-kedi .in{background:#fff1e3;border-color:#d9682b}
+.d-kedi .top{background:transparent;color:#d9682b;font-size:calc(var(--k)*15pt);padding:calc(var(--k)*1.5mm) calc(var(--k)*1.5mm) 0}
+.d-kedi .code{background:#d9682b}
+/* özür */
+.d-ozur .in{background:#e8f7ee;border-color:#0c7a43}
+.d-ozur .top{background:#0c7a43;font-size:calc(var(--k)*10.5pt)}
+.d-ozur .code{background:#0c7a43}
+/* gece */
+.d-gece .in{background:#0d1530;border-color:#0d1530;color:#fff}
+.d-gece .top{background:transparent;color:#5ef2ff;font-size:calc(var(--k)*13pt);letter-spacing:.05em}
+.d-gece .code{background:#5ef2ff;color:#0d1530}
+/* minimal (mürekkep dostu) */
+.d-minimal .top{background:#fff;color:var(--ink);border-bottom:calc(var(--k)*.5mm) solid var(--ink)}
+.d-minimal .code{background:#fff;color:var(--ink);border-top:calc(var(--k)*.5mm) solid var(--ink)}
+/* retro */
+.d-retro .in{background:linear-gradient(#2b1055,#7a2a8c 55%,#ff6a88);border-color:#2b1055;color:#fff}
+.d-retro .top{background:transparent;color:#ffd166;font-size:calc(var(--k)*13pt);letter-spacing:.08em}
+.d-retro .code{background:#ffd166;color:#2b1055}
+/* roket */
+.d-roket .in{background:#101a3d;border-color:#101a3d;color:#fff}
+.d-roket .top{background:transparent;color:#ff9a6b;font-size:calc(var(--k)*10.5pt)}
+.d-roket .code{background:#ff7849;color:#101a3d}
+/* kahve */
+.d-kahve .in{background:#f6ede3;border-color:#6f4e37;color:#3b2a1e}
+.d-kahve .top{background:#6f4e37;font-size:calc(var(--k)*11pt)}
+.d-kahve .code{background:#6f4e37}
+/* köpek */
+.d-kopek .in{background:#e6f3ff;border-color:#2f6fb5}
+.d-kopek .top{background:transparent;color:#2f6fb5;font-size:calc(var(--k)*15pt);padding:calc(var(--k)*1.5mm) calc(var(--k)*1.5mm) 0}
+.d-kopek .code{background:#2f6fb5}
+/* kahraman */
+.d-kahraman .in{background:#ffd400;border-color:#111;border-width:calc(var(--k)*1.1mm)}
+.d-kahraman .top{background:#e4002b;font-size:calc(var(--k)*10.5pt);letter-spacing:.03em}
+.d-kahraman .msgline{color:#111}
+.d-kahraman .code{background:#e4002b}
+/* trafik lambası */
+.d-lamba .in{background:#23272f;border-color:#23272f;color:#fff}
+.d-lamba .top{background:transparent;flex-direction:column;gap:calc(var(--k)*1mm);color:#fff;font-size:calc(var(--k)*12pt)}
+.d-lamba .code{background:#2ecc71;color:#111}
+/* sarı kart */
+.d-sarikart .in{background:#1f8a3b;border-color:#14612a;color:#fff}
+.d-sarikart .top{background:transparent;font-size:calc(var(--k)*13pt);letter-spacing:.04em}
+.d-sarikart .code{background:#ffd400;color:#111}
+/* çiçek */
+.d-cicek .in{background:#fff0f5;border-color:#e05a8a}
+.d-cicek .top{background:transparent;color:#c2185b;font-size:calc(var(--k)*13pt);padding:calc(var(--k)*1.8mm) calc(var(--k)*1.5mm) 0}
+.d-cicek .code{background:#e05a8a}
+/* piksel */
+.d-piksel .in{background:#0b0b0b;border-color:#39ff14;color:#39ff14;font-family:"Courier New",ui-monospace,monospace}
+.d-piksel .top{background:transparent;color:#39ff14;font-family:"Courier New",ui-monospace,monospace;font-size:calc(var(--k)*13pt);letter-spacing:.05em}
+.d-piksel .msgline{font-size:calc(var(--k)*8.5pt)}
+.d-piksel .code{background:#39ff14;color:#000;font-family:"Courier New",ui-monospace,monospace}
+/* nazar */
+.d-nazar .in{background:#0a3d91;border-color:#062a66;color:#fff}
+.d-nazar .top{background:transparent;font-size:calc(var(--k)*15pt);letter-spacing:.05em}
+.d-nazar .code{background:#fff;color:#0a3d91}
+.sticker .ic-light{width:calc(var(--k)*13mm);height:calc(var(--k)*5mm)}.sticker .ic-card{width:calc(var(--k)*4.5mm);height:calc(var(--k)*6mm)}
+.pin{width:var(--w);border:calc(var(--k)*.4mm) dashed #9aa0a8;border-top:0;padding:calc(var(--k)*2.5mm);text-align:center;font-size:calc(var(--k)*9pt);background:#fff}
+.pin span{display:block;font-size:calc(var(--k)*20pt);font-weight:700;letter-spacing:.15em;margin:calc(var(--k)*1mm) 0}
+.pin small{color:#666}
+.only-sticker .pin,.only-pin .sticker{display:none}
+.only-pin .pin{border-top:calc(var(--k)*.4mm) dashed #9aa0a8}
+.small-size .sticker .how{display:none}
+.tek .sticker,.tek .pin{border-color:transparent;border-radius:0}

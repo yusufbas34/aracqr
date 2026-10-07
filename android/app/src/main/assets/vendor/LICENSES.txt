@@ -1,0 +1,5 @@
+Uygulamaya gömülü üçüncü taraf dosyalar:
+- qrcode.js: qrcode-generator 1.4.4, Kazuhiko Arase, MIT lisansı (dosya başlığında).
+- html2canvas.min.js: html2canvas 1.4.1, Niklas von Hertzen, MIT lisansı.
+- jspdf.umd.min.js: jsPDF 2.5.1, James Hall ve yWorks GmbH, MIT lisansı.
+- ../fonts/*.woff2: Barlow ve Barlow Condensed, Jeremy Tribby, SIL Open Font License 1.1 (fonts/OFL.txt).

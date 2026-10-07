@@ -1,0 +1,48 @@
+plugins {
+    id "com.android.application"
+}
+
+android {
+    namespace "io.github.yusufbas34.aracqr"
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "io.github.yusufbas34.aracqr"
+        minSdk 29
+        targetSdk 35
+        // GitHub Actions her derlemede sürümü artırır; yeni APK eskisinin üstüne kurulur
+        def run = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger()
+        versionCode run
+        versionName "1.0.${run}"
+    }
+
+    // Web sitesiyle aynı sticker tasarımları: ../../shared klasörü uygulama içeriğine eklenir.
+    sourceSets {
+        main {
+            assets.srcDirs += ["../../shared"]
+        }
+    }
+
+    // Elden dağıtım (APK) için sabit imza: her sürüm öncekinin üstüne kurulabilsin.
+    // Google Play'e yüklemeden önce kendi gizli anahtarınızı oluşturup bunu değiştirin (android/README.md).
+    signingConfigs {
+        sideload {
+            storeFile file("aracqr-sideload.keystore")
+            storePassword "aracqr-sideload"
+            keyAlias "aracqr"
+            keyPassword "aracqr-sideload"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.sideload
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
