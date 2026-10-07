@@ -27,6 +27,11 @@ const svgPitch = `<svg class="deco" viewBox="0 0 100 150" preserveAspectRatio="n
 const svgFlower = `<svg class="ic-smile" viewBox="0 0 24 24" aria-hidden="true"><g fill="#ff8fb8">${[0, 72, 144, 216, 288].map(a => `<ellipse cx="12" cy="6" rx="3.6" ry="5.2" transform="rotate(${a} 12 12)"/>`).join("")}</g><circle cx="12" cy="12" r="3.3" fill="#ffd166"/></svg>`;
 const svgHeart = `<svg class="ic-smile" viewBox="0 0 7 6" shape-rendering="crispEdges" aria-hidden="true"><path fill="#ff2d55" d="M1 0h2v1H1zM4 0h2v1H4zM0 1h7v2H0zM1 3h5v1H1zM2 4h3v1H2zM3 5h1v1H3z"/></svg>`;
 const svgNazar = `<svg class="ic-smile" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11.3" fill="#1565c0" stroke="#fff" stroke-width="1.2"/><circle cx="12" cy="12" r="7.6" fill="#fff"/><circle cx="12" cy="12" r="5" fill="#5ec8ff"/><circle cx="12" cy="12" r="2.6" fill="#111"/></svg>`;
+const svgClock = `<svg class="ic-smile" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="10" fill="#fff" stroke="#111" stroke-width="1.6"/><path d="M12 7v6l4 2.5" stroke="#e4002b" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M5 3.5 2.5 6M19 3.5 21.5 6" stroke="#111" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+const svgTea = `<svg class="ic-tea" viewBox="0 0 24 30" aria-hidden="true"><path d="M8 3q-1 2 0 3.5T8 10M12 2q-1 2 0 3.5T12 9M16 3q-1 2 0 3.5T16 10" stroke="#fff" stroke-width="1.2" fill="none" stroke-linecap="round" opacity=".85"/><path d="M5 11h14q0 3-2.2 5.2Q15 18 16.5 21T15 27H9q-3-3-1.5-6T7.2 16.2Q5 14 5 11z" fill="#fff" fill-opacity=".35" stroke="#fff" stroke-width="1"/><path d="M6.2 13h11.6q-.6 2.2-2.6 3.6-1.4 1.4.2 4.2t-.9 5.2H9.5q-2.5-2.6-1.1-5.2t.2-4.2Q6.8 15.2 6.2 13z" fill="#c0392b"/><ellipse cx="12" cy="28" rx="7" ry="1.6" fill="#fff"/></svg>`;
+const svgPin = `<svg class="ic-smile" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="6" fill="#e4002b"/><circle cx="10" cy="7" r="2" fill="#fff" opacity=".5"/><path d="M12 15v8" stroke="#555" stroke-width="2" stroke-linecap="round"/></svg>`;
+const svgGrade = `<span class="grade" aria-label="10 üzerinden 2">2<small>/10</small></span>`;
+const svgStarRow = `<div class="kamyon-stars" aria-hidden="true">★ ✿ ★ ✿ ★ ✿ ★</div>`;
 const MSG = "Bu aracın sahibine ulaşmak için QR kodu okutun";
 const HOW = "Telefon kameranızı açın, kodu okutun,<br>tek dokunuşla arayın.";
 
@@ -36,6 +41,18 @@ const DESIGNS = {
   plaka:    {name: "Plaka", top: `<span class="tr">TR</span><span class="t">SAHİBİNE ULAŞ</span>`, msg: MSG, how: HOW},
   dikkat:   {name: "Dikkat şeritli", pre: svgStripe, top: "PARK SORUNU MU?", msg: MSG, how: HOW, post: svgStripe},
   minimal:  {name: "Sade (az mürekkep)", top: "ARAÇ SAHİBİNE ULAŞIN", msg: MSG, how: HOW},
+  kamyon:   {name: "Kamyon arkası", group: FUN, isNew: true, pre: svgStarRow, top: "KADER BİZİ BU OTOPARKTA BULUŞTURDU",
+             msg: "Şoförsen bas gaza, önün kapandıysa okut bu kodu!", how: "Gazla uçabilirsin ama<br>önce bir okut, sahibi gelsin.", post: svgStarRow},
+  karne:    {name: "Park karnesi", group: FUN, isNew: true, top: `PARK KARNESİ${svgGrade}`,
+             msg: "Kötü park ettiysem affedin! QR'ı okutun, hemen gelip düzelteyim.", how: "Karneyi silecek altına bırakmayın,<br>okutup arayın yeter."},
+  postit:   {name: "Not bırakmayın", group: FUN, isNew: true, top: `${svgPin}NOT BIRAKMAYA GEREK YOK!`,
+             msg: "Silecek altına kâğıt sıkıştırmayın; QR'ı okutun, beni arayın.", how: "Yağmurda ıslanan notlar<br>artık tarih oldu."},
+  mim:      {name: "Mim (meme)", group: FUN, isNew: true, top: "PARK YERİ YOK MU?",
+             msg: "Bu aracın sahibine ulaşmak için QR kodu okutun", how: "", post: `<div class="mim-bottom">QR'I OKUT,<br>SAHİBİ GELSİN</div>`},
+  besdk:    {name: "5 dakikaya geliyorum", group: FUN, isNew: true, top: `${svgClock}5 DK'YA GELİYORUM`,
+             msg: "Söz, gerçekten 5 dakika! Gecikirsem QR'ı okutup arayın.", how: "Türk usulü 5 dakika değil,<br>gerçek 5 dakika."},
+  cay:      {name: "Çay molası", group: FUN, isNew: true, top: `${svgTea}<span>BİR ÇAY İÇİP<br>GELİYORUM</span>`,
+             msg: "Çayım soğumadan gelirim! Acilse QR'ı okutun.", how: "Demli mi açık mı?<br>Önce arayın, sonra karar verelim."},
   gece:     {name: "Gece yıldızlı", group: FUN, pre: svgStars, top: `SAHİBİNE ULAŞ${svgMoon}`, msg: MSG, how: "Gece gündüz fark etmez,<br>tek dokunuşla arayın."},
   kedi:     {name: "Miyav kedi", group: FUN, top: `${svgCat}MİYAV!`, msg: "Sahibime ulaşmak için QR kodu okut, hemen gelsin!",
              how: "Kameranı aç, kodu okut, ara.<br>Patiler seni bekliyor."},

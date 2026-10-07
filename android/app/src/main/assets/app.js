@@ -236,7 +236,7 @@ function showDesigns(tagCode) {
     <div class="reels" id="reels">
       ${keys.map((k, i) => `
         <section class="reel" data-d="${k}" aria-label="${esc(DESIGNS[k].name)}">
-          <div class="reel-top">${i + 1} / ${keys.length} · ${DESIGNS[k].group ? "Eğlenceli" : "Klasik"}</div>
+          <div class="reel-top">${DESIGNS[k].isNew ? `<span class="new">🆕 Yeni</span> ` : ""}${i + 1} / ${keys.length} · ${DESIGNS[k].group ? "Eğlenceli" : "Klasik"}</div>
           <div class="reel-sticker">${stickerAt(code, k, link, "60x90")}</div>
           <div class="reel-bottom">
             <b>${esc(DESIGNS[k].name)}</b>

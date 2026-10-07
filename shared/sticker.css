@@ -86,6 +86,48 @@
 .d-nazar .top{background:transparent;font-size:calc(var(--k)*15pt);letter-spacing:.05em}
 .d-nazar .code{background:#fff;color:#0a3d91}
 .sticker .ic-light{width:calc(var(--k)*13mm);height:calc(var(--k)*5mm)}.sticker .ic-card{width:calc(var(--k)*4.5mm);height:calc(var(--k)*6mm)}
+/* ---- sosyal medyadan esinlenen komik tasarımlar ---- */
+/* kamyon arkası */
+.d-kamyon .in{background:#b3121b;border:calc(var(--k)*1.2mm) double #ffd400;color:#fff}
+.d-kamyon .top{background:#ffd400;color:#b3121b;font-size:calc(var(--k)*9.5pt);line-height:1.1;padding:calc(var(--k)*1.6mm) calc(var(--k)*2mm);letter-spacing:.01em}
+.d-kamyon .kamyon-stars{text-align:center;color:#ffd400;font-size:calc(var(--k)*7pt);letter-spacing:calc(var(--k)*1.2mm);line-height:1;padding:calc(var(--k)*.8mm) 0}
+.d-kamyon .msgline{font-size:calc(var(--k)*9pt)}
+.d-kamyon .how{font-style:italic}
+.d-kamyon .code{background:#ffd400;color:#b3121b}
+/* park karnesi */
+.d-karne .in{background:#fffdf5;border-color:#1f3a93;color:#1f3a93;
+  background-image:repeating-linear-gradient(#fffdf5 0 calc(var(--k)*3.6mm),#c9d6f2 calc(var(--k)*3.6mm) calc(var(--k)*3.8mm))}
+.d-karne .top{background:#1f3a93;justify-content:space-between;padding:calc(var(--k)*1.6mm) calc(var(--k)*2.4mm);font-size:calc(var(--k)*13pt);letter-spacing:.06em}
+.d-karne .grade{display:inline-flex;align-items:baseline;justify-content:center;width:calc(var(--k)*10mm);height:calc(var(--k)*10mm);border:calc(var(--k)*.7mm) solid #e4002b;border-radius:50%;
+  color:#e4002b;background:#fff;font-size:calc(var(--k)*13pt);line-height:calc(var(--k)*9mm);transform:rotate(-12deg);margin:-1.5mm 0}
+.d-karne .grade small{font-size:calc(var(--k)*6pt)}
+.d-karne .msgline{color:#1f3a93}
+.d-karne .code{background:#1f3a93}
+/* not bırakmayın: yapışkan not */
+.d-postit .in{background:#fff27a;border-color:#e0c200;color:#3b3200;box-shadow:inset 0 -3mm calc(var(--k)*4mm) #00000012}
+.d-postit .top{background:transparent;color:#3b3200;font-size:calc(var(--k)*11pt);padding:calc(var(--k)*2mm) calc(var(--k)*1.5mm) 0;transform:rotate(-2deg)}
+.d-postit .msgline{font-style:italic}
+.d-postit .code{background:#3b3200;color:#fff27a}
+/* mim */
+.d-mim .in{background:radial-gradient(circle at 50% 45%,#6b7280,#1f2937 75%);border-color:#000;color:#fff}
+.d-mim .top,.d-mim .mim-bottom{background:transparent;color:#fff;font-family:"Barlow Condensed","Barlow",sans-serif;font-weight:700;text-transform:uppercase;
+  text-align:center;letter-spacing:.02em;
+  text-shadow:calc(var(--k)*.35mm) calc(var(--k)*.35mm) 0 #000,-.35mm calc(var(--k)*.35mm) 0 #000,calc(var(--k)*.35mm) -.35mm 0 #000,-.35mm -.35mm 0 #000,0 calc(var(--k)*.4mm) 0 #000,0 -.4mm 0 #000,calc(var(--k)*.4mm) 0 0 #000,-.4mm 0 0 #000}
+.d-mim .top{font-size:calc(var(--k)*16pt);padding:calc(var(--k)*2mm) calc(var(--k)*1.5mm) 0}
+.d-mim .msgline{font-size:calc(var(--k)*7.5pt);font-weight:600;opacity:.85}
+.d-mim .mim-bottom{font-size:calc(var(--k)*13pt);line-height:1.05;padding:0 calc(var(--k)*1.5mm) calc(var(--k)*1.5mm)}
+.d-mim .how{display:none}
+.d-mim .code{background:#000}
+/* 5 dakikaya geliyorum */
+.d-besdk .in{background:#e8f6ff;border-color:#0b74c4}
+.d-besdk .top{background:#0b74c4;font-size:calc(var(--k)*13pt);letter-spacing:.03em}
+.d-besdk .code{background:#0b74c4}
+/* çay molası */
+.d-cay .in{background:#7a1f12;border-color:#4a1209;color:#fff;
+  background-image:radial-gradient(circle at 20% 15%,#ffffff14 0 calc(var(--k)*2mm),transparent calc(var(--k)*2.2mm)),radial-gradient(circle at 85% 80%,#ffffff10 0 calc(var(--k)*3mm),transparent calc(var(--k)*3.2mm))}
+.d-cay .top{background:transparent;font-size:calc(var(--k)*11pt);line-height:1.05;text-align:left;gap:calc(var(--k)*2mm)}
+.d-cay .code{background:#f6e2b3;color:#7a1f12}
+.sticker .ic-tea{width:calc(var(--k)*7mm);height:calc(var(--k)*8.75mm)}
 .pin{width:var(--w);border:calc(var(--k)*.4mm) dashed #9aa0a8;border-top:0;padding:calc(var(--k)*2.5mm);text-align:center;font-size:calc(var(--k)*9pt);background:#fff}
 .pin span{display:block;font-size:calc(var(--k)*20pt);font-weight:700;letter-spacing:.15em;margin:calc(var(--k)*1mm) 0}
 .pin small{color:#666}
