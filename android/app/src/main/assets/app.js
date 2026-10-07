@@ -110,7 +110,8 @@ function showHome() {
       ${list.map(t => `
         <a class="card" href="#/etiket/${encodeURIComponent(t.code)}">
           ${stickerAt(t.code, t.design, qrLink(t.code), "40x60")}
-          <div><b>${esc(t.code)}</b><span>${esc(prettyPhone(t.phone))}<br>${esc(DESIGNS[t.design]?.name || "")} · ${esc(SIZES[t.size] || "")}</span></div>
+          <div><b>${esc(t.code)}</b><span>${esc(prettyPhone(t.phone))}<br>${esc(DESIGNS[t.design]?.name || "")} · ${esc(SIZES[t.size] || "")}</span>
+            <span class="scan" data-scan="${esc(t.code)}">${scanChip(store.get("stats", {})[t.code])}</span></div>
         </a>`).join("")}
     </div>
     <a class="btn" href="#/yeni">+ Yeni QR etiket oluştur</a>
@@ -118,7 +119,10 @@ function showHome() {
     <button class="btn ghost" type="button" id="howto">Nasıl çalışır?</button>`);
   bindHowto();
   refreshOrders();
+  loadStats(list).then(st => document.querySelectorAll("[data-scan]").forEach(el => { el.innerHTML = scanChip(st[el.dataset.scan]); }));
 }
+
+const scanChip = st => st ? `👀 ${st.last30} okutma / 30 gün` : "";
 
 function bindHowto() {
   const b = document.getElementById("howto");
@@ -195,6 +199,28 @@ function showPhone(error = "", value = "") {
   });
 }
 
+const hhmm = min => `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
+const toMinutes = v => { const m = /^(\d{1,2}):(\d{2})$/.exec(v || ""); return m ? Number(m[1]) * 60 + Number(m[2]) : null; };
+
+// Okutma sayacı (yalnızca PIN'i bilen sahibine): {code: {total, last30, last}}
+async function loadStats(list) {
+  const cache = store.get("stats", {});
+  if (!list.length) return cache;
+  try {
+    const rows = await rpc("self_tag_stats", {p_codes: list.map(t => t.code), p_pins: list.map(t => t.pin)});
+    for (const r of rows || []) cache[r.code] = {total: r.total, last30: r.last30, last: r.last};
+    store.set("stats", cache);
+  } catch (e) {}
+  return cache;
+}
+
+function statText(st) {
+  if (!st) return "";
+  if (!st.total) return "👀 Henüz okutulmadı";
+  const last = new Date(st.last).toLocaleString("tr-TR", {day: "numeric", month: "long", hour: "2-digit", minute: "2-digit"});
+  return `👀 Son 30 günde <b>${esc(st.last30)}</b> kez okutuldu · toplam ${esc(st.total)} · son: ${esc(last)}`;
+}
+
 let celebrated = "";
 
 function showTag(code, isNew) {
@@ -237,6 +263,7 @@ function showTag(code, isNew) {
 
     <h2>Etiket bilgileri</h2>
     <div class="opts" style="padding-top:14px">
+      <div class="stat" id="stat">${statText(store.get("stats", {})[t.code])}</div>
       <dl class="kv">
         <dt>Etiket kodu</dt><dd>${esc(t.code)}</dd>
         <dt>Aranacak numara</dt><dd>${esc(prettyPhone(t.phone))}</dd>
@@ -246,9 +273,55 @@ function showTag(code, isNew) {
       <a class="btn ghost" href="#/etiket/${encodeURIComponent(t.code)}/numara">Numarayı değiştir</a>
       <a class="btn ghost" href="${esc(qrLink(t.code))}">QR'ı dene (okutan kişinin göreceği sayfa)</a>
       <button class="btn danger" id="remove" type="button">Bu telefondan kaldır</button>
-    </div>`, true);
+    </div>
+
+    <h2>Arama ayarları</h2>
+    <form class="opts" id="cs" novalidate style="padding-top:4px">
+      <div id="cs-msg"></div>
+      <label for="b-name">Yedek kişi <span class="opt">(isteğe bağlı)</span></label>
+      <input id="b-name" maxlength="40" placeholder="Örn. Eşim, Babam" value="${esc(t.backupName || "")}">
+      <label for="b-phone">Yedek numara</label>
+      <input id="b-phone" type="tel" inputmode="tel" placeholder="05xx xxx xx xx" value="${esc(t.backupPhone ? prettyPhone(t.backupPhone) : "")}">
+      <div class="hint">QR'ı okutan kişi size ulaşamazsa bu numarayı da görür ve arayabilir.</div>
+      <label class="check"><input type="checkbox" id="q-on"${t.quietStart != null ? " checked" : ""}> Sessiz saatler (bu saatlerde otomatik arama yapılmaz, SMS önerilir)</label>
+      <div class="row" id="q-times"${t.quietStart != null ? "" : " hidden"}>
+        <div><label for="q-start">Başlangıç</label><input id="q-start" type="time" value="${hhmm(t.quietStart ?? 1380)}"></div>
+        <div><label for="q-end">Bitiş</label><input id="q-end" type="time" value="${hhmm(t.quietEnd ?? 420)}"></div>
+      </div>
+      <button class="btn" type="submit">Arama ayarlarını kaydet</button>
+    </form>`, true);
 
   const update = patch => { saveTag({...t, ...patch}); showTag(code, isNew); };
+  loadStats([t]).then(st => { const el = document.getElementById("stat"); if (el && st[t.code]) el.innerHTML = statText(st[t.code]); });
+  document.getElementById("q-on").onchange = ev => { document.getElementById("q-times").hidden = !ev.target.checked; };
+  document.getElementById("cs").addEventListener("submit", async ev => {
+    ev.preventDefault();
+    const box = document.getElementById("cs-msg");
+    const fail = text => { box.innerHTML = `<div class="msg err" role="alert">${esc(text)}</div>`; box.scrollIntoView({block: "center"}); };
+    const rawB = document.getElementById("b-phone").value.trim(), backup = rawB ? normalizePhone(rawB) : null;
+    if (rawB && !backup) return fail("Yedek numara geçersiz. Örnek: 0532 123 45 67");
+    if (backup && backup === t.phone) return fail("Yedek numara asıl numarayla aynı olamaz.");
+    const quiet = document.getElementById("q-on").checked;
+    const qs = quiet ? toMinutes(document.getElementById("q-start").value) : null;
+    const qe = quiet ? toMinutes(document.getElementById("q-end").value) : null;
+    if (quiet && (qs == null || qe == null || qs === qe)) return fail("Sessiz saatlerin başlangıç ve bitişini farklı seçin.");
+    const name = document.getElementById("b-name").value.trim();
+    ev.submitter && (ev.submitter.disabled = true);
+    let res;
+    try { res = await rpc("self_tag_settings", {p_code: t.code, p_pin: t.pin, p_backup_phone: backup, p_backup_name: name || null, p_quiet_start: qs, p_quiet_end: qe}); }
+    catch (e) {
+      ev.submitter && (ev.submitter.disabled = false);
+      return fail(e.status === 404 ? "Bu özellik için sunucu güncellemesi gerekiyor; kısa süre içinde açılacak." : "Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edin.");
+    }
+    if (!res?.ok) {
+      ev.submitter && (ev.submitter.disabled = false);
+      return fail({bad_phone: "Yedek numara geçersiz.", bad_hours: "Sessiz saatler geçersiz.", bad_pin: "PIN eşleşmedi.",
+        locked: "Çok fazla deneme. 15 dakika sonra tekrar deneyin.", not_found: "Etiket sunucuda bulunamadı."}[res?.error] || "Kaydedilemedi.");
+    }
+    saveTag({...findTag(code), backupPhone: backup, backupName: backup ? name : "", quietStart: qs, quietEnd: qe});
+    toast("Arama ayarları kaydedildi.");
+    showTag(code, isNew);
+  });
   document.getElementById("size").onchange = ev => update({size: ev.target.value});
   app.querySelectorAll('input[name="paper"]').forEach(r => r.onchange = () => update({paper: r.value}));
   const copies = () => Math.max(1, Math.min(maxCopies, parseInt(document.getElementById("copies").value, 10) || 1));

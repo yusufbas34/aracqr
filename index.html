@@ -81,6 +81,8 @@ details p{margin:8px 0 0}
 .req.order.st-odeme_bildirildi{border-left-color:var(--err)}.req.order.st-onaylandi{border-left-color:#e0a100}
 .req.order.st-baskida{border-left-color:var(--band)}.req.order.st-kargolandi{border-left-color:var(--ok)}
 .tabs{overflow-x:auto}.tabs button{white-space:nowrap}
+details.howto{background:#f4f6fa;margin:12px 0 0}
+details.howto ol{margin:8px 0 0;padding-left:20px;line-height:1.6;font-size:15px}
 .req h3{margin:0;font-size:18px}
 .req .meta{font-size:14px;color:var(--muted);line-height:1.6}
 .req .meta a{color:var(--band)}
@@ -93,6 +95,9 @@ details p{margin:8px 0 0}
   border:0;background:var(--band);color:#fff;text-decoration:none;margin-top:22px;cursor:pointer}
 .btn[disabled]{opacity:.6}
 .btn.call{background:var(--ok);font-size:22px;padding:20px}
+.btn.ghost{background:#fff;color:var(--band);border:2px solid var(--line)}
+.msg.info{background:#fff;color:var(--ink);border-left:4px solid var(--band)}
+.msg.info a{color:var(--band)}
 .btn:focus-visible,a:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 .msg{padding:12px 14px;border-radius:8px;font-size:15px;margin-bottom:14px}
 .msg.err{background:#fbe9e8;color:var(--err)}
@@ -217,12 +222,46 @@ const CHANGE = {title: "Numarayı değiştir", button: "Yeni numarayı kaydet", 
   intro: "Yeni numarayı ve etiketin PIN'ini girin."};
 const CHANGE_SELF = {...CHANGE, intro: "Yeni numarayı ve etiketi oluştururken uygulamada gösterilen PIN'i girin."};
 
-function showCall(code, phone) {
+// Türkiye saatiyle şu an dakika cinsinden (0..1439)
+function istanbulMinutes(now = new Date()) {
+  const [h, m] = new Intl.DateTimeFormat("en-GB", {timeZone: "Europe/Istanbul", hour: "2-digit", minute: "2-digit", hourCycle: "h23"})
+    .format(now).split(":").map(Number);
+  return h * 60 + m;
+}
+const hhmm = min => `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
+
+// Sessiz saatler gece yarısını geçebilir (ör. 23:00–07:00)
+function inQuietHours(tag, now) {
+  if (tag.quiet_start == null || tag.quiet_end == null) return false;
+  const t = istanbulMinutes(now), a = tag.quiet_start, b = tag.quiet_end;
+  return a < b ? t >= a && t < b : t >= a || t < b;
+}
+
+function showCall(code, tag) {
+  const phone = tag.phone, quiet = inQuietHours(tag);
+  const sms = `sms:${phone}?body=${encodeURIComponent("Merhaba, aracınızla ilgili size ulaşmaya çalışıyorum (Araç QR).")}`;
+  const backup = tag.backup_phone ? `
+    <div class="msg info" style="margin-top:18px">Ulaşamazsanız${tag.backup_name ? ` <b>${esc(tag.backup_name)}</b>` : ""}:
+      <a href="tel:${esc(tag.backup_phone)}"><b>${esc(prettyPhone(tag.backup_phone))}</b></a></div>
+    <a class="btn ghost" href="tel:${esc(tag.backup_phone)}" style="margin-top:8px">Yedek numarayı ara</a>` : "";
+  if (quiet) {
+    show(`
+      ${plate(code)}
+      <h1>Araç sahibi şu an sessiz saatlerde</h1>
+      <p>Araç sahibi ${hhmm(tag.quiet_start)}–${hhmm(tag.quiet_end)} arasında aranmak istemiyor. Acil değilse mesaj gönderin.</p>
+      <a class="btn call" href="${esc(sms)}">SMS gönder</a>
+      <a class="btn ghost" href="tel:${esc(phone)}">Acil durum: yine de ara</a>
+      ${backup}
+      <p class="small"><a href="${esc(ownLink(code))}&degistir">Aracın sahibi misiniz? Numarayı değiştirin</a></p>`);
+    return; // sessiz saatlerde otomatik arama yok
+  }
   show(`
     ${plate(code)}
     <h1>Araç sahibini arayın</h1>
     <p>Arama ekranı açılmadıysa aşağıdaki butona dokunun.</p>
     <a class="btn call" href="tel:${esc(phone)}">Ara: ${esc(prettyPhone(phone))}</a>
+    <a class="btn ghost" href="${esc(sms)}">SMS gönder</a>
+    ${backup}
     <p class="small"><a href="${esc(ownLink(code))}&degistir">Aracın sahibi misiniz? Numarayı değiştirin</a></p>`);
   setTimeout(() => { location.href = "tel:" + phone; }, 250);
 }
@@ -420,7 +459,7 @@ async function showAdmin() {
   if (!Array.isArray(rows)) return showAdminLogin("Beklenmeyen yanıt, tekrar deneyin.");
   if (typeof qrcode !== "function") return showMessage("QR kütüphanesi yüklenemedi", "Sayfayı yenileyip tekrar deneyin.");
   const [given, requests, appReady, orderRows] = await Promise.all([loadGiven(), loadRequests(),
-    rpc("aracqr_app_version", {}).then(v => v >= 1, () => false), loadOrders()]);
+    rpc("aracqr_app_version", {}).then(v => v >= 2, () => false), loadOrders()]);
   orderBadge = orderRows ? orderRows.filter(o => o.status === "odeme_bildirildi").length : 0;
   if (adminTab === "requests") return showRequests(rows, given, requests);
   if (adminTab === "orders") return showOrders(orderRows, requests);
@@ -457,7 +496,7 @@ async function showAdmin() {
       <button class="btn" id="add">10 etiket daha üret</button>
     </div>
     ${given ? "" : setupHtml('"Verildi" takibi kurulu değil.', "verildi.sql")}
-    ${appReady ? "" : setupHtml("Android uygulaması için veritabanı kurulumu eksik; kurulmadan uygulamada QR oluşturulamaz.", "uygulama.sql")}
+    ${appReady ? "" : setupHtml("Android uygulaması için veritabanı kurulumu eksik ya da güncel değil (yedek numara, sessiz saatler, okutma sayacı). Kurulmadan uygulamada QR oluşturulamaz.", "uygulama.sql")}
     <p class="noprint">Talep edene etiket verirken tasarımı seçip <b>Yazdır ve ver</b> ya da <b>PDF kaydet ve ver</b>'e basın; etiket verildi olarak işaretlenip bu listeden kalkar.
       Kişi QR'ı okutup numarasını ve PIN'i girdiğinde etiket o numarayı aramaya başlar.
       Yazdırırken ölçek <b>%100 / Gerçek boyut</b> olmalı. Etiket yazıcısı ya da matbaa için “Her sayfaya bir etiket”i seçin; sayfa ölçüsü sticker ölçüsü olur.</p>
@@ -995,12 +1034,63 @@ async function showSettings(requests, error = "") {
       <label for="s-ship">Kargo bilgisi (uygulamada görünür)</label><input id="s-ship" value="${esc(shop.shipping_text || "")}">
       <label for="s-printer">Baskıcının e-postası <span style="font-weight:400;color:var(--muted)">(yalnızca burada görünür)</span></label>
       <input id="s-printer" type="email" value="${esc(shop.printer_email || "")}">
+
+      <h2>Ödeme bildirimi</h2>
+      <p class="hint">Müşteri “Ödemeyi yaptım” deyince size anında haber gelir. Telegram, e-posta ya da ikisi birden.</p>
+      ${"telegram_bot_token" in shop ? `
+      <details class="howto"><summary>Telegram nasıl kurulur? (2 dakika)</summary>
+        <ol>
+          <li>Telegram'da <b>@BotFather</b>'ı açın, <b>/newbot</b> yazın, bota bir ad verin.</li>
+          <li>BotFather'ın verdiği <b>token</b>'ı aşağıya yapıştırın.</li>
+          <li>Kendi botunuzu Telegram'da açıp <b>Başlat</b>'a (Start) basın ve bir mesaj yazın.</li>
+          <li>Aşağıdaki <b>Chat ID'yi bul</b> butonuna basın, sonra <b>Kaydet</b> ve <b>Deneme bildirimi gönder</b>.</li>
+        </ol>
+      </details>
+      <label for="s-tg-token">Telegram bot token</label><input id="s-tg-token" autocomplete="off" placeholder="123456789:AA…" value="${esc(shop.telegram_bot_token || "")}">
+      <label for="s-tg-chat">Telegram chat ID</label>
+      <div class="row2" style="align-items:end"><input id="s-tg-chat" inputmode="numeric" value="${esc(shop.telegram_chat_id || "")}">
+        <button class="btn ghost" type="button" id="find-chat" style="margin:0">Chat ID'yi bul</button></div>
+      <details class="howto"><summary>E-posta nasıl kurulur? (Resend, ücretsiz)</summary>
+        <ol>
+          <li><b>resend.com</b>'da ücretsiz hesap açın (bildirim e-postası bu hesabın e-postası olmalı).</li>
+          <li><b>API Keys</b> bölümünden bir anahtar oluşturup aşağıya yapıştırın.</li>
+        </ol>
+      </details>
+      <label for="s-resend">Resend API anahtarı</label><input id="s-resend" autocomplete="off" placeholder="re_…" value="${esc(shop.resend_api_key || "")}">
+      <label for="s-notify">Bildirim e-postası</label><input id="s-notify" type="email" value="${esc(shop.notify_email || "")}">
+      ` : `<div class="msg err">Bildirimler için veritabanını güncelleyin: ${setupHtml("Sipariş sistemi güncellemesi var.", "siparis.sql")}</div>`}
+
       <button class="btn" type="submit">Kaydet</button>
+      ${"telegram_bot_token" in shop ? `<button class="btn ghost" type="button" id="notify-test">Deneme bildirimi gönder</button>` : ""}
       <p class="hint" style="margin-top:12px">IBAN ve alıcı adı girilmeden satış açılmaz. Değişiklikler uygulamaya hemen yansır; uygulamayı güncellemek gerekmez.</p>
     </form>` : ""}`, true);
   bindTabs();
   const form = document.getElementById("sf");
   if (!form) return;
+  // Bota yazılan son mesajdan chat ID'yi bulur (Telegram API tarayıcıdan çağrılabilir)
+  const find = document.getElementById("find-chat");
+  if (find) find.onclick = async () => {
+    const token = document.getElementById("s-tg-token").value.trim();
+    if (!/^\d+:[\w-]+$/.test(token)) return toast("Önce BotFather'ın verdiği token'ı yapıştırın.");
+    try {
+      const r = await (await fetch(`https://api.telegram.org/bot${token}/getUpdates`)).json();
+      if (!r.ok) return toast("Token hatalı görünüyor.");
+      const chat = [...(r.result || [])].reverse().map(u => (u.message || u.channel_post)?.chat).find(Boolean);
+      if (!chat) return toast("Mesaj bulunamadı: botunuzu Telegram'da açıp Başlat'a basın, bir mesaj yazıp tekrar deneyin.", 6000);
+      document.getElementById("s-tg-chat").value = chat.id;
+      toast(`Bulundu: ${chat.first_name || chat.title || chat.id}. Şimdi Kaydet'e basın.`);
+    } catch (e) { toast("Telegram'a ulaşılamadı."); }
+  };
+  const test = document.getElementById("notify-test");
+  if (test) test.onclick = async () => {
+    test.disabled = true;
+    try {
+      const r = await rpc("admin_notify_test", {p_key: adminKey});
+      toast(!r.pg_net ? "Supabase'de pg_net eklentisi açık değil: Database > Extensions'tan pg_net'i açın." :
+        r.sent ? "Deneme bildirimi gönderildi. Telegram / e-postanızı kontrol edin." : "Önce bilgileri girip Kaydet'e basın.", 7000);
+    } catch (e) { toast("Gönderilemedi: " + e.message); }
+    test.disabled = false;
+  };
   form.addEventListener("submit", async ev => {
     ev.preventDefault();
     const g = id => document.getElementById(id).value.trim();
@@ -1010,8 +1100,11 @@ async function showSettings(requests, error = "") {
     const price = parseInt(g("s-price"), 10);
     if (!(price >= 0)) return showSettings(requests, "Fiyat geçersiz.");
     try {
+      const notify = document.getElementById("s-tg-token") ? {p_telegram_bot_token: g("s-tg-token"), p_telegram_chat_id: g("s-tg-chat"),
+        p_resend_api_key: g("s-resend"), p_notify_email: g("s-notify")} : {};
+      if (notify.p_notify_email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(notify.p_notify_email)) return showSettings(requests, "Bildirim e-postası geçersiz.");
       await rpc("admin_shop_set", {p_key: adminKey, p_active: active, p_price: price, p_iban: iban, p_account_name: g("s-name"),
-        p_bank_name: g("s-bank"), p_printer_email: g("s-printer"), p_shipping_text: g("s-ship")});
+        p_bank_name: g("s-bank"), p_printer_email: g("s-printer"), p_shipping_text: g("s-ship"), ...notify});
       await showSettings(requests);
       toast(active ? "Kaydedildi. Satış açık." : "Kaydedildi. Satış kapalı.");
     } catch (e) { showSettings(requests, "Kaydedilemedi: " + e.message); }
@@ -1035,7 +1128,7 @@ async function route() {
   if (!tag?.exists) return showMessage("Etiket bulunamadı", "Bu QR kod geçerli bir etikete ait değil.");
   if (params.has("degistir")) return showForm(code, SELF ? CHANGE_SELF : CHANGE);
   if (!tag.phone) return showForm(code, CLAIM);
-  showCall(code, tag.phone);
+  showCall(code, tag);
 }
 
 route();

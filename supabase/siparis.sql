@@ -2,6 +2,13 @@
 -- Supabase > SQL Editor'da çalıştırın. Önce uygulama.sql kurulu olmalı. Mevcut tablolara dokunmaz; tekrar çalıştırmak güvenlidir.
 -- Admin şifresi kontrolü için mevcut admin_list(p_key) fonksiyonunu kullanır.
 
+-- Bildirimler (Telegram / e-posta) Supabase'in pg_net eklentisiyle gönderilir. Eklenti açılamazsa sipariş sistemi
+-- yine çalışır, yalnızca bildirim gitmez.
+do $$ begin
+  create extension if not exists pg_net;
+exception when others then raise notice 'pg_net açılamadı, bildirimler kapalı: %', sqlerrm;
+end $$;
+
 -- ---------------------------------------------------------------- ayarlar (tek satır, panelden düzenlenir)
 create table if not exists public.shop_settings (
   id integer primary key default 1 check (id = 1),
@@ -15,6 +22,11 @@ create table if not exists public.shop_settings (
   updated_at timestamptz
 );
 insert into public.shop_settings (id) values (1) on conflict (id) do nothing;
+-- sürüm 2: bildirim ayarları (yalnızca panelde görünür)
+alter table public.shop_settings add column if not exists telegram_bot_token text;
+alter table public.shop_settings add column if not exists telegram_chat_id text;
+alter table public.shop_settings add column if not exists resend_api_key text;
+alter table public.shop_settings add column if not exists notify_email text;
 alter table public.shop_settings enable row level security;
 revoke all on public.shop_settings from anon, authenticated;
 
@@ -46,7 +58,60 @@ create index if not exists orders_created_idx on public.orders (created_at);
 alter table public.orders enable row level security;
 revoke all on public.orders from anon, authenticated;
 
-create or replace function public.aracqr_shop_version() returns integer language sql immutable as 'select 1';
+create or replace function public.aracqr_shop_version() returns integer language sql immutable as 'select 2';
+
+-- ---------------------------------------------------------------- bildirim
+-- Telegram ve/veya e-posta (Resend) gönderir. Hata olursa siparişi bozmaz, yalnızca uyarı yazar.
+create or replace function public.aracqr_notify(p_subject text, p_text text)
+returns boolean
+language plpgsql security definer set search_path = public
+as $$
+declare
+  s shop_settings;
+  sent boolean := false;
+begin
+  select * into s from shop_settings where id = 1;
+  if to_regprocedure('net.http_post(text,jsonb,jsonb,jsonb,integer)') is null then return false; end if;
+  if coalesce(s.telegram_bot_token, '') <> '' and coalesce(s.telegram_chat_id, '') <> '' then
+    execute 'select net.http_post(url := $1, body := $2, headers := $3)'
+      using 'https://api.telegram.org/bot' || s.telegram_bot_token || '/sendMessage',
+            jsonb_build_object('chat_id', s.telegram_chat_id, 'text', p_subject || E'\n\n' || p_text),
+            '{"Content-Type": "application/json"}'::jsonb;
+    sent := true;
+  end if;
+  if coalesce(s.resend_api_key, '') <> '' and coalesce(s.notify_email, '') <> '' then
+    execute 'select net.http_post(url := $1, body := $2, headers := $3)'
+      using 'https://api.resend.com/emails',
+            jsonb_build_object('from', 'Araç QR <onboarding@resend.dev>', 'to', jsonb_build_array(s.notify_email),
+              'subject', p_subject, 'text', p_text),
+            jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || s.resend_api_key);
+    sent := true;
+  end if;
+  return sent;
+exception when others then
+  raise warning 'Araç QR bildirimi gönderilemedi: %', sqlerrm;
+  return false;
+end $$;
+revoke all on function public.aracqr_notify(text, text) from public, anon, authenticated;  -- yalnızca içeriden
+
+-- Müşteri "ödemeyi yaptım" deyince size haber verir
+create or replace function public.orders_notify_paid()
+returns trigger
+language plpgsql security definer set search_path = public
+as $$
+begin
+  perform public.aracqr_notify('Araç QR: ödeme bildirimi ' || new.code,
+    new.code || ' · ' || new.amount || ' TL' || E'\n' ||
+    new.full_name || ' · ' || new.phone || E'\n' ||
+    new.district || ' / ' || new.city || E'\n\n' ||
+    'Hesabınızı kontrol edip panelden onaylayın: https://yusufbas34.github.io/aracqr/?admin');
+  return new;
+end $$;
+
+drop trigger if exists orders_paid_notify on public.orders;
+create trigger orders_paid_notify after update of status on public.orders
+  for each row when (new.status = 'odeme_bildirildi' and old.status is distinct from new.status)
+  execute function public.orders_notify_paid();
 
 -- ---------------------------------------------------------------- herkese açık
 -- Uygulamanın göstereceği satış bilgileri (baskıcı e-postası hariç)
@@ -144,8 +209,11 @@ begin
   return query select * from shop_settings where id = 1;
 end $$;
 
+drop function if exists public.admin_shop_set(text, boolean, integer, text, text, text, text, text);  -- sürüm 1 imzası
 create or replace function public.admin_shop_set(p_key text, p_active boolean, p_price integer, p_iban text,
-  p_account_name text, p_bank_name text, p_printer_email text, p_shipping_text text)
+  p_account_name text, p_bank_name text, p_printer_email text, p_shipping_text text,
+  p_telegram_bot_token text default null, p_telegram_chat_id text default null,
+  p_resend_api_key text default null, p_notify_email text default null)
 returns void
 language plpgsql security definer set search_path = public
 as $$
@@ -159,8 +227,23 @@ begin
     bank_name = nullif(trim(coalesce(p_bank_name, '')), ''),
     printer_email = nullif(trim(coalesce(p_printer_email, '')), ''),
     shipping_text = coalesce(nullif(trim(coalesce(p_shipping_text, '')), ''), 'Kargo ücreti fiyata dahildir.'),
+    telegram_bot_token = nullif(trim(coalesce(p_telegram_bot_token, '')), ''),
+    telegram_chat_id = nullif(trim(coalesce(p_telegram_chat_id, '')), ''),
+    resend_api_key = nullif(trim(coalesce(p_resend_api_key, '')), ''),
+    notify_email = nullif(trim(coalesce(p_notify_email, '')), ''),
     updated_at = now()
   where id = 1;
+end $$;
+
+-- Yönetim: deneme bildirimi. {sent: gönderildi mi, pg_net: eklenti var mı}
+create or replace function public.admin_notify_test(p_key text)
+returns json
+language plpgsql security definer set search_path = public
+as $$
+begin
+  perform public.admin_list(p_key);  -- şifre kontrolü
+  return json_build_object('pg_net', to_regprocedure('net.http_post(text,jsonb,jsonb,jsonb,integer)') is not null,
+    'sent', public.aracqr_notify('Araç QR: deneme bildirimi', 'Bildirimler çalışıyor. Yeni ödeme bildirimleri buraya gelecek.'));
 end $$;
 
 create or replace function public.admin_orders(p_key text)
@@ -188,7 +271,8 @@ revoke all on function public.order_create(text, text, text, text, text, text, t
 revoke all on function public.order_paid(text, uuid) from public;
 revoke all on function public.order_status(text[], uuid[]) from public;
 revoke all on function public.admin_shop_get(text) from public;
-revoke all on function public.admin_shop_set(text, boolean, integer, text, text, text, text, text) from public;
+revoke all on function public.admin_shop_set(text, boolean, integer, text, text, text, text, text, text, text, text, text) from public;
+revoke all on function public.admin_notify_test(text) from public;
 revoke all on function public.admin_orders(text) from public;
 revoke all on function public.admin_order_update(text, bigint, text, text, text) from public;
 grant execute on function public.aracqr_shop_version() to anon, authenticated;
@@ -197,6 +281,7 @@ grant execute on function public.order_create(text, text, text, text, text, text
 grant execute on function public.order_paid(text, uuid) to anon, authenticated;
 grant execute on function public.order_status(text[], uuid[]) to anon, authenticated;
 grant execute on function public.admin_shop_get(text) to anon, authenticated;
-grant execute on function public.admin_shop_set(text, boolean, integer, text, text, text, text, text) to anon, authenticated;
+grant execute on function public.admin_shop_set(text, boolean, integer, text, text, text, text, text, text, text, text, text) to anon, authenticated;
+grant execute on function public.admin_notify_test(text) to anon, authenticated;
 grant execute on function public.admin_orders(text) to anon, authenticated;
 grant execute on function public.admin_order_update(text, bigint, text, text, text) to anon, authenticated;

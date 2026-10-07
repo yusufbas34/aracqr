@@ -183,3 +183,8 @@ body.onb-open{overflow:hidden}
 @keyframes onbWave{from{transform:scale(1);opacity:.9}to{transform:scale(2.2);opacity:0}}
 @media (prefers-reduced-motion:reduce){.onb *{animation:none!important;transition:none!important}}
 @media (min-height:760px){.onb-copy h1{font-size:31px}}
+.stat{background:#eef3ff;border-radius:8px;padding:10px 12px;font-size:15px;color:var(--ink);margin-bottom:12px}
+.stat:empty{display:none}
+.card .scan{display:block;margin-top:4px;color:var(--band);font-weight:600;font-size:14px}
+.opt{font-weight:400;color:var(--muted)}
+input[type=time]{font-size:19px}
