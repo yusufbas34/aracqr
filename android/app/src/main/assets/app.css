@@ -253,3 +253,9 @@ body.has-tabbar main{padding-bottom:96px}
 .phrase-row{align-items:center}
 .phrase-row select{flex:1;min-width:0}
 .phrase-row .dice{flex:none;width:auto;margin:0;padding:11px 14px;font-size:20px}
+.switch{display:flex;gap:12px;align-items:flex-start;margin-top:16px;padding:12px;border:2px solid var(--line);border-radius:10px;font-weight:400;font-size:14px;
+  line-height:1.4;color:var(--muted)}
+.switch b{display:block;font-size:16px;color:var(--ink)}
+.switch input{width:22px;height:22px;flex:none;margin:2px 0 0;accent-color:var(--ok)}
+.switch:has(input:not(:checked)){border-color:#f0c7c4;background:#fdf3f2}
+.off-chip{display:inline-block;margin:2px 0 4px;background:#fdf3f2;color:var(--err);border-radius:999px;padding:1px 8px;font-size:13px;font-weight:700}

@@ -99,6 +99,17 @@ details.howto ol{margin:8px 0 0;padding-left:20px;line-height:1.6;font-size:15px
 .btn.ghost{background:#fff;color:var(--band);border:2px solid var(--line)}
 .msg.info{background:#fff;color:var(--ink);border-left:4px solid var(--band)}
 .msg.info a{color:var(--band)}
+/* hazır mesajlar */
+.qm-title{font-size:18px;margin:26px 0 10px}
+.qm-switch{display:flex;gap:8px;margin-bottom:10px}
+.qm-switch label{flex:1;margin:0;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border:2px solid var(--line);
+  border-radius:8px;background:#fff;font-weight:600;font-size:15px}
+.qm-switch input{width:auto;margin:0}
+.qm-switch label:has(input:checked){border-color:var(--band);background:#eef3ff}
+.qm{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.qm-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;background:#fff;border:2px solid var(--line);border-radius:10px;
+  color:var(--ink);text-decoration:none;font-weight:600;font-size:15px;text-align:center;line-height:1.25}
+.qm-btn span{font-size:24px}
 .btn:focus-visible,a:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 .msg{padding:12px 14px;border-radius:8px;font-size:15px;margin-bottom:14px}
 .msg.err{background:#fbe9e8;color:var(--err)}
@@ -238,9 +249,43 @@ function inQuietHours(tag, now) {
   return a < b ? t >= a && t < b : t >= a || t < b;
 }
 
+// QR'ı okutanın tek dokunuşla gönderebileceği hazır mesajlar
+const QUICK_MESSAGES = [
+  ["🚗", "Önümü kapatıyorsunuz", "Merhaba, aracınız önümü kapatıyor. Çıkabilmem için aracınızı çekebilir misiniz?"],
+  ["💡", "Farlarınız açık", "Merhaba, aracınızın farları açık kalmış."],
+  ["🪟", "Camınız açık", "Merhaba, aracınızın camı açık kalmış."],
+  ["💥", "Aracınıza çarpıldı", "Merhaba, aracınıza çarpıldı / hasar var. Lütfen aracınızın yanına gelin."],
+  ["🚓", "Çekici / ceza", "Merhaba, aracınız çekilmek üzere ya da ceza yazılıyor. Lütfen hemen gelin."],
+  ["⚠️", "Araçta çocuk / hayvan var", "ACİL: Aracınızın içinde çocuk ya da hayvan kalmış görünüyor. Lütfen hemen gelin!"],
+];
+
+function quickMessagesHtml(phone) {
+  const digits = String(phone).replace(/\D/g, ""), tail = "\n\n(Araç QR ile gönderildi)";
+  return `<h2 class="qm-title">Ya da hazır mesaj gönderin</h2>
+    <div class="qm-switch" role="radiogroup" aria-label="Gönderme yolu">
+      <label><input type="radio" name="qm" value="sms" checked> SMS</label>
+      <label><input type="radio" name="qm" value="wa"> WhatsApp</label>
+    </div>
+    <div class="qm">${QUICK_MESSAGES.map(([icon, label, text]) => `
+      <a class="qm-btn" data-sms="${esc(`sms:${phone}?body=${encodeURIComponent(text + tail)}`)}"
+         data-wa="${esc(`https://wa.me/${digits}?text=${encodeURIComponent(text + tail)}`)}"
+         href="${esc(`sms:${phone}?body=${encodeURIComponent(text + tail)}`)}"><span aria-hidden="true">${icon}</span>${esc(label)}</a>`).join("")}
+    </div>`;
+}
+
+function bindQuickMessages() {
+  document.querySelectorAll('input[name="qm"]').forEach(r => r.onchange = () =>
+    document.querySelectorAll(".qm-btn").forEach(a => { a.href = a.dataset[r.value === "wa" ? "wa" : "sms"]; }));
+}
+
 function showCall(code, tag) {
+  if (tag.disabled) {
+    return show(`
+      ${plate(code)}
+      <h1>Bu etiket şu an kullanılmıyor</h1>
+      <p>Aracın sahibi bu QR etiketini geçici olarak kapatmış. Araç satılmış ya da etiket artık kullanılmıyor olabilir.</p>`);
+  }
   const phone = tag.phone, quiet = inQuietHours(tag);
-  const sms = `sms:${phone}?body=${encodeURIComponent("Merhaba, aracınızla ilgili size ulaşmaya çalışıyorum (Araç QR).")}`;
   const backup = tag.backup_phone ? `
     <div class="msg info" style="margin-top:18px">Ulaşamazsanız${tag.backup_name ? ` <b>${esc(tag.backup_name)}</b>` : ""}:
       <a href="tel:${esc(tag.backup_phone)}"><b>${esc(prettyPhone(tag.backup_phone))}</b></a></div>
@@ -250,10 +295,11 @@ function showCall(code, tag) {
       ${plate(code)}
       <h1>Araç sahibi şu an sessiz saatlerde</h1>
       <p>Araç sahibi ${hhmm(tag.quiet_start)}–${hhmm(tag.quiet_end)} arasında aranmak istemiyor. Acil değilse mesaj gönderin.</p>
-      <a class="btn call" href="${esc(sms)}">SMS gönder</a>
+      ${quickMessagesHtml(phone)}
       <a class="btn ghost" href="tel:${esc(phone)}">Acil durum: yine de ara</a>
       ${backup}
       <p class="small"><a href="${esc(ownLink(code))}&degistir">Aracın sahibi misiniz? Numarayı değiştirin</a></p>`);
+    bindQuickMessages();
     return; // sessiz saatlerde otomatik arama yok
   }
   show(`
@@ -261,9 +307,10 @@ function showCall(code, tag) {
     <h1>Araç sahibini arayın</h1>
     <p>Arama ekranı açılmadıysa aşağıdaki butona dokunun.</p>
     <a class="btn call" href="tel:${esc(phone)}">Ara: ${esc(prettyPhone(phone))}</a>
-    <a class="btn ghost" href="${esc(sms)}">SMS gönder</a>
+    ${quickMessagesHtml(phone)}
     ${backup}
     <p class="small"><a href="${esc(ownLink(code))}&degistir">Aracın sahibi misiniz? Numarayı değiştirin</a></p>`);
+  bindQuickMessages();
   setTimeout(() => { location.href = "tel:" + phone; }, 250);
 }
 
@@ -460,7 +507,7 @@ async function showAdmin() {
   if (!Array.isArray(rows)) return showAdminLogin("Beklenmeyen yanıt, tekrar deneyin.");
   if (typeof qrcode !== "function") return showMessage("QR kütüphanesi yüklenemedi", "Sayfayı yenileyip tekrar deneyin.");
   const [given, requests, appReady, orderRows] = await Promise.all([loadGiven(), loadRequests(),
-    rpc("aracqr_app_version", {}).then(v => v >= 2, () => false), loadOrders()]);
+    rpc("aracqr_app_version", {}).then(v => v >= 3, () => false), loadOrders()]);
   orderBadge = orderRows ? orderRows.filter(o => NEW_ORDER.includes(o.status)).length : 0;
   if (adminTab === "requests") return showRequests(rows, given, requests);
   if (adminTab === "orders") return showOrders(orderRows, requests);
@@ -497,7 +544,7 @@ async function showAdmin() {
       <button class="btn" id="add">10 etiket daha üret</button>
     </div>
     ${given ? "" : setupHtml('"Verildi" takibi kurulu değil.', "verildi.sql")}
-    ${appReady ? "" : setupHtml("Android uygulaması için veritabanı kurulumu eksik ya da güncel değil (yedek numara, sessiz saatler, okutma sayacı). Kurulmadan uygulamada QR oluşturulamaz.", "uygulama.sql")}
+    ${appReady ? "" : setupHtml("Android uygulaması için veritabanı kurulumu eksik ya da güncel değil (sessiz saatler, okutma sayacı, QR kapat/aç). Kurulmadan uygulamada QR oluşturulamaz.", "uygulama.sql")}
     <p class="noprint">Talep edene etiket verirken tasarımı seçip <b>Yazdır ve ver</b> ya da <b>PDF kaydet ve ver</b>'e basın; etiket verildi olarak işaretlenip bu listeden kalkar.
       Kişi QR'ı okutup numarasını ve PIN'i girdiğinde etiket o numarayı aramaya başlar.
       Yazdırırken ölçek <b>%100 / Gerçek boyut</b> olmalı. Etiket yazıcısı ya da matbaa için “Her sayfaya bir etiket”i seçin; sayfa ölçüsü sticker ölçüsü olur.</p>
@@ -1119,6 +1166,7 @@ async function route() {
   catch (e) { return showMessage("Bağlantı hatası", "Sayfayı yenileyip tekrar deneyin."); }
 
   if (!tag?.exists) return showMessage("Etiket bulunamadı", "Bu QR kod geçerli bir etikete ait değil.");
+  if (tag.disabled) return showCall(code, tag);  // sahibi QR'ı kapatmış: form da numara da gösterilmez
   if (params.has("degistir")) return showForm(code, SELF ? CHANGE_SELF : CHANGE);
   if (!tag.phone) return showForm(code, CLAIM);
   showCall(code, tag);

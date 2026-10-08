@@ -143,7 +143,7 @@ function showHome() {
       ${list.map(t => `
         <a class="card" href="#/etiket/${encodeURIComponent(t.code)}">
           ${stickerAt(t.code, t.design, qrLink(t.code), "40x60", t.phrase)}
-          <div><b>${esc(t.code)}</b><span>${esc(prettyPhone(t.phone))}<br>${esc(DESIGNS[t.design]?.name || "")} · ${esc(SIZES[t.size] || "")}</span>
+          <div><b>${esc(t.name || t.code)}</b>${t.disabled ? `<span class="off-chip">⏸ QR kapalı</span>` : ""}<span>${t.name ? `${esc(t.code)} · ` : ""}${esc(prettyPhone(t.phone))}<br>${esc(DESIGNS[t.design]?.name || "")} · ${esc(SIZES[t.size] || "")}</span>
             <span class="scan" data-scan="${esc(t.code)}">${scanChip(store.get("stats", {})[t.code])}</span></div>
         </a>`).join("")}
     </div>
@@ -325,7 +325,7 @@ function showTag(code, isNew) {
   const maxCopies = t.paper === "a4" ? perA4({w, h}) * 4 : 30;
   // Önizleme ekrana sığsın: geniş stickerlarda küçült
   const fit = Math.min(1, (Math.min(innerWidth, 560) - 64) / (w * 96 / 25.4));
-  show(isNew ? "3. Yazdırın" : t.code, `
+  show(isNew ? "3. Yazdırın" : (t.name || t.code), `
     ${isNew ? `<div class="steps"><span class="on"></span><span class="on"></span><span class="on"></span></div>
       <div class="msg ok"><b>QR'ınız hazır!</b> Bu etiket ${esc(prettyPhone(t.phone))} numarasını arar.</div>` : ""}
     <div class="preview"><div style="zoom:${fit.toFixed(3)}">${stickerAt(t.code, t.design, qrLink(t.code), t.size, t.phrase)}</div></div>
@@ -358,8 +358,13 @@ function showTag(code, isNew) {
     </div>
 
     <h2>Etiket bilgileri</h2>
-    <div class="opts" style="padding-top:14px">
-      <div class="stat" id="stat">${statText(store.get("stats", {})[t.code])}</div>
+    <div class="opts" style="padding-top:4px">
+      <label for="t-name">Araç adı <span class="opt">(isteğe bağlı, yalnızca sizde görünür)</span></label>
+      <input id="t-name" maxlength="30" placeholder="Örn. Beyaz Clio, Motor" value="${esc(t.name || "")}">
+      <label class="switch"><input type="checkbox" id="t-active"${t.disabled ? "" : " checked"}>
+        <span><b>QR açık</b>Kapatırsanız okutan kişi “Bu etiket şu an kullanılmıyor” görür, numaranız gösterilmez. Araç satıldığında ya da etiket kaybolduğunda işe yarar.</span></label>
+      <div id="active-msg"></div>
+      <div class="stat" id="stat" style="margin-top:12px">${statText(store.get("stats", {})[t.code])}</div>
       <dl class="kv">
         <dt>Etiket kodu</dt><dd>${esc(t.code)}</dd>
         <dt>Aranacak numara</dt><dd>${esc(prettyPhone(t.phone))}</dd>
@@ -383,6 +388,30 @@ function showTag(code, isNew) {
     </form>`, true);
 
   const update = patch => { saveTag({...t, ...patch}); showTag(code, isNew); };
+  document.getElementById("t-name").onchange = ev => {
+    saveTag({...findTag(code), name: ev.target.value.trim()});
+    document.getElementById("apptitle").textContent = ev.target.value.trim() || t.code;
+    toast("Araç adı kaydedildi.", 1500);
+  };
+  document.getElementById("t-active").onchange = async ev => {
+    const active = ev.target.checked, box = document.getElementById("active-msg");
+    if (!active && !confirm("QR kapatılsın mı? Okutan kişiler size ulaşamaz; istediğiniz zaman yeniden açabilirsiniz.")) { ev.target.checked = true; return; }
+    ev.target.disabled = true;
+    let res;
+    try { res = await rpc("self_tag_set_active", {p_code: t.code, p_pin: t.pin, p_active: active}); }
+    catch (e) { res = {ok: false, error: e.status === 404 ? "update" : "net"}; }
+    ev.target.disabled = false;
+    if (!res?.ok) {
+      ev.target.checked = !active;
+      box.innerHTML = `<div class="msg err" role="alert">${esc({update: "Bu özellik için sunucu güncellemesi gerekiyor; kısa süre içinde açılacak.",
+        net: "Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edin.", bad_pin: "PIN eşleşmedi.",
+        locked: "Çok fazla deneme. 15 dakika sonra tekrar deneyin."}[res?.error] || "Değiştirilemedi.")}</div>`;
+      return;
+    }
+    box.innerHTML = "";
+    saveTag({...findTag(code), disabled: res.disabled});
+    toast(res.disabled ? "QR kapatıldı. Okutan kişiler size ulaşamaz." : "QR yeniden açıldı.");
+  };
   loadStats([t]).then(st => { const el = document.getElementById("stat"); if (el && st[t.code]) el.innerHTML = statText(st[t.code]); });
   document.getElementById("q-on").onchange = ev => { document.getElementById("q-times").hidden = !ev.target.checked; };
   document.getElementById("cs").addEventListener("submit", async ev => {

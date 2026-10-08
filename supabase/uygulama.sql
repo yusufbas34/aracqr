@@ -18,6 +18,8 @@ alter table public.self_tags add column if not exists backup_phone text;
 alter table public.self_tags add column if not exists backup_name text;
 alter table public.self_tags add column if not exists quiet_start smallint;
 alter table public.self_tags add column if not exists quiet_end smallint;
+-- sürüm 3: sahibi QR'ı geçici olarak kapatabilir (araç satıldı, etiket kayboldu, tatil…)
+alter table public.self_tags add column if not exists disabled boolean not null default false;
 
 -- okutma sayacı: yalnızca kod ve zaman tutulur (IP, cihaz vb. tutulmaz)
 create table if not exists public.self_tag_scans (
@@ -31,7 +33,7 @@ revoke all on public.self_tag_scans from anon, authenticated;
 alter table public.self_tags enable row level security;  -- politika yok: doğrudan erişim kapalı
 revoke all on public.self_tags from anon, authenticated;
 
-create or replace function public.aracqr_app_version() returns integer language sql immutable as 'select 2';
+create or replace function public.aracqr_app_version() returns integer language sql immutable as 'select 3';
 
 -- Yeni etiket oluşturur: {ok:true, code, pin} ya da {ok:false, error}
 create or replace function public.self_tag_create(p_phone text, p_device text default null)
@@ -73,6 +75,7 @@ declare t self_tags;
 begin
   select * into t from self_tags where code = upper(trim(coalesce(p_code, '')));
   if not found then return json_build_object('exists', false); end if;
+  if t.disabled then return json_build_object('exists', true, 'disabled', true); end if;  -- numara gösterilmez
   if not exists (select 1 from self_tag_scans where code = t.code and scanned_at > now() - interval '30 seconds') then
     insert into self_tag_scans (code) values (t.code);
   end if;
@@ -145,6 +148,20 @@ begin
   return json_build_object('ok', true);
 end $$;
 
+-- QR'ı kapat / aç (PIN ile). {ok, disabled}
+create or replace function public.self_tag_set_active(p_code text, p_pin text, p_active boolean)
+returns json
+language plpgsql security definer set search_path = public
+as $$
+declare
+  v_code text := upper(trim(coalesce(p_code, '')));
+  v_err text := public.self_tag_check_pin(v_code, p_pin);
+begin
+  if v_err is not null then return json_build_object('ok', false, 'error', v_err); end if;
+  update self_tags set disabled = not coalesce(p_active, true), updated_at = now() where code = v_code;
+  return json_build_object('ok', true, 'disabled', not coalesce(p_active, true));
+end $$;
+
 -- Okutma istatistikleri (yalnızca PIN'i bilen sahibine): [{code, total, last30, last}]
 create or replace function public.self_tag_stats(p_codes text[], p_pins text[])
 returns json
@@ -175,6 +192,8 @@ revoke all on function public.admin_self_tags(text) from public;
 revoke all on function public.self_tag_check_pin(text, text) from public, anon, authenticated;  -- yalnızca içeriden
 revoke all on function public.self_tag_settings(text, text, text, text, integer, integer) from public;
 revoke all on function public.self_tag_stats(text[], text[]) from public;
+revoke all on function public.self_tag_set_active(text, text, boolean) from public;
+grant execute on function public.self_tag_set_active(text, text, boolean) to anon, authenticated;
 grant execute on function public.self_tag_settings(text, text, text, text, integer, integer) to anon, authenticated;
 grant execute on function public.self_tag_stats(text[], text[]) to anon, authenticated;
 grant execute on function public.aracqr_app_version() to anon, authenticated;
