@@ -80,12 +80,35 @@ const DESIGNS = {
 const RANDOM = "rastgele";
 const pickRandom = () => { const k = Object.keys(DESIGNS); return k[Math.floor(Math.random() * k.length)]; };
 
-// Tasarım metinleri sabit HTML; yalnızca kod kaçışlanır.
-function stickerHtml(code, design, link = tagLink(code)) {
+// İnternetten tanıdık kalıplarla hazır sözler: herhangi bir tasarımın mesaj satırının yerine geçer.
+// Anahtar kaydedilir (sipariş/baskıda metin değil anahtar taşınır), metin burada tek yerde durur.
+const PHRASES = {
+  olm:      "Olm bi saniye, geliyorum! QR'ı okut, ara.",
+  asiri:    "Aşırı özür dilerim! QR'ı okutun, hemen geleyim.",
+  aura:     "Kötü park: -1000 aura. QR'ı okut, aura'mı geri kazanayım.",
+  npc:      "NPC gibi bekleme, QR'ı okut, sahibi gelsin!",
+  plot:     "Plot twist: QR'ı okutursan sahibi 2 dakikada gelir.",
+  spoiler:  "Spoiler: QR'ı okutursan bu hikâye mutlu biter.",
+  ana:      "Ana karakter enerjisiyle park ettim, affet. Okut, geleyim.",
+  kanka:    "Kanka çıkamıyorsan QR'ı okut, hemen geliyorum.",
+  sakin:    "Sakin ol şampiyon! QR'ı okut, 5 dakikaya buradayım.",
+  hayirdir: "Hayırdır kardeşim? QR'ı okut, tatlıya bağlayalım.",
+  kimbu:    "Kimin bu araba? Benim! QR'ı okut, ara beni.",
+  abi:      "Abi bi okut ya, hemen gelip çekiyorum.",
+  efsane:   "Bu park efsane değil, biliyorum. Okut, düzelteyim.",
+  test:     "Bu bir tatbikat değildir: QR'ı okut, sahibi gelsin!",
+  mod:      "Mod: geç kaldım. QR'ı okut, koşarak geleyim.",
+  bekleme:  "Bekleme yapma, QR'ı okut! (lütfen)",
+};
+const pickPhrase = () => { const k = Object.keys(PHRASES); return k[Math.floor(Math.random() * k.length)]; };
+
+// Tasarım metinleri sabit HTML; yalnızca kod kaçışlanır. phrase: PHRASES anahtarı (isteğe bağlı)
+function stickerHtml(code, design, link = tagLink(code), phrase) {
   const d = DESIGNS[design] ? design : "klasik", D = DESIGNS[d];
+  const msg = PHRASES[phrase] ? esc(PHRASES[phrase]) : D.msg;
   return `<div class="sticker d-${d}"><div class="in">${D.pre || ""}
       <div class="top">${D.top}</div>
-      <div class="msgline">${D.msg}</div>
+      <div class="msgline">${msg}</div>
       <div class="qr"><div class="box">${qrSvg(link)}</div></div>
       <div class="how">${D.how}</div>
       <div class="code">${esc(code)}</div>${D.post || ""}
@@ -112,9 +135,9 @@ const perA4 = ({w, h}) => Math.floor((A4.W - 2 * A4.M + A4.G) / (w + A4.G)) * Ma
 const ORDER_SHEET = [["80x120", "74x105"], ["60x90", "55x85", "50x75"], ["40x60", "40x60", "40x60", "40x60"]];
 const ORDER_SIZES = [...new Set(ORDER_SHEET.flat())];
 
-function orderSheetHtml(code, design, link) {
+function orderSheetHtml(code, design, link, phrase) {
   return `<div class="sheet">${ORDER_SHEET.map(row => `<div class="sheet-row">${row.map(size => {
     const {w, h, k} = dims(size);
-    return `<div class="grid${k < .75 ? " small-size" : ""}" style="--w:${w}mm;--h:${h}mm;--k:${k}">${stickerHtml(code, design, link)}</div>`;
+    return `<div class="grid${k < .75 ? " small-size" : ""}" style="--w:${w}mm;--h:${h}mm;--k:${k}">${stickerHtml(code, design, link, phrase)}</div>`;
   }).join("")}</div>`).join("")}</div>`;
 }

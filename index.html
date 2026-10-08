@@ -859,7 +859,7 @@ async function orderPdf(o) {
   await loadPdfLibs();
   const box = document.createElement("div");
   box.style.cssText = "position:fixed;left:-30000px;top:0;background:#fff";
-  box.innerHTML = orderSheetHtml(o.tag_code, o.design, selfLink(o.tag_code));
+  box.innerHTML = orderSheetHtml(o.tag_code, o.design, selfLink(o.tag_code), o.phrase);
   document.body.append(box);
   try {
     await document.fonts?.ready;
@@ -919,7 +919,7 @@ async function showOrders(orders, requests) {
   show(`
     ${tabsHtml(requests ? requests.filter(r => r.status === "yeni").length : 0)}
     ${orders ? "" : setupHtml("Sipariş sistemi kurulu değil.", "siparis.sql")}
-    ${orders && shopVersion < 4 ? setupHtml("Sipariş sistemi güncellemesi var: ödemesiz sipariş, Telegram bildirimi ve sipariş iptali.", "siparis.sql") : ""}
+    ${orders && shopVersion < 5 ? setupHtml("Sipariş sistemi güncellemesi var: siparişte seçilen söz, sipariş iptali ve Telegram bildirimi.", "siparis.sql") : ""}
     ${orders && shop && !shop.active ? `<div class="msg err">Satış kapalı: uygulamada sipariş alınmıyor. <b>Ayarlar</b> sekmesinden açabilirsiniz.</div>` : ""}
     <div class="bar">
       <select id="ofilter" aria-label="Sipariş durumu">
@@ -940,7 +940,7 @@ async function showOrders(orders, requests) {
               · <a href="${esc(waLink(o, customerMessage(o)))}" target="_blank" rel="noopener">WhatsApp</a>
               ${o.email ? ` · <a href="mailto:${esc(o.email)}">${esc(o.email)}</a>` : ""}<br>
               ${o.address || o.city ? `${esc([o.address, [o.district, o.city].filter(Boolean).join(" / ")].filter(Boolean).join(", "))}<br>` : "Adres: görüşmede alınacak<br>"}
-              Tasarım: ${esc(DESIGNS[o.design]?.name || o.design)} · QR: <a href="${esc(selfLink(o.tag_code))}" target="_blank" rel="noopener">${esc(o.tag_code)}</a>
+              Tasarım: ${esc(DESIGNS[o.design]?.name || o.design)}${o.phrase && PHRASES[o.phrase] ? ` · Söz: “${esc(PHRASES[o.phrase])}”` : ""} · QR: <a href="${esc(selfLink(o.tag_code))}" target="_blank" rel="noopener">${esc(o.tag_code)}</a>
               ${o.tracking ? ` · Takip no: <b>${esc(o.tracking)}</b>` : ""}
             </div>
             ${o.note ? `<div class="note">Müşteri notu: ${esc(o.note)}</div>` : ""}

@@ -64,12 +64,13 @@ alter table public.orders alter column address drop not null;
 alter table public.orders alter column status set default 'yeni';
 alter table public.orders drop constraint if exists orders_status_check;
 -- sürüm 4: iptal bilgisi (müşteri uygulamadan ya da yönetici panelden)
+alter table public.orders add column if not exists phrase text;          -- sürüm 5: sticker sözü (shared/sticker.js PHRASES anahtarı)
 alter table public.orders add column if not exists cancelled_by text;   -- 'musteri' | 'yonetici'
 alter table public.orders add column if not exists cancelled_at timestamptz;
 alter table public.orders add constraint orders_status_check
   check (status in ('yeni', 'odeme_bekleniyor', 'odeme_bildirildi', 'onaylandi', 'baskida', 'kargolandi', 'iptal'));
 
-create or replace function public.aracqr_shop_version() returns integer language sql immutable as 'select 4';
+create or replace function public.aracqr_shop_version() returns integer language sql immutable as 'select 5';
 
 -- ---------------------------------------------------------------- bildirim
 -- Telegram ve/veya e-posta (Resend) gönderir. Hata olursa siparişi bozmaz, yalnızca uyarı yazar.
@@ -133,7 +134,7 @@ begin
     case when coalesce(new.address, '') <> '' or coalesce(new.city, '') <> '' then
       '📍 ' || concat_ws(', ', nullif(new.address, ''), nullif(concat_ws(' / ', nullif(new.district, ''), nullif(new.city, '')), '')) || E'\n'
     else '' end ||
-    '🎨 Tasarım: ' || new.design || ' · QR: ' || new.tag_code || E'\n' ||
+    '🎨 Tasarım: ' || new.design || coalesce(' · söz: ' || new.phrase, '') || ' · QR: ' || new.tag_code || E'\n' ||
     case when new.note is not null then '📝 ' || new.note || E'\n' else '' end ||
     E'\nPanel: https://yusufbas34.github.io/aracqr/?admin');
   return new;
@@ -159,9 +160,10 @@ as $$
   from shop_settings where id = 1;
 $$;
 
+drop function if exists public.order_create(text, text, text, text, text, text, text, text, text, text);  -- sürüm 4 imzası
 create or replace function public.order_create(
   p_tag_code text, p_design text, p_full_name text, p_phone text, p_email text,
-  p_city text, p_district text, p_address text, p_note text default null, p_device text default null)
+  p_city text, p_district text, p_address text, p_note text default null, p_device text default null, p_phrase text default null)
 returns json
 language plpgsql security definer set search_path = public
 as $$
@@ -177,6 +179,7 @@ declare
   v_address text := nullif(left(trim(coalesce(p_address, '')), 400), '');
   v_note text := nullif(left(trim(coalesce(p_note, '')), 300), '');
   v_device text := nullif(left(trim(coalesce(p_device, '')), 64), '');
+  v_phrase text := nullif(lower(trim(coalesce(p_phrase, ''))), '');
   v_code text;
   o orders;
 begin
@@ -184,6 +187,7 @@ begin
   if not s.active then return json_build_object('ok', false, 'error', 'closed'); end if;
   if not exists (select 1 from self_tags where code = v_tag) then return json_build_object('ok', false, 'error', 'no_tag'); end if;
   if v_design !~ '^[a-z]{2,20}$' then v_design := 'klasik'; end if;
+  if v_phrase !~ '^[a-z0-9_]{1,20}$' then v_phrase := null; end if;  -- yalnızca anahtar; metin uygulamada
   if length(v_name) < 3 then return json_build_object('ok', false, 'error', 'missing'); end if;
   if v_phone !~ '^\+[0-9]{10,15}$' then return json_build_object('ok', false, 'error', 'bad_phone'); end if;
   if v_email !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' then return json_build_object('ok', false, 'error', 'bad_email'); end if;
@@ -197,8 +201,8 @@ begin
     v_code := 'AQ-' || translate(upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 6)), '01', 'XY');
     exit when not exists (select 1 from orders where code = v_code);
   end loop;
-  insert into orders (code, tag_code, design, full_name, phone, email, city, district, address, note, amount, device)
-    values (v_code, v_tag, v_design, v_name, v_phone, v_email, v_city, v_district, v_address, v_note, s.price, v_device)
+  insert into orders (code, tag_code, design, phrase, full_name, phone, email, city, district, address, note, amount, device)
+    values (v_code, v_tag, v_design, v_phrase, v_name, v_phone, v_email, v_city, v_district, v_address, v_note, s.price, v_device)
     returning * into o;
   return json_build_object('ok', true, 'code', o.code, 'token', o.token, 'amount', o.amount, 'status', o.status);
 end $$;
@@ -320,7 +324,7 @@ begin
 end $$;
 
 revoke all on function public.shop_info() from public;
-revoke all on function public.order_create(text, text, text, text, text, text, text, text, text, text) from public;
+revoke all on function public.order_create(text, text, text, text, text, text, text, text, text, text, text) from public;
 revoke all on function public.order_paid(text, uuid) from public;
 revoke all on function public.order_status(text[], uuid[]) from public;
 revoke all on function public.order_cancel(text, uuid) from public;
@@ -331,7 +335,7 @@ revoke all on function public.admin_orders(text) from public;
 revoke all on function public.admin_order_update(text, bigint, text, text, text) from public;
 grant execute on function public.aracqr_shop_version() to anon, authenticated;
 grant execute on function public.shop_info() to anon, authenticated;
-grant execute on function public.order_create(text, text, text, text, text, text, text, text, text, text) to anon, authenticated;
+grant execute on function public.order_create(text, text, text, text, text, text, text, text, text, text, text) to anon, authenticated;
 grant execute on function public.order_paid(text, uuid) to anon, authenticated;
 grant execute on function public.order_status(text[], uuid[]) to anon, authenticated;
 grant execute on function public.order_cancel(text, uuid) to anon, authenticated;

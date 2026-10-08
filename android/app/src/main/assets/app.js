@@ -76,8 +76,8 @@ function confetti() {
 }
 
 const sizeVars = size => { const {w, h, k} = dims(size); return `--w:${w}mm;--h:${h}mm;--k:${k}`; };
-const stickerAt = (code, design, link, size) =>
-  `<div class="grid${dims(size).k < .75 ? " small-size" : ""}" style="${sizeVars(size)}">${stickerHtml(code, design, link)}</div>`;
+const stickerAt = (code, design, link, size, phrase) =>
+  `<div class="grid${dims(size).k < .75 ? " small-size" : ""}" style="${sizeVars(size)}">${stickerHtml(code, design, link, phrase)}</div>`;
 
 // ---------------------------------------------------------------- ekranlar
 // tab: alt menüde seçili sekme ("qr" | "orders" | "profile"); verilmezse alt menü gizlenir
@@ -142,7 +142,7 @@ function showHome() {
     <div class="cards">
       ${list.map(t => `
         <a class="card" href="#/etiket/${encodeURIComponent(t.code)}">
-          ${stickerAt(t.code, t.design, qrLink(t.code), "40x60")}
+          ${stickerAt(t.code, t.design, qrLink(t.code), "40x60", t.phrase)}
           <div><b>${esc(t.code)}</b><span>${esc(prettyPhone(t.phone))}<br>${esc(DESIGNS[t.design]?.name || "")} · ${esc(SIZES[t.size] || "")}</span>
             <span class="scan" data-scan="${esc(t.code)}">${scanChip(store.get("stats", {})[t.code])}</span></div>
         </a>`).join("")}
@@ -237,7 +237,7 @@ function showDesigns(tagCode) {
       ${keys.map((k, i) => `
         <section class="reel" data-d="${k}" aria-label="${esc(DESIGNS[k].name)}">
           <div class="reel-top">${DESIGNS[k].isNew ? `<span class="new">🆕 Yeni</span> ` : ""}${i + 1} / ${keys.length} · ${DESIGNS[k].group ? "Eğlenceli" : "Klasik"}</div>
-          <div class="reel-sticker">${stickerAt(code, k, link, "60x90")}</div>
+          <div class="reel-sticker">${stickerAt(code, k, link, "60x90", t?.phrase)}</div>
           <div class="reel-bottom">
             <b>${esc(DESIGNS[k].name)}</b>
             <button class="btn" type="button" data-pick="${k}">${k === current && t ? "Şu anki tasarım" : t ? "Bu tasarımı kullan" : "Bu tasarımı seç"}</button>
@@ -328,13 +328,19 @@ function showTag(code, isNew) {
   show(isNew ? "3. Yazdırın" : t.code, `
     ${isNew ? `<div class="steps"><span class="on"></span><span class="on"></span><span class="on"></span></div>
       <div class="msg ok"><b>QR'ınız hazır!</b> Bu etiket ${esc(prettyPhone(t.phone))} numarasını arar.</div>` : ""}
-    <div class="preview"><div style="zoom:${fit.toFixed(3)}">${stickerAt(t.code, t.design, qrLink(t.code), t.size)}</div></div>
+    <div class="preview"><div style="zoom:${fit.toFixed(3)}">${stickerAt(t.code, t.design, qrLink(t.code), t.size, t.phrase)}</div></div>
     <div id="promo-slot"></div>
 
     <h2>Kendiniz yazdırın</h2>
     <div class="opts">
       <label>Tasarım</label>
       <a class="btn ghost" style="margin-top:0" href="#/etiket/${encodeURIComponent(t.code)}/tasarim">🎨 ${esc(DESIGNS[t.design]?.name || "")} · kaydırarak değiştir</a>
+      <label for="phrase">💬 Söz <span class="opt">(internetten tanıdık kalıplar)</span></label>
+      <div class="row phrase-row">
+        <select id="phrase"><option value="">Tasarımın kendi sözü</option>${Object.entries(PHRASES).map(([k, v]) =>
+          `<option value="${k}"${k === t.phrase ? " selected" : ""}>${esc(v)}</option>`).join("")}</select>
+        <button type="button" class="btn ghost dice" id="phrase-dice" aria-label="Rastgele söz">🎲</button>
+      </div>
       <label for="size">Baskı ölçüsü</label>
       <select id="size">${Object.entries(SIZES).map(([k, n]) =>
         `<option value="${k}"${k === t.size ? " selected" : ""}>${n}</option>`).join("")}</select>
@@ -404,6 +410,11 @@ function showTag(code, isNew) {
     showTag(code, isNew);
   });
   document.getElementById("size").onchange = ev => update({size: ev.target.value});
+  document.getElementById("phrase").onchange = ev => update({phrase: ev.target.value || null});
+  document.getElementById("phrase-dice").onclick = () => {
+    let k; do { k = pickPhrase(); } while (k === t.phrase && Object.keys(PHRASES).length > 1);
+    update({phrase: k});
+  };
   app.querySelectorAll('input[name="paper"]').forEach(r => r.onchange = () => update({paper: r.value}));
   const copies = () => Math.max(1, Math.min(maxCopies, parseInt(document.getElementById("copies").value, 10) || 1));
   document.getElementById("copies").onchange = () => saveTag({...findTag(code), copies: copies()});
@@ -466,7 +477,7 @@ function fillPrint(t, copies) {
   const {w, h} = dims(t.size), box = document.getElementById("printarea");
   box.className = t.paper === "tek" ? "tek" : "a4";
   box.innerHTML = `<div class="grid${dims(t.size).k < .75 ? " small-size" : ""}" style="${sizeVars(t.size)}">${
-    Array.from({length: copies}, () => stickerHtml(t.code, t.design, qrLink(t.code))).join("")}</div>`;
+    Array.from({length: copies}, () => stickerHtml(t.code, t.design, qrLink(t.code), t.phrase)).join("")}</div>`;
   document.getElementById("pagestyle").textContent = t.paper === "tek" ? `@page{size:${w}mm ${h}mm;margin:0}` : "@page{size:A4;margin:10mm}";
   return box;
 }
@@ -598,19 +609,19 @@ const PRODUCT_FEATURES = [
 ];
 
 // Örnek baskı sayfası: gerçek QR yerine çalışmayan örnek QR ve "ÖRNEK" filigranı (ekran görüntüsü alınsa da işe yaramaz)
-function sampleSheetHtml(design, zoom) {
+function sampleSheetHtml(design, zoom, phrase) {
   return `<div class="sample" style="zoom:${zoom.toFixed(3)}" aria-label="Örnek baskı sayfası">
-    ${orderSheetHtml("ÖRNEK", design, SITE + "#ornek")}
+    ${orderSheetHtml("ÖRNEK", design, SITE + "#ornek", phrase)}
     <div class="watermark" aria-hidden="true">${"<span>ÖRNEK</span>".repeat(24)}</div>
   </div>`;
 }
 
-function openSample(design) {
+function openSample(design, phrase) {
   const box = document.createElement("div");
   box.className = "viewer";
   const zoom = (Math.min(innerWidth, 700) - 24) / (190 * 96 / 25.4);
   box.innerHTML = `<button class="viewer-close" type="button" aria-label="Kapat">✕</button>
-    <div class="viewer-body">${sampleSheetHtml(design, zoom)}<p>Gerçek baskıda sizin QR'ınız olur. Sayfa A4, stickerlar gerçek ölçüsünde basılır.</p></div>`;
+    <div class="viewer-body">${sampleSheetHtml(design, zoom, phrase)}<p>Gerçek baskıda sizin QR'ınız olur. Sayfa A4, stickerlar gerçek ölçüsünde basılır.</p></div>`;
   box.querySelector(".viewer-close").onclick = () => box.remove();
   document.body.append(box);
 }
@@ -632,7 +643,7 @@ async function showOrder(tagCode, error = "", v = null) {
     ${error ? `<div class="msg err" role="alert">${esc(error)}</div>` : ""}
     <div class="price big"><span>Su geçirmez vinil sticker seti<small>6 ölçüde 9 sticker · A4 sayfa</small></span><strong>${esc(shop.price)} TL</strong></div>
     <div class="hint" style="text-align:center">${esc(shop.shipping_text)}</div>
-    <button type="button" class="preview sheetprev" id="sample" aria-label="Örnek baskıyı büyüt">${sampleSheetHtml(t.design, zoom)}<span class="zoomhint">🔍 Örneği büyüt</span></button>
+    <button type="button" class="preview sheetprev" id="sample" aria-label="Örnek baskıyı büyüt">${sampleSheetHtml(t.design, zoom, t.phrase)}<span class="zoomhint">🔍 Örneği büyüt</span></button>
     <ul class="features">${PRODUCT_FEATURES.map(([i, h, d]) => `<li><span aria-hidden="true">${i}</span><div><b>${h}</b>${d}</div></li>`).join("")}</ul>
     <a class="btn ghost" href="#/etiket/${encodeURIComponent(t.code)}/tasarim">🎨 Tasarım: ${esc(DESIGNS[t.design]?.name || "")} · değiştir</a>
 
@@ -657,7 +668,7 @@ async function showOrder(tagCode, error = "", v = null) {
       <label class="check"><input type="checkbox" id="o-ok"${v.ok ? " checked" : ""}> Bilgilerimin siparişim için benimle iletişime geçilmesi ve siparişin gönderilmesi amacıyla kullanılmasını kabul ediyorum.</label>
       <button class="btn order-go" type="submit">Siparişi gönder · ${esc(shop.price)} TL</button>
     </form>`, true);
-  document.getElementById("sample").onclick = () => openSample(t.design);
+  document.getElementById("sample").onclick = () => openSample(t.design, t.phrase);
   document.getElementById("of").addEventListener("submit", async ev => {
     ev.preventDefault();
     const g = id => document.getElementById(id).value.trim();
@@ -673,7 +684,7 @@ async function showOrder(tagCode, error = "", v = null) {
     ev.submitter && (ev.submitter.disabled = true, ev.submitter.textContent = "Gönderiliyor…");
     let res;
     try {
-      res = await rpc("order_create", {p_tag_code: t.code, p_design: t.design, p_full_name: v2.name, p_phone: phone, p_email: v2.email,
+      res = await rpc("order_create", {p_tag_code: t.code, p_design: t.design, p_phrase: t.phrase || null, p_full_name: v2.name, p_phone: phone, p_email: v2.email,
         p_city: v2.city || null, p_district: v2.district || null, p_address: v2.address || null, p_note: v2.note || null, p_device: deviceId()});
     } catch (e) { return showOrder(tagCode, "Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.", v2); }
     if (!res?.ok) {

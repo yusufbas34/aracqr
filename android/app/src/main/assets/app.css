@@ -250,3 +250,6 @@ body.has-tabbar main{padding-bottom:96px}
 .update span{font-size:14px;line-height:1.35;color:var(--muted)}
 .update b{display:block;font-size:16px;color:var(--ink)}
 .reel-top .new{background:#ff4e50;color:#fff;border-radius:999px;padding:2px 8px;margin-right:4px}
+.phrase-row{align-items:center}
+.phrase-row select{flex:1;min-width:0}
+.phrase-row .dice{flex:none;width:auto;margin:0;padding:11px 14px;font-size:20px}
