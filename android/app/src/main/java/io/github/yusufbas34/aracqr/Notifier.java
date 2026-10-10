@@ -66,7 +66,8 @@ public class Notifier extends JobService {
     @Override
     public boolean onStartJob(JobParameters params) {
         new Thread(() -> {
-            try { checkUpdate(); } catch (Exception ignored) { }
+            // Play sürümü kendini güncellemez; güncelleme duyurusunu Play Store yapar
+            if (!"play".equals(BuildConfig.FLAVOR)) try { checkUpdate(); } catch (Exception ignored) { }
             try { checkOrders(); } catch (Exception ignored) { }
             jobFinished(params, false);
         }).start();

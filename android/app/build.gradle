@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace "io.github.yusufbas34.aracqr"
-    compileSdk 35
+    compileSdk 36
 
     defaultConfig {
         applicationId "io.github.yusufbas34.aracqr"
         minSdk 29
-        targetSdk 35
+        targetSdk 36
         // GitHub Actions her derlemede sürümü artırır; yeni APK eskisinin üstüne kurulur
         def run = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger()
         versionCode run
@@ -20,6 +20,22 @@ android {
     sourceSets {
         main {
             assets.srcDirs = ["../../app"]
+        }
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    // İki dağıtım: "github" elden kurulan APK'dır ve yeni sürümü GitHub'dan kendisi haber verir.
+    // "play" Google Play'e yüklenen AAB'dir; kendini güncellemez (Play kuralı), güncellemeyi Play Store yapar.
+    flavorDimensions = ["dagitim"]
+    productFlavors {
+        github {
+            dimension "dagitim"
+        }
+        play {
+            dimension "dagitim"
         }
     }
 
@@ -34,10 +50,25 @@ android {
         }
     }
 
+    // Google Play yükleme anahtarı depoda DURMAZ: GitHub Actions onu Secrets'tan dosyaya yazar ve yolunu verir
+    // (android/README.md > Google Play). Anahtar yoksa play sürümü imzasız derlenir ve Play'e yüklenemez.
+    def playKey = System.getenv("PLAY_KEYSTORE_FILE")
+    if (playKey) {
+        signingConfigs {
+            play {
+                storeFile file(playKey)
+                storePassword System.getenv("PLAY_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("PLAY_KEY_ALIAS")
+                keyPassword System.getenv("PLAY_KEY_PASSWORD")
+            }
+        }
+    }
+    productFlavors.github.signingConfig signingConfigs.sideload
+    if (playKey) productFlavors.play.signingConfig signingConfigs.play
+
     buildTypes {
         release {
             minifyEnabled false
-            signingConfig signingConfigs.sideload
         }
     }
 

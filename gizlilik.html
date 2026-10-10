@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Araç QR Gizlilik Politikası</title>
+<link rel="icon" type="image/svg+xml" href="app/logo.svg">
+<meta name="theme-color" content="#0a3a9e">
+<style>
+:root{--ink:#111418;--muted:#4b5360;--band:#0a3a9e;--bg:#eef0f3;--card:#fff;--line:#d5d9e0}
+@media (prefers-color-scheme:dark){:root{--ink:#e9ecf1;--muted:#aeb5c0;--band:#6d9bff;--bg:#14171c;--card:#1d2128;--line:#323844}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;padding:24px 16px 48px}
+main{max-width:720px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 20px}
+h1{font-size:26px;line-height:1.25;margin:0 0 4px}
+h2{font-size:19px;margin:28px 0 8px;color:var(--band)}
+p,li{color:var(--muted)}
+b{color:var(--ink)}
+ul{padding-left:20px}
+table{width:100%;border-collapse:collapse;font-size:15px;margin:8px 0}
+th,td{text-align:left;vertical-align:top;border-top:1px solid var(--line);padding:8px 6px}
+th{color:var(--ink)}
+a{color:var(--band)}
+.small{font-size:14px}
+.box{border-left:4px solid var(--band);padding:8px 12px;background:color-mix(in srgb,var(--band) 8%,transparent);border-radius:6px}
+</style>
+</head>
+<body>
+<main>
+<h1>Gizlilik Politikası</h1>
+<p class="small">Araç QR uygulaması ve yusufbas34.github.io/aracqr sitesi · Son güncelleme: 10 Ekim 2026</p>
+
+<div class="box"><p style="margin:6px 0"><b>Kısaca:</b> Hesap açmazsınız. Telefon numaranız QR kodun üstüne yazılmaz; yalnızca biri QR'ı okuttuğunda sizi araması ya da size mesaj atması için kullanılır. Verilerinizi istediğiniz an uygulamadan silebilirsiniz. Verilerinizi satmıyoruz, reklam ya da takip yapmıyoruz.</p></div>
+
+<h2>1. Hangi verileri topluyoruz?</h2>
+<table>
+<tr><th>Veri</th><th>Ne zaman</th><th>Neden</th></tr>
+<tr><td>QR'a bağlı telefon numarası</td><td>QR oluşturduğunuzda ya da ayarları değiştirdiğinizde</td><td>QR'ı okutan kişinin sizi arayabilmesi / mesaj atabilmesi</td></tr>
+<tr><td>Sessiz saatler, QR açık/kapalı durumu</td><td>Ayarlarda seçtiğinizde</td><td>Belirlediğiniz saatlerde arama yerine yalnızca mesaj seçeneği gösterilmesi</td></tr>
+<tr><td>Okutma zamanı (yalnızca QR kodu ve saat)</td><td>QR her okutulduğunda</td><td>Size "kaç kez okutuldu" bilgisini göstermek. Okutan kişinin IP'si, konumu ya da cihazı kaydedilmez.</td></tr>
+<tr><td>Rastgele uygulama kimliği</td><td>QR oluştururken ve sipariş verirken</td><td>Kötüye kullanımı sınırlamak (ör. bir cihazdan günde en fazla 10 QR). Cihazınızın gerçek kimliğiyle ilgisi yoktur.</td></tr>
+<tr><td>Ad soyad, telefon, e-posta, adres, sipariş notu, seçilen tasarım</td><td>Yalnızca "Biz basıp gönderelim" siparişi verirseniz</td><td>Sticker'ı basmak, size ulaşmak ve kargolamak</td></tr>
+</table>
+<p>Uygulama konum, rehber, fotoğraf, kamera ya da mikrofon izni istemez. Araç adı yalnızca telefonunuzda saklanır. Profil bilgileriniz (ad, adres) siz sipariş verene kadar yalnızca telefonunuzda saklanır. QR kodlarınızın PIN'i telefonunuzda saklanır ve numarayı yalnızca PIN'i bilen değiştirebilir.</p>
+
+<h2>2. QR'ı okutan kişi ne görür?</h2>
+<p>Okutan kişi numaranızı yazılı olarak görmez; "Ara" ya da hazır mesaj butonlarına basınca telefonunun arama/SMS/WhatsApp uygulaması açılır, bu sırada numara o uygulamaya aktarılır. Sessiz saatlerde arama butonu hiç gösterilmez, yalnızca mesaj seçenekleri çıkar. QR'ı kapattığınızda numara hiç kimseye iletilmez.</p>
+
+<h2>3. Verileri kimlerle paylaşıyoruz?</h2>
+<p>Verileri satmıyor, reklam için kullanmıyoruz. Hizmetin çalışması için şu altyapılar kullanılır:</p>
+<ul>
+<li><b>Supabase</b>: veritabanı (QR kayıtları ve siparişler). Bağlantılar şifrelidir (HTTPS).</li>
+<li><b>Telegram ve e-posta (Resend)</b>: yeni bir sipariş geldiğinde sipariş bilgileri yalnızca işletmeciye bildirim olarak gönderilir.</li>
+<li><b>Baskı firması</b>: sipariş onaylanınca basılacak sticker dosyası ve gönderim için gereken bilgiler iletilebilir.</li>
+<li><b>Kargo firması</b>: gönderim için ad, telefon ve adres.</li>
+<li><b>GitHub</b>: site ve uygulama dosyaları GitHub Pages'te barındırılır. Elden kurulan (APK) sürüm yeni sürüm olup olmadığını GitHub'a sorar; Google Play sürümü bunu yapmaz.</li>
+</ul>
+<p>Yasal bir zorunluluk olursa (ör. mahkeme kararı) veriler yetkili mercilerle paylaşılabilir.</p>
+
+<h2>4. Ne kadar süre saklıyoruz?</h2>
+<ul>
+<li>QR kayıtları ve okutma zamanları: siz silene kadar.</li>
+<li>Sipariş kayıtları: sipariş tamamlandıktan ya da iptal edildikten sonra en fazla 2 yıl (iade/şikâyet için); daha önce silinmesini isteyebilirsiniz.</li>
+</ul>
+
+<h2 id="silme">5. Verilerimi nasıl silerim?</h2>
+<ul>
+<li><b>Tek bir QR:</b> Uygulamada QR'larım › QR'ı seçin › <b>QR'ı kalıcı olarak sil</b>. Numaranız ve okutma kayıtları sunucudan hemen silinir.</li>
+<li><b>Her şey:</b> Uygulamada Profilim › <b>Tüm verilerimi sil</b>. Bu telefondaki bütün QR'lar sunucudan silinir; profil, adres ve sipariş listesi telefondan temizlenir.</li>
+<li><b>Uygulama artık yoksa ya da sipariş kayıtlarınızın silinmesini istiyorsanız:</b> QR kodunuzu (ör. SAB12CD3) ya da sipariş numaranızı ve siparişte kullandığınız telefon/e-postayı yazarak Google Play'deki uygulama sayfasında yer alan geliştirici e-posta adresine yazın. Talebiniz en geç 30 gün içinde yerine getirilir.</li>
+</ul>
+<p>Uygulamayı kaldırmak, telefonda saklanan bilgileri (PIN dahil) siler ama sunucudaki QR kaydını silmez; önce yukarıdaki yollarla silmeniz önerilir.</p>
+
+<h2>6. Çocuklar</h2>
+<p>Hizmet araç sahiplerine yöneliktir ve 13 yaşından küçük çocuklara yönelik değildir.</p>
+
+<h2>7. Haklarınız (KVKK)</h2>
+<p>6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında verilerinizin işlenip işlenmediğini öğrenme, düzeltilmesini, silinmesini isteme ve itiraz etme haklarınız vardır. Taleplerinizi yukarıdaki iletişim yoluyla iletebilirsiniz.</p>
+
+<h2>8. Değişiklikler</h2>
+<p>Bu metin değişirse bu sayfada güncellenir ve üstteki tarih değiştirilir.</p>
+
+<p class="small" style="margin-top:28px"><a href="./">← Araç QR ana sayfa</a></p>
+</main>
+</body>
+</html>

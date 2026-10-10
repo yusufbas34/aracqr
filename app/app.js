@@ -95,11 +95,15 @@ function show(title, html, canGoBack, cls = "", tab = "") {
 
 // ---------------------------------------------------------------- sürüm ve güncelleme
 const APK_URL = "https://github.com/yusufbas34/aracqr/releases/download/apk-son/arac-qr.apk";
+// Google Play sürümü kendini güncellemez (Play kuralı): güncellemeleri Play Store yapar, GitHub'a bakılmaz
+const PLAY = (() => { try { return !!bridge && typeof bridge.distribution === "function" && bridge.distribution() === "play"; } catch (e) { return false; } })();
+const PRIVACY_URL = SITE + "gizlilik.html";
 const myVersion = () => { try { return bridge ? Number(bridge.versionCode()) || 0 : 0; } catch (e) { return 0; } };
 const myVersionName = () => { try { return bridge ? bridge.versionName() : "tarayıcı"; } catch (e) { return ""; } };
 let latestCheck;
 // GitHub'daki son APK'nın derleme numarası (sürüm notunda "Derleme N")
 function latestVersion() {
+  if (PLAY) return Promise.resolve(0);
   return latestCheck ||= fetch("https://api.github.com/repos/yusufbas34/aracqr/releases/tags/apk-son")
     .then(r => r.json()).then(j => Number((/Derleme (\d+)/.exec(j.body || "") || [])[1]) || 0).catch(() => 0);
 }
@@ -197,7 +201,16 @@ function showProfile(saved = false) {
       <div id="update-slot"></div>
       <button class="btn ghost" type="button" id="howto">Nasıl çalışır?</button>
       <a class="btn ghost" href="${SITE}">Web sitesi</a>
+    </div>
+
+    <h2>Gizlilik ve verilerim</h2>
+    <div class="opts" style="padding-top:14px">
+      <div class="hint" style="margin-top:0">Hesap yok. Numaranız yalnızca QR okutulunca arama/mesaj için kullanılır; QR'ın üstünde yazmaz.</div>
+      <a class="btn ghost" href="${PRIVACY_URL}">Gizlilik politikası</a>
+      <button class="btn danger" type="button" id="wipe">Tüm verilerimi sil</button>
+      <div id="wipe-msg"></div>
     </div>`, false, "", "profile");
+  document.getElementById("wipe").onclick = wipeAll;
   bindHowto();
   latestVersion().then(latest => {
     const mine = myVersion(), el = document.getElementById("update-slot");
@@ -215,6 +228,36 @@ function showProfile(saved = false) {
     store.set("profile", v);
     showProfile(true);
   });
+}
+
+// Sunucudan siler; hata varsa kullanıcıya gösterilecek metni döner
+async function deleteTagOnServer(t) {
+  try {
+    const r = await rpc("self_tag_delete", {p_code: t.code, p_pin: t.pin});
+    if (r?.ok) return null;
+    return r?.error === "bad_pin" ? `${t.code}: PIN tutmuyor, silinemedi.` : r?.error === "locked" ? "Çok fazla yanlış deneme; 15 dakika sonra tekrar deneyin." : "Silinemedi, tekrar deneyin.";
+  } catch (e) {
+    return e.status === 404 ? "Silme özelliği sunucuda henüz kurulu değil. Lütfen daha sonra tekrar deneyin." : "Bağlantı yok; internete bağlanıp tekrar deneyin.";
+  }
+}
+
+// Gizlilik: bu telefondaki her QR'ı sunucudan siler, sonra telefondaki tüm kayıtları (profil, adres, siparişler) temizler
+async function wipeAll(ev) {
+  const list = tags(), msg = document.getElementById("wipe-msg");
+  if (!confirm(`Tüm verileriniz silinsin mi?\n\n• ${list.length} QR ve okutma kayıtları sunucudan silinir; bu QR'lar artık sizi aramaz.\n• Bu telefondaki profil, adres ve sipariş listesi silinir.\n\nGeri alınamaz.`)) return;
+  ev.target.disabled = true;
+  const errors = [];
+  for (const t of list) {
+    const err = await deleteTagOnServer(t);
+    if (err) errors.push(err); else store.set("tags", tags().filter(x => x.code !== t.code));
+  }
+  ev.target.disabled = false;
+  if (errors.length) { msg.innerHTML = `<div class="msg err" role="alert">${esc(errors[0])}</div>`; return; }
+  const sent = orders().length;
+  try { Object.keys(localStorage).filter(k => k.startsWith("aracqr-") && k !== "aracqr-onboarded").forEach(k => localStorage.removeItem(k)); } catch (e) {}
+  syncOrdersToAndroid();
+  showProfile();
+  toast(sent ? "Silindi. Verilmiş sipariş kayıtlarının silinmesi için gizlilik sayfasındaki adrese yazın." : "Tüm verileriniz silindi.");
 }
 
 const scanChip = st => st ? `👀 ${st.last30} okutma / 30 gün` : "";
@@ -390,7 +433,8 @@ function showTag(code, isNew) {
       <div class="hint">PIN numarayı değiştirmek için gerekir. Bu telefonda saklanır; telefon değiştirecekseniz bir yere not edin.</div>
       <a class="btn ghost" href="#/etiket/${encodeURIComponent(t.code)}/numara">Numarayı değiştir</a>
       <a class="btn ghost" href="${esc(qrLink(t.code))}">QR'ı dene (okutan kişinin göreceği sayfa)</a>
-      <button class="btn danger" id="remove" type="button">Bu telefondan kaldır</button>
+      <button class="btn danger" id="delete" type="button">QR'ı kalıcı olarak sil</button>
+      <button class="btn ghost" id="remove" type="button">Yalnızca bu telefondaki listeden kaldır</button>
     </div>
 
     <h2>Arama ayarları</h2>
@@ -479,6 +523,16 @@ function showTag(code, isNew) {
   document.getElementById("remove").onclick = () => {
     if (!confirm(`${t.code} bu telefondaki listeden kaldırılsın mı?\n\nQR çalışmaya devam eder; ama PIN'i not etmediyseniz numarasını bir daha değiştiremezsiniz.`)) return;
     store.set("tags", tags().filter(x => x.code !== t.code));
+    location.replace("#/");
+  };
+  document.getElementById("delete").onclick = async ev => {
+    if (!confirm(`${t.code} kalıcı olarak silinsin mi?\n\nNumaranız ve okutma kayıtları sunucudan silinir. Bu QR okutulunca artık sizi aramaz; basılı sticker'ı da çöpe atabilirsiniz. Geri alınamaz.`)) return;
+    ev.target.disabled = true;
+    const err = await deleteTagOnServer(t);
+    ev.target.disabled = false;
+    if (err) return toast(err);
+    store.set("tags", tags().filter(x => x.code !== t.code));
+    toast("QR silindi");
     location.replace("#/");
   };
   if (isNew && celebrated !== code) { celebrated = code; confetti(); }

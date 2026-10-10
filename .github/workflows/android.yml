@@ -16,6 +16,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      # Google Play yükleme anahtarı (Settings > Secrets and variables > Actions). Yoksa yalnızca APK derlenir.
+      PLAY_KEYSTORE_BASE64: ${{ secrets.PLAY_KEYSTORE_BASE64 }}
     steps:
       - uses: actions/checkout@v4
 
@@ -26,12 +29,32 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: APK derle
+      - name: APK derle (elden kurulum sürümü)
         working-directory: android
-        run: ./gradlew --no-daemon assembleRelease
+        run: ./gradlew --no-daemon assembleGithubRelease
 
       - name: APK dosyasını hazırla
-        run: cp android/app/build/outputs/apk/release/app-release.apk arac-qr.apk
+        run: cp android/app/build/outputs/apk/github/release/app-github-release.apk arac-qr.apk
+
+      # Google Play sürümü: kendini güncellemez, gizli anahtarla imzalanır. Play Console'a bu .aab yüklenir.
+      - name: Google Play paketi (AAB) derle
+        if: env.PLAY_KEYSTORE_BASE64 != ''
+        working-directory: android
+        env:
+          PLAY_KEYSTORE_PASSWORD: ${{ secrets.PLAY_KEYSTORE_PASSWORD }}
+          PLAY_KEY_ALIAS: ${{ secrets.PLAY_KEY_ALIAS }}
+          PLAY_KEY_PASSWORD: ${{ secrets.PLAY_KEY_PASSWORD }}
+        run: |
+          echo "$PLAY_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/play.jks"
+          PLAY_KEYSTORE_FILE="$RUNNER_TEMP/play.jks" ./gradlew --no-daemon bundlePlayRelease
+          cp app/build/outputs/bundle/playRelease/app-play-release.aab ../arac-qr-play.aab
+          rm -f "$RUNNER_TEMP/play.jks"
+
+      - uses: actions/upload-artifact@v4
+        if: env.PLAY_KEYSTORE_BASE64 != ''
+        with:
+          name: arac-qr-play-aab
+          path: arac-qr-play.aab
 
       - uses: actions/upload-artifact@v4
         with:

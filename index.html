@@ -506,7 +506,7 @@ async function showAdmin() {
   if (!Array.isArray(rows)) return showAdminLogin("Beklenmeyen yanıt, tekrar deneyin.");
   if (typeof qrcode !== "function") return showMessage("QR kütüphanesi yüklenemedi", "Sayfayı yenileyip tekrar deneyin.");
   const [given, requests, appReady, orderRows] = await Promise.all([loadGiven(), loadRequests(),
-    rpc("aracqr_app_version", {}).then(v => v >= 3, () => false), loadOrders()]);
+    rpc("aracqr_app_version", {}).then(v => v >= 4, () => false), loadOrders()]);
   orderBadge = orderRows ? orderRows.filter(o => NEW_ORDER.includes(o.status)).length : 0;
   if (adminTab === "requests") return showRequests(rows, given, requests);
   if (adminTab === "orders") return showOrders(orderRows, requests);
@@ -543,7 +543,7 @@ async function showAdmin() {
       <button class="btn" id="add">10 etiket daha üret</button>
     </div>
     ${given ? "" : setupHtml('"Verildi" takibi kurulu değil.', "verildi.sql")}
-    ${appReady ? "" : setupHtml("Android uygulaması için veritabanı kurulumu eksik ya da güncel değil (sessiz saatler, okutma sayacı, QR kapat/aç). Kurulmadan uygulamada QR oluşturulamaz.", "uygulama.sql")}
+    ${appReady ? "" : setupHtml("Android uygulaması için veritabanı kurulumu eksik ya da güncel değil (sessiz saatler, okutma sayacı, QR kapat/aç, QR silme). Kurulmadan uygulamada QR oluşturulamaz.", "uygulama.sql")}
     <p class="noprint">Talep edene etiket verirken tasarımı seçip <b>Yazdır ve ver</b> ya da <b>PDF kaydet ve ver</b>'e basın; etiket verildi olarak işaretlenip bu listeden kalkar.
       Kişi QR'ı okutup numarasını ve PIN'i girdiğinde etiket o numarayı aramaya başlar.
       Yazdırırken ölçek <b>%100 / Gerçek boyut</b> olmalı. Etiket yazıcısı ya da matbaa için “Her sayfaya bir etiket”i seçin; sayfa ölçüsü sticker ölçüsü olur.</p>
@@ -675,7 +675,9 @@ function showHome() {
       <details><summary>Telefon numaram değişirse ne olacak?</summary><p>Uygulamada QR'ınızı açıp “Numarayı değiştir”e dokunun. Sticker'ı yeniden basmanız gerekmez.</p></details>
       <details><summary>Sticker'ı nereye yapıştırmalıyım?</summary><p>Camın dış yüzüne, kaportaya ya da tampona yapıştırın. Normal bir sticker camın içine yapıştırılırsa dışarıdan ters görünür ve okunmaz. QR kod yüksek hata düzeltmeyle üretilir; biraz çizilse de okunur.</p></details>
       <details><summary>Telefonumu değiştirirsem QR'larım ne olur?</summary><p>QR'larınız çalışmaya devam eder. Numaranızı yeni telefondan değiştirebilmek için uygulamadaki PIN'inizi bir yere not edin.</p></details>
-    </section>`, "home");
+      <details><summary>Verilerimi nasıl silerim?</summary><p>Uygulamada QR'ınızı açıp “QR'ı kalıcı olarak sil”e ya da Profilim'de “Tüm verilerimi sil”e dokunun. Ayrıntılar <a href="gizlilik.html#silme">gizlilik politikasında</a>.</p></details>
+    </section>
+    <p style="text-align:center;font-size:14px;margin-top:22px"><a href="gizlilik.html">Gizlilik politikası</a></p>`, "home");
   document.getElementById("another").onclick = () => { document.getElementById("sample").innerHTML = showcaseHtml(); };
   // Fiyat panelden değişebilir
   rpc("shop_info", {}).then(sh => { if (sh?.price) document.querySelectorAll(".price-tag").forEach(el => { el.textContent = `${sh.price} TL`; }); }).catch(() => {});

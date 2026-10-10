@@ -26,17 +26,21 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.Toast;
+import android.window.OnBackInvokedCallback;
+import android.window.OnBackInvokedDispatcher;
 
 import java.io.OutputStream;
 import java.util.Locale;
 
 /**
- * Uygulamanın tamamı assets/app.html içindeki web arayüzüdür. Bu sınıf onu gösterir ve
+ * Uygulamanın tamamı assets/index.html (depoda app/ klasörü) içindeki web arayüzüdür. Bu sınıf onu gösterir ve
  * web tarafının yapamadığı üç işi sağlar: Android yazdırma ekranı, PDF'i İndirilenler'e kaydetme ve paylaşma.
  */
 public class MainActivity extends Activity {
     private static final String START_URL = "file:///android_asset/index.html";
     private WebView web;
+    private OnBackInvokedCallback backCallback;
+    private boolean backRegistered;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -55,6 +59,12 @@ public class MainActivity extends Activity {
         web.setWebChromeClient(new WebChromeClient());
         web.setWebViewClient(new WebViewClient() {
             @Override
+            public void doUpdateVisitedHistory(WebView view, String url, boolean isReload) {
+                updateBack();
+            }
+
+
+            @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest req) {
                 Uri uri = req.getUrl();
                 if ("file".equals(uri.getScheme())) return false;
@@ -71,6 +81,8 @@ public class MainActivity extends Activity {
         String route = getIntent().getStringExtra(Notifier.EXTRA_ROUTE);
         if (state != null) web.restoreState(state);
         else web.loadUrl(START_URL + (route != null && route.startsWith("#/") ? route : ""));
+
+        updateBack();
 
         // Bildirim altyapısı uygulamanın açılmasını asla engellememeli
         try { Notifier.schedule(this); } catch (Exception e) { /* bildirimler çalışmaz, uygulama çalışır */ }
@@ -144,6 +156,21 @@ public class MainActivity extends Activity {
         web.saveState(out);
     }
 
+    /**
+     * Geri hareketi: uygulamada önceki sayfa varsa oraya döner, yoksa sistem uygulamayı kapatır (ana ekrana dönüş
+     * animasyonu dahil). Android 13+ yeni geri sistemi, daha eskileri onBackPressed kullanır.
+     */
+    private void updateBack() {
+        if (Build.VERSION.SDK_INT < 33) return;
+        if (backCallback == null) backCallback = () -> { if (web.canGoBack()) web.goBack(); };
+        boolean want = web.canGoBack();
+        if (want == backRegistered) return;
+        OnBackInvokedDispatcher d = getOnBackInvokedDispatcher();
+        if (want) d.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, backCallback);
+        else d.unregisterOnBackInvokedCallback(backCallback);
+        backRegistered = want;
+    }
+
     @Override
     @SuppressWarnings("deprecation")
     public void onBackPressed() {
@@ -166,6 +193,12 @@ public class MainActivity extends Activity {
         public long versionCode() {
             try { return getPackageManager().getPackageInfo(getPackageName(), 0).getLongVersionCode(); }
             catch (Exception e) { return 0; }
+        }
+
+        /** "github" (elden APK) ya da "play": Play sürümünde güncelleme duyurusu gösterilmez. */
+        @JavascriptInterface
+        public String distribution() {
+            return BuildConfig.FLAVOR;
         }
 
         /** Siparişler değişince web arayüzü bildirir: arka plan kontrolü bunlara bakar. */

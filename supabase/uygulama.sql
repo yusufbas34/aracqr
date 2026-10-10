@@ -33,7 +33,7 @@ revoke all on public.self_tag_scans from anon, authenticated;
 alter table public.self_tags enable row level security;  -- politika yok: doğrudan erişim kapalı
 revoke all on public.self_tags from anon, authenticated;
 
-create or replace function public.aracqr_app_version() returns integer language sql immutable as 'select 3';
+create or replace function public.aracqr_app_version() returns integer language sql immutable as 'select 4';
 
 -- Yeni etiket oluşturur: {ok:true, code, pin} ya da {ok:false, error}
 create or replace function public.self_tag_create(p_phone text, p_device text default null)
@@ -175,6 +175,23 @@ as $$
   join self_tags t on t.code = upper(trim(q.code)) and t.pin = trim(q.pin);
 $$;
 
+-- sürüm 4: QR'ı ve okutma kayıtlarını kalıcı olarak siler (PIN ile). Silinen kod okutulunca "kayıtlı değil" görünür
+-- ve bir daha kimseye verilmez (kod rastgele üretilir; aynı kodun yeniden çıkma olasılığı yok denecek kadar azdır).
+create or replace function public.self_tag_delete(p_code text, p_pin text)
+returns json
+language plpgsql security definer set search_path = public
+as $$
+declare
+  v_code text := upper(trim(coalesce(p_code, '')));
+  v_err text := public.self_tag_check_pin(v_code, p_pin);
+begin
+  if v_err = 'not_found' then return json_build_object('ok', true, 'already', true); end if;  -- zaten silinmiş
+  if v_err is not null then return json_build_object('ok', false, 'error', v_err); end if;
+  delete from self_tag_scans where code = v_code;
+  delete from self_tags where code = v_code;
+  return json_build_object('ok', true);
+end $$;
+
 -- Yönetim: uygulamadan oluşturulan etiketler (PIN'ler gösterilmez)
 create or replace function public.admin_self_tags(p_key text)
 returns table (code text, phone text, created_at timestamptz, updated_at timestamptz)
@@ -193,6 +210,8 @@ revoke all on function public.self_tag_check_pin(text, text) from public, anon, 
 revoke all on function public.self_tag_settings(text, text, text, text, integer, integer) from public;
 revoke all on function public.self_tag_stats(text[], text[]) from public;
 revoke all on function public.self_tag_set_active(text, text, boolean) from public;
+revoke all on function public.self_tag_delete(text, text) from public;
+grant execute on function public.self_tag_delete(text, text) to anon, authenticated;
 grant execute on function public.self_tag_set_active(text, text, boolean) to anon, authenticated;
 grant execute on function public.self_tag_settings(text, text, text, text, integer, integer) to anon, authenticated;
 grant execute on function public.self_tag_stats(text[], text[]) to anon, authenticated;

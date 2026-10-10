@@ -26,10 +26,13 @@ Android Studio ile `android` klasörünü açın ya da komut satırında:
 
 ```
 cd android
-./gradlew assembleRelease
+./gradlew assembleGithubRelease
 ```
 
-APK: `android/app/build/outputs/apk/release/app-release.apk`
+APK: `android/app/build/outputs/apk/github/release/app-github-release.apk`
+
+İki sürüm vardır: `github` (elden kurulan APK, yeni sürümü kendisi haber verir) ve `play`
+(Google Play'e yüklenen AAB, kendini güncellemez).
 
 ## Yapı
 
@@ -45,5 +48,5 @@ APK: `android/app/build/outputs/apk/release/app-release.apk`
 `app/build.gradle` içinde açık duran bir anahtardır. Her sürüm aynı anahtarla imzalandığı için
 güncellemeler eskisinin üstüne kurulur.
 
-Uygulamayı Google Play'e yükleyecekseniz bu anahtarı kullanmayın: kendi gizli anahtarınızı oluşturun
-ve şifresini depoya değil GitHub Secrets'a koyun.
+Google Play sürümü bu anahtarı kullanmaz; gizli yükleme anahtarı GitHub Secrets'tan gelir.
+Adım adım anlatım, test süreci, Veri güvenliği cevapları ve mağaza metinleri: [GOOGLE_PLAY.md](GOOGLE_PLAY.md).
