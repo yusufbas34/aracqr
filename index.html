@@ -889,6 +889,36 @@ Teşekkürler.`;
   return {subject, body};
 }
 
+// PDF'i ekli, gönderilmeye hazır e-posta taslağı (.eml). mailto: bağlantısına dosya eklenemediği için bu yol kullanılır:
+// dosya açılınca Outlook / Windows Posta / Apple Mail ekli PDF'le yeni e-posta olarak açar (X-Unsent), Gönder'e basmak yeter.
+async function printerEml(o, pdfBlob, fileName, to) {
+  const b64 = buf => { let bin = ""; const u = new Uint8Array(buf); for (let i = 0; i < u.length; i += 0x8000) bin += String.fromCharCode(...u.subarray(i, i + 0x8000)); return btoa(bin); };
+  const utf8 = t => b64(new TextEncoder().encode(t));
+  const wrap = t => t.replace(/.{1,76}/g, "$&\r\n");
+  const m = printerMail(o), boundary = "aracqr-" + Math.random().toString(36).slice(2);
+  const eml = [
+    to ? `To: ${to}` : "To: ",
+    `Subject: =?UTF-8?B?${utf8(m.subject)}?=`,
+    "X-Unsent: 1",
+    "MIME-Version: 1.0",
+    `Content-Type: multipart/mixed; boundary="${boundary}"`,
+    "",
+    `--${boundary}`,
+    "Content-Type: text/plain; charset=UTF-8",
+    "Content-Transfer-Encoding: base64",
+    "",
+    wrap(utf8(m.body.replace(/\r?\n/g, "\r\n"))),
+    `--${boundary}`,
+    `Content-Type: application/pdf; name="${fileName}"`,
+    `Content-Disposition: attachment; filename="${fileName}"`,
+    "Content-Transfer-Encoding: base64",
+    "",
+    wrap(b64(await pdfBlob.arrayBuffer())),
+    `--${boundary}--`,
+    ""].join("\r\n");
+  return new Blob([eml], {type: "message/rfc822"});
+}
+
 function waLink(o, text) {
   return `https://wa.me/${String(o.phone).replace(/\D/g, "")}?text=${encodeURIComponent(text)}`;
 }
@@ -945,7 +975,7 @@ async function showOrders(orders, requests) {
           <div class="act">
             ${NEW_ORDER.includes(o.status) ? `<button data-act="approve" style="background:var(--ok)">✓ Görüşüldü, onayla</button>` : ""}
             <button data-act="pdf">Baskı PDF'i indir</button>
-            ${["onaylandi", "baskida"].includes(o.status) ? `<button data-act="mail">Baskıcıya e-posta</button>
+            ${["onaylandi", "baskida"].includes(o.status) ? `<button data-act="mail" title="PDF ekli e-posta taslağı (.eml) indirir; açınca Outlook / Posta'da hazır gelir">Baskıcıya e-posta (PDF ekli)</button>
               ${canShareFiles ? `<button data-act="share">PDF'i paylaş (e-posta ekli)</button>` : ""}` : ""}
             <input data-f="tracking" placeholder="Kargo takip no" value="${esc(o.tracking || "")}" aria-label="Kargo takip no">
             ${["onaylandi", "baskida"].includes(o.status) ? `<button data-act="shipped">Kargolandı</button>` : ""}
@@ -983,10 +1013,8 @@ async function showOrders(orders, requests) {
         toast("PDF indirildi.");
       } else if (act === "mail") {
         toast("Baskı PDF'i hazırlanıyor…", 30000);
-        downloadBlob(await orderPdf(o), fileName);
-        const m = printerMail(o);
-        location.href = `mailto:${encodeURIComponent(shop?.printer_email || "")}?subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.body)}`;
-        toast(`PDF indirildi: ${fileName}. Açılan e-postaya ekleyip gönderin.`, 6000);
+        downloadBlob(await printerEml(o, await orderPdf(o), fileName, shop?.printer_email || ""), `baskici-${o.code}.eml`);
+        toast(`İnen “baskici-${o.code}.eml” dosyasını açın: PDF ekli e-posta hazır gelir, Gönder'e basın.`, 9000);
         if (o.status === "onaylandi" && confirm("E-postayı gönderdiyseniz sipariş “Baskıda” olarak işaretlensin mi?")) await update("baskida");
       } else if (act === "share") {
         toast("Baskı PDF'i hazırlanıyor…", 30000);
