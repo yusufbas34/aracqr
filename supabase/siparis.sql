@@ -71,7 +71,7 @@ alter table public.orders add column if not exists pdf_sent_at timestamptz;  -- 
 alter table public.orders add constraint orders_status_check
   check (status in ('yeni', 'odeme_bekleniyor', 'odeme_bildirildi', 'onaylandi', 'baskida', 'kargolandi', 'iptal'));
 
-create or replace function public.aracqr_shop_version() returns integer language sql immutable as 'select 6';
+create or replace function public.aracqr_shop_version() returns integer language sql immutable as 'select 7';
 
 -- ---------------------------------------------------------------- bildirim
 -- Telegram ve/veya e-posta (Resend) gönderir. Hata olursa siparişi bozmaz, yalnızca uyarı yazar.
@@ -229,6 +229,42 @@ exception when others then
 end $$;
 revoke all on function public.order_pdf_ready(text, uuid) from public;
 grant execute on function public.order_pdf_ready(text, uuid) to anon, authenticated;
+
+-- ---------------------------------------------------------------- sürüm 7: yönetim istatistikleri
+-- QR, okutma ve sipariş sayıları, ciro (onaylanan, baskıdaki ve kargolanan siparişler) ve son 14 günün günlük dökümü
+create or replace function public.admin_stats(p_key text)
+returns json
+language plpgsql security definer set search_path = public
+as $$
+declare
+  v_today date := (now() at time zone 'Europe/Istanbul')::date;
+  v_month timestamptz := date_trunc('month', now() at time zone 'Europe/Istanbul') at time zone 'Europe/Istanbul';
+  v_paid text[] := array['onaylandi', 'baskida', 'kargolandi'];
+begin
+  perform public.admin_list(p_key);  -- şifre kontrolü
+  return json_build_object(
+    'qr_total', (select count(*) from self_tags),
+    'qr_7', (select count(*) from self_tags where created_at > now() - interval '7 days'),
+    'qr_off', (select count(*) from self_tags where disabled),
+    'scan_total', (select count(*) from self_tag_scans),
+    'scan_7', (select count(*) from self_tag_scans where scanned_at > now() - interval '7 days'),
+    'scan_30', (select count(*) from self_tag_scans where scanned_at > now() - interval '30 days'),
+    'qr_scanned', (select count(distinct code) from self_tag_scans),
+    'order_total', (select count(*) from orders),
+    'order_7', (select count(*) from orders where created_at > now() - interval '7 days'),
+    'order_open', (select count(*) from orders where status in ('yeni', 'odeme_bekleniyor', 'odeme_bildirildi')),
+    'order_cancel', (select count(*) from orders where status = 'iptal'),
+    'revenue_total', (select coalesce(sum(amount), 0) from orders where status = any(v_paid)),
+    'revenue_month', (select coalesce(sum(amount), 0) from orders where status = any(v_paid) and created_at >= v_month),
+    'paid_total', (select count(*) from orders where status = any(v_paid)),
+    'days', (select json_agg(json_build_object('day', d,
+        'qr', (select count(*) from self_tags where (created_at at time zone 'Europe/Istanbul')::date = d),
+        'scan', (select count(*) from self_tag_scans where (scanned_at at time zone 'Europe/Istanbul')::date = d),
+        'order', (select count(*) from orders where (created_at at time zone 'Europe/Istanbul')::date = d)) order by d)
+      from generate_series(v_today - 13, v_today, interval '1 day') g(d0), lateral (select g.d0::date as d) x));
+end $$;
+revoke all on function public.admin_stats(text) from public;
+grant execute on function public.admin_stats(text) to anon, authenticated;
 
 -- ---------------------------------------------------------------- herkese açık
 -- Uygulamanın göstereceği satış bilgileri (baskıcı e-postası hariç)

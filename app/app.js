@@ -138,7 +138,8 @@ function showHome() {
         <li>İstediğiniz ölçüde yazdırın, camınıza yapıştırın</li>
       </ol>
       <a class="btn" href="#/yeni">Başlayalım</a>
-      <button class="btn ghost" type="button" id="howto">Nasıl çalışır?</button>`, false, "", "qr"), bindHowto();
+      <button class="btn ghost" type="button" id="howto">Nasıl çalışır?</button>
+      <a class="btn ghost" href="#/yedek">Eski telefonumdaki QR'ları getir</a>`, false, "", "qr"), bindHowto();
   }
   show("QR'larım", `
     <div id="update-slot"></div>
@@ -151,7 +152,9 @@ function showHome() {
             <span class="scan" data-scan="${esc(t.code)}">${scanChip(store.get("stats", {})[t.code])}</span></div>
         </a>`).join("")}
     </div>
-    <a class="btn" href="#/yeni">+ Yeni QR oluştur</a>`, false, "", "qr");
+    <a class="btn" href="#/yeni">+ Yeni QR oluştur</a>
+    <button class="btn ghost share-app" type="button">👋 Arkadaşına öner</button>`, false, "", "qr");
+  bindShareApp();
   updateBanner("update-slot");
   loadShop().then(shop => {
     const slot = document.getElementById("promo-slot");
@@ -195,6 +198,13 @@ function showProfile(saved = false) {
       <button class="btn" type="submit">Kaydet</button>
     </form>
 
+    <h2>Yedekle / taşı</h2>
+    <div class="opts" style="padding-top:14px">
+      <div class="hint" style="margin-top:0">Telefon değiştirirken ya da uygulamayı silip yeniden kurarken QR'larınız ve PIN'leriniz kaybolmasın.</div>
+      <a class="btn ghost" href="#/yedek">💾 Yedekle / geri yükle</a>
+      <button class="btn ghost share-app" type="button">👋 Arkadaşına öner</button>
+    </div>
+
     <h2>Uygulama</h2>
     <div class="opts" style="padding-top:14px">
       <dl class="kv"><dt>Sürüm</dt><dd id="ver">${esc(myVersionName() || "-")}</dd></dl>
@@ -212,6 +222,7 @@ function showProfile(saved = false) {
     </div>`, false, "", "profile");
   document.getElementById("wipe").onclick = wipeAll;
   bindHowto();
+  bindShareApp();
   latestVersion().then(latest => {
     const mine = myVersion(), el = document.getElementById("update-slot");
     if (!el) return;
@@ -258,6 +269,82 @@ async function wipeAll(ev) {
   syncOrdersToAndroid();
   showProfile();
   toast(sent ? "Silindi. Verilmiş sipariş kayıtlarının silinmesi için gizlilik sayfasındaki adrese yazın." : "Tüm verileriniz silindi.");
+}
+
+// ---------------------------------------------------------------- arkadaşına öner
+const PLAY_URL = "https://play.google.com/store/apps/details?id=io.github.yusufbas34.aracqr";
+function bindShareApp() {
+  document.querySelectorAll(".share-app").forEach(b => b.onclick = async () => {
+    const text = `Arabana QR sticker yap: önünü kapatan seni tek dokunuşla arasın ya da mesaj atsın, numaran camda yazmaz. Ücretsiz 👉 ${PLAY ? PLAY_URL : SITE}`;
+    if (!bridge && navigator.share) { try { await navigator.share({text}); return; } catch (e) { if (e.name === "AbortError") return; } }
+    location.href = `https://wa.me/?text=${encodeURIComponent(text)}`;
+  });
+}
+
+// ---------------------------------------------------------------- yedekle / geri yükle
+// Yedek kodu: QR'lar (PIN dahil) ve siparişler, tek satır metin. Sunucuda saklanmaz; kullanıcı kendine gönderir.
+const BACKUP_PREFIX = "ARACQR1.";
+function backupCode() {
+  const json = JSON.stringify({t: tags(), o: orders().map(o => ({code: o.code, token: o.token, amount: o.amount, status: o.status, tagCode: o.tagCode, design: o.design, created: o.created}))});
+  const bytes = new TextEncoder().encode(json);
+  let bin = ""; bytes.forEach(b => { bin += String.fromCharCode(b); });
+  return BACKUP_PREFIX + btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function parseBackup(text) {
+  const m = /ARACQR1\.([A-Za-z0-9_-]+)/.exec(String(text).replace(/\s+/g, ""));
+  if (!m) return null;
+  try {
+    const bin = atob(m[1].replace(/-/g, "+").replace(/_/g, "/"));
+    const data = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))));
+    const okTag = t => t && /^S[0-9A-Z]{7}$/.test(t.code) && /^\d{6}$/.test(t.pin);
+    return {t: (data.t || []).filter(okTag), o: (data.o || []).filter(o => o && /^AQ-/.test(o.code) && o.token)};
+  } catch (e) { return null; }
+}
+
+function showBackup(msg = "") {
+  const list = tags(), code = list.length ? backupCode() : "";
+  show("Yedekle / taşı", `
+    ${msg}
+    ${list.length ? `
+    <h2 style="margin-top:4px">1. Yedek kodunuz</h2>
+    <div class="opts" style="padding-top:14px">
+      <div class="hint" style="margin-top:0">${list.length} QR ve PIN'leri, ${orders().length} sipariş bu kodun içinde. Kodu kendinize WhatsApp'tan ya da e-postayla gönderin, yeni telefonda “Geri yükle”ye yapıştırın.</div>
+      <textarea id="bk-code" rows="4" readonly style="font-family:monospace;font-size:12px;word-break:break-all">${esc(code)}</textarea>
+      <button class="btn" type="button" id="bk-copy">Kopyala</button>
+      <a class="btn ghost" href="https://wa.me/?text=${encodeURIComponent("Araç QR yedek kodum (kimseyle paylaşmayın):\n\n" + code)}">WhatsApp'ta kendime gönder</a>
+      <div class="msg err" style="margin-top:12px">🔒 Bu kodu kimseyle paylaşmayın: kodu bilen QR'larınızın numarasını değiştirebilir.</div>
+    </div>` : ""}
+    <h2>${list.length ? "2. " : ""}Geri yükle</h2>
+    <form class="opts" id="bk-form" style="padding-top:14px" novalidate>
+      <label for="bk-in" style="margin-top:0">Yedek kodunu yapıştırın</label>
+      <textarea id="bk-in" rows="4" placeholder="ARACQR1.…" style="font-family:monospace;font-size:12px"></textarea>
+      <button class="btn" type="submit">Geri yükle</button>
+      <div class="hint">Bu telefondaki QR'lar silinmez; yedekteki QR'lar listeye eklenir.</div>
+    </form>`, true, "", "profile");
+  const copy = document.getElementById("bk-copy");
+  if (copy) copy.onclick = async () => {
+    const ta = document.getElementById("bk-code");
+    try { await navigator.clipboard.writeText(ta.value); } catch (e) { ta.select(); document.execCommand("copy"); }
+    toast("Yedek kodu kopyalandı");
+  };
+  document.getElementById("bk-form").addEventListener("submit", async ev => {
+    ev.preventDefault();
+    const fail = t => showBackup(`<div class="msg err" role="alert">${esc(t)}</div>`);
+    const data = parseBackup(document.getElementById("bk-in").value);
+    if (!data || !data.t.length) return fail("Yedek kodu okunamadı. Kodun tamamını (ARACQR1. ile başlayan) yapıştırdığınızdan emin olun.");
+    ev.submitter && (ev.submitter.disabled = true);
+    // PIN'i hâlâ geçerli olan (silinmemiş) QR'lar
+    let valid;
+    try { valid = new Set((await rpc("self_tag_stats", {p_codes: data.t.map(t => t.code), p_pins: data.t.map(t => t.pin)})).map(x => x.code)); }
+    catch (e) { return fail("Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edip tekrar deneyin."); }
+    const ok = data.t.filter(t => valid.has(t.code)), have = new Set(tags().map(t => t.code));
+    ok.filter(t => !have.has(t.code)).reverse().forEach(t => saveTag(t));
+    const known = new Set(orders().map(o => o.code));
+    data.o.filter(o => !known.has(o.code)).forEach(o => saveOrder(o));
+    const skipped = data.t.length - ok.length;
+    showBackup(`<div class="msg ok" role="status">${ok.length} QR geri yüklendi${data.o.length ? `, ${data.o.length} sipariş` : ""}.${skipped ? ` ${skipped} QR silinmiş ya da PIN'i değişmiş olduğu için eklenmedi.` : ""}</div>`);
+    if (ok.length) confetti();
+  });
 }
 
 const scanChip = st => st ? `👀 ${st.last30} okutma / 30 gün` : "";
@@ -430,7 +517,7 @@ function showTag(code, isNew) {
         <dt>Aranacak numara</dt><dd>${esc(prettyPhone(t.phone))}</dd>
         <dt>PIN</dt><dd><span class="secret" id="pin">••••••</span> <button type="button" class="btn ghost" id="showpin" style="display:inline;width:auto;margin:0 0 0 6px;padding:4px 12px;font-size:14px">Göster</button></dd>
       </dl>
-      <div class="hint">PIN numarayı değiştirmek için gerekir. Bu telefonda saklanır; telefon değiştirecekseniz bir yere not edin.</div>
+      <div class="hint">PIN numarayı değiştirmek için gerekir ve bu telefonda saklanır. Telefon değiştirecekseniz <a href="#/yedek">Profilim › Yedekle / taşı</a> ile QR'larınızı yeni telefona taşıyın.</div>
       <a class="btn ghost" href="#/etiket/${encodeURIComponent(t.code)}/numara">Numarayı değiştir</a>
       <a class="btn ghost" href="${esc(qrLink(t.code))}">QR'ı dene (okutan kişinin göreceği sayfa)</a>
       <button class="btn danger" id="delete" type="button">QR'ı kalıcı olarak sil</button>
@@ -884,6 +971,7 @@ function route() {
   if (parts[0] === "etiket" && parts[2] === "siparis") return showOrder(parts[1]);
   if (parts[0] === "siparisler") return showOrders();
   if (parts[0] === "profil") return showProfile();
+  if (parts[0] === "yedek") return showBackup();
   if (parts[0] === "siparis") return showOrderStatus(parts[1], parts[2] === "yeni");
   if (parts[0] === "odeme") return showOrderStatus(parts[1]);  // eski bağlantılar
   if (parts[0] === "etiket") return showTag(parts[1], parts[2] === "yeni");

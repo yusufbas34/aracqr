@@ -74,6 +74,19 @@ details p{margin:8px 0 0}
 .tabs button{font:inherit;font-size:16px;font-weight:700;padding:10px 16px;border:0;background:none;color:var(--muted);
   border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer}
 .tabs button.on{color:var(--band);border-bottom-color:var(--band)}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:0 0 18px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat b{display:block;font-size:28px;line-height:1.1;color:var(--ink)}
+.stat span{display:block;font-size:14px;color:var(--muted)}
+.stat small{display:block;font-size:13px;color:var(--muted);margin-top:4px}
+.stat-h{font-size:17px;margin:18px 0 8px}
+.bars{position:relative;display:flex;align-items:flex-end;gap:2px;height:140px;padding:8px 0 0;border-bottom:1px solid var(--line);background:#fff;border-radius:10px 10px 0 0}
+.bars .col{flex:1;height:100%;display:flex;align-items:flex-end;cursor:default}
+.bars .bar{width:100%;background:var(--band);border-radius:4px 4px 0 0;min-height:0}
+.bars .col:hover .bar,.bars .col:focus .bar{background:#1e5fd8}
+.bar-x{display:flex;gap:2px;font-size:12px;color:var(--muted);margin-top:4px}
+.bar-x span{flex:1;text-align:center}
+.bar-tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-size:13px;line-height:1.35;padding:6px 9px;border-radius:6px;white-space:nowrap;transform:translate(-50%,-100%);display:none}
 .badge{display:inline-block;min-width:22px;padding:1px 7px;border-radius:999px;background:var(--err);color:#fff;font-size:13px;margin-left:4px}
 .reqs{display:grid;gap:12px}
 .req{background:#fff;border-radius:10px;padding:14px 16px;display:grid;grid-template-columns:1fr auto;gap:10px 18px;border-left:5px solid var(--line)}
@@ -101,6 +114,11 @@ details.howto ol{margin:8px 0 0;padding-left:20px;line-height:1.6;font-size:15px
 .msg.info a{color:var(--band)}
 /* hazır mesajlar */
 .qm-title{font-size:18px;margin:26px 0 10px}
+.langs{display:flex;justify-content:flex-end;gap:6px;margin:-8px 0 14px;direction:ltr}
+.langs button{font:inherit;font-size:14px;padding:5px 11px;border:1.5px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);cursor:pointer}
+.langs button[aria-pressed="true"]{border-color:var(--band);background:var(--band);color:#fff}
+[dir="rtl"] .plate{direction:ltr}
+.qm-note{font-size:13px;color:var(--muted);margin:8px 0 0}
 .qm-switch{display:flex;gap:8px;margin-bottom:10px}
 .qm-switch label{flex:1;margin:0;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border:2px solid var(--line);
   border-radius:8px;background:#fff;font-weight:600;font-size:15px}
@@ -184,7 +202,7 @@ const tagLink = code => `${BASE}?k=${encodeURIComponent(code)}`;
 const SELF = params.has("s");
 const ownLink = code => SELF ? `${BASE}?s=${encodeURIComponent(code)}` : tagLink(code);
 
-function show(html, wide = false) { app.className = wide === true ? "wide" : wide || ""; app.innerHTML = html; }
+function show(html, wide = false) { app.className = wide === true ? "wide" : wide || ""; app.dir = ""; app.lang = ""; app.innerHTML = html; }
 
 // ---------------------------------------------------------------- ekranlar
 function showForm(code, {title, intro, button, overwrite}, error = "", phoneVal = "") {
@@ -249,28 +267,102 @@ function inQuietHours(tag, now) {
   return a < b ? t >= a && t < b : t >= a || t < b;
 }
 
-// QR'ı okutanın tek dokunuşla gönderebileceği hazır mesajlar
+// ---------------------------------------------------------------- okutma sayfasının dili (Türkçe / English / العربية)
+// QR'ı yabancı biri de okutabilir: telefonunun diline göre açılır, üstteki düğmelerle değiştirilebilir.
+const SCAN_TEXT = {
+  tr: {callTitle: "Araç sahibini arayın", callIntro: "Arama ekranı açılmadıysa aşağıdaki butona dokunun.", call: "Ara",
+    quietTitle: "Araç sahibi şu an sessiz saatlerde",
+    quietText: (a, b) => `Araç sahibi ${a}–${b} arasında arama almıyor. Aşağıdan ona SMS ya da WhatsApp mesajı gönderebilirsiniz; acil durumlar için de hazır mesaj var.`,
+    msgTitle: "Mesaj gönderin", msgOr: "Ya da hazır mesaj gönderin", via: "Gönderme yolu", note: "",
+    offTitle: "Bu QR şu an kullanılmıyor", offText: "Aracın sahibi bu QR'ı geçici olarak kapatmış. Araç satılmış ya da sticker artık kullanılmıyor olabilir.",
+    noneTitle: "QR bulunamadı", noneText: "Bu QR kod geçerli bir etikete ait değil.",
+    netTitle: "Bağlantı hatası", netText: "Sayfayı yenileyip tekrar deneyin.",
+    backup: "Ulaşamazsanız", backupCall: "Yedek numarayı ara", owner: "Aracın sahibi misiniz? Numarayı değiştirin"},
+  en: {callTitle: "Call the vehicle owner", callIntro: "If the call screen didn't open, tap the button below.", call: "Call",
+    quietTitle: "The owner is in quiet hours",
+    quietText: (a, b) => `The owner doesn't take calls between ${a} and ${b} (Turkey time). You can send an SMS or WhatsApp message below; there are ready messages for emergencies too.`,
+    msgTitle: "Send a message", msgOr: "Or send a ready message", via: "Send via", note: "The message is sent in Turkish together with your language, so the owner understands it.",
+    offTitle: "This QR is not in use right now", offText: "The owner has turned this QR off for now. The vehicle may have been sold or the sticker is no longer used.",
+    noneTitle: "QR not found", noneText: "This QR code doesn't belong to a valid sticker.",
+    netTitle: "Connection error", netText: "Refresh the page and try again.",
+    backup: "If you can't reach them", backupCall: "Call the backup number", owner: "Are you the owner? Change the number"},
+  ar: {callTitle: "اتصل بصاحب السيارة", callIntro: "إذا لم تُفتح شاشة الاتصال، اضغط على الزر أدناه.", call: "اتصال",
+    quietTitle: "صاحب السيارة في ساعات الهدوء الآن",
+    quietText: (a, b) => `لا يستقبل صاحب السيارة المكالمات بين ${a} و${b} (بتوقيت تركيا). يمكنك إرسال رسالة SMS أو واتساب أدناه، وتوجد رسائل جاهزة للحالات الطارئة.`,
+    msgTitle: "أرسل رسالة", msgOr: "أو أرسل رسالة جاهزة", via: "طريقة الإرسال", note: "تُرسل الرسالة بالتركية مع لغتك حتى يفهمها صاحب السيارة.",
+    offTitle: "رمز QR هذا غير مستخدم حاليًا", offText: "أوقف صاحب السيارة هذا الرمز مؤقتًا. ربما بيعت السيارة أو لم يعد الملصق مستخدمًا.",
+    noneTitle: "لم يتم العثور على الرمز", noneText: "رمز QR هذا لا ينتمي إلى ملصق صالح.",
+    netTitle: "خطأ في الاتصال", netText: "حدّث الصفحة وحاول مرة أخرى.",
+    backup: "إذا لم تتمكن من الوصول", backupCall: "اتصل بالرقم الاحتياطي", owner: "هل أنت صاحب السيارة؟ غيّر الرقم"},
+};
+const LANG_NAMES = {tr: "Türkçe", en: "English", ar: "العربية"};
+let LANG = (() => {
+  const want = [params.get("lang"), (() => { try { return localStorage.getItem("aracqr-lang"); } catch (e) { return null; } })(),
+    ...(navigator.languages || [navigator.language])].filter(Boolean).map(l => l.slice(0, 2).toLowerCase());
+  return want.find(l => SCAN_TEXT[l]) || (want.length ? "en" : "tr");  // tanınmayan dil: İngilizce
+})();
+const T = () => SCAN_TEXT[LANG];
+let rerenderScan = null;
+
+function langBar() {
+  return `<div class="langs" role="group" aria-label="Dil / Language / اللغة">${Object.entries(LANG_NAMES).map(([k, n]) =>
+    `<button type="button" data-lang="${k}" lang="${k}" aria-pressed="${k === LANG}">${n}</button>`).join("")}</div>`;
+}
+// Okutma ekranlarını seçili dilde gösterir (sağdan sola yazım dahil)
+function showScan(html, render) {
+  rerenderScan = render;
+  show(langBar() + html);
+  app.dir = LANG === "ar" ? "rtl" : "ltr";
+  app.lang = LANG;
+  app.querySelectorAll(".langs button").forEach(b => b.onclick = () => {
+    LANG = b.dataset.lang;
+    try { localStorage.setItem("aracqr-lang", LANG); } catch (e) {}
+    rerenderScan && rerenderScan();
+  });
+}
+function scanMessage(key) {
+  const r = () => showScan(`<h1>${esc(T()[key + "Title"])}</h1><p>${esc(T()[key + "Text"])}</p>`, r);
+  r();
+}
+
+// QR'ı okutanın tek dokunuşla gönderebileceği hazır mesajlar. Araç sahibine her zaman Türkçesi gider;
+// okutan başka dildeyse kendi dilindeki metin de eklenir.
 const QUICK_MESSAGES = [
-  ["🚗", "Önümü kapatıyorsunuz", "Merhaba, aracınız önümü kapatıyor. Çıkabilmem için aracınızı çekebilir misiniz?"],
-  ["💡", "Farlarınız açık", "Merhaba, aracınızın farları açık kalmış."],
-  ["🪟", "Camınız açık", "Merhaba, aracınızın camı açık kalmış."],
-  ["💥", "Aracınıza çarpıldı", "Merhaba, aracınıza çarpıldı / hasar var. Lütfen aracınızın yanına gelin."],
-  ["🚓", "Çekici / ceza", "Merhaba, aracınız çekilmek üzere ya da ceza yazılıyor. Lütfen hemen gelin."],
-  ["⚠️", "Araçta çocuk / hayvan var", "ACİL: Aracınızın içinde çocuk ya da hayvan kalmış görünüyor. Lütfen hemen gelin!"],
+  ["🚗", {tr: ["Önümü kapatıyorsunuz", "Merhaba, aracınız önümü kapatıyor. Çıkabilmem için aracınızı çekebilir misiniz?"],
+    en: ["You're blocking me", "Hello, your car is blocking me. Could you move it so I can get out?"],
+    ar: ["سيارتك تسد طريقي", "مرحبًا، سيارتك تسد طريقي. هل يمكنك تحريكها لأتمكن من الخروج؟"]}],
+  ["💡", {tr: ["Farlarınız açık", "Merhaba, aracınızın farları açık kalmış."],
+    en: ["Your lights are on", "Hello, your car's lights were left on."],
+    ar: ["أضواء سيارتك مضاءة", "مرحبًا، أضواء سيارتك ما زالت مضاءة."]}],
+  ["🪟", {tr: ["Camınız açık", "Merhaba, aracınızın camı açık kalmış."],
+    en: ["Your window is open", "Hello, your car's window was left open."],
+    ar: ["نافذة سيارتك مفتوحة", "مرحبًا، نافذة سيارتك تُركت مفتوحة."]}],
+  ["💥", {tr: ["Aracınıza çarpıldı", "Merhaba, aracınıza çarpıldı / hasar var. Lütfen aracınızın yanına gelin."],
+    en: ["Your car was hit", "Hello, your car was hit / damaged. Please come to your car."],
+    ar: ["صُدمت سيارتك", "مرحبًا، تعرضت سيارتك لصدمة أو ضرر. يرجى الحضور إلى سيارتك."]}],
+  ["🚓", {tr: ["Çekici / ceza", "Merhaba, aracınız çekilmek üzere ya da ceza yazılıyor. Lütfen hemen gelin."],
+    en: ["Tow truck / ticket", "Hello, your car is about to be towed or ticketed. Please come right away."],
+    ar: ["سحب / مخالفة", "مرحبًا، سيارتك على وشك أن تُسحب أو تُحرر لها مخالفة. يرجى الحضور فورًا."]}],
+  ["⚠️", {tr: ["Araçta çocuk / hayvan var", "ACİL: Aracınızın içinde çocuk ya da hayvan kalmış görünüyor. Lütfen hemen gelin!"],
+    en: ["Child / pet in the car", "URGENT: A child or pet seems to be left inside your car. Please come right away!"],
+    ar: ["طفل / حيوان في السيارة", "عاجل: يبدو أن طفلًا أو حيوانًا تُرك داخل سيارتك. يرجى الحضور فورًا!"]}],
 ];
 
 function quickMessagesHtml(phone, quietTitle = false) {
   const digits = String(phone).replace(/\D/g, ""), tail = "\n\n(Araç QR ile gönderildi)";
-  return `<h2 class="qm-title">${quietTitle ? "Mesaj gönderin" : "Ya da hazır mesaj gönderin"}</h2>
-    <div class="qm-switch" role="radiogroup" aria-label="Gönderme yolu">
+  return `<h2 class="qm-title">${esc(quietTitle ? T().msgTitle : T().msgOr)}</h2>
+    <div class="qm-switch" role="radiogroup" aria-label="${esc(T().via)}">
       <label><input type="radio" name="qm" value="sms" checked> SMS</label>
       <label><input type="radio" name="qm" value="wa"> WhatsApp</label>
     </div>
-    <div class="qm">${QUICK_MESSAGES.map(([icon, label, text]) => `
-      <a class="qm-btn" data-sms="${esc(`sms:${phone}?body=${encodeURIComponent(text + tail)}`)}"
-         data-wa="${esc(`https://wa.me/${digits}?text=${encodeURIComponent(text + tail)}`)}"
-         href="${esc(`sms:${phone}?body=${encodeURIComponent(text + tail)}`)}"><span aria-hidden="true">${icon}</span>${esc(label)}</a>`).join("")}
-    </div>`;
+    <div class="qm">${QUICK_MESSAGES.map(([icon, m]) => {
+      const text = m.tr[1] + (LANG === "tr" ? "" : `\n\n(${LANG_NAMES[LANG]}) ${m[LANG][1]}`) + tail;
+      const sms = `sms:${phone}?body=${encodeURIComponent(text)}`, wa = `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+      return `
+      <a class="qm-btn" data-sms="${esc(sms)}" data-wa="${esc(wa)}" href="${esc(sms)}"><span aria-hidden="true">${icon}</span>${esc(m[LANG][0])}</a>`;
+    }).join("")}
+    </div>
+    ${T().note ? `<p class="qm-note">${esc(T().note)}</p>` : ""}`;
 }
 
 function bindQuickMessages() {
@@ -278,39 +370,41 @@ function bindQuickMessages() {
     document.querySelectorAll(".qm-btn").forEach(a => { a.href = a.dataset[r.value === "wa" ? "wa" : "sms"]; }));
 }
 
-function showCall(code, tag) {
+function showCall(code, tag, again = false) {
+  const t = T(), render = () => showCall(code, tag, true);
   if (tag.disabled) {
-    return show(`
+    return showScan(`
       ${plate(code)}
-      <h1>Bu QR şu an kullanılmıyor</h1>
-      <p>Aracın sahibi bu QR'ı geçici olarak kapatmış. Araç satılmış ya da sticker artık kullanılmıyor olabilir.</p>`);
+      <h1>${esc(t.offTitle)}</h1>
+      <p>${esc(t.offText)}</p>`, render);
   }
   const phone = tag.phone, quiet = inQuietHours(tag);
   const backup = tag.backup_phone ? `
-    <div class="msg info" style="margin-top:18px">Ulaşamazsanız${tag.backup_name ? ` <b>${esc(tag.backup_name)}</b>` : ""}:
-      <a href="tel:${esc(tag.backup_phone)}"><b>${esc(prettyPhone(tag.backup_phone))}</b></a></div>
-    <a class="btn ghost" href="tel:${esc(tag.backup_phone)}" style="margin-top:8px">Yedek numarayı ara</a>` : "";
+    <div class="msg info" style="margin-top:18px">${esc(t.backup)}${tag.backup_name ? ` <b>${esc(tag.backup_name)}</b>` : ""}:
+      <a href="tel:${esc(tag.backup_phone)}" dir="ltr"><b>${esc(prettyPhone(tag.backup_phone))}</b></a></div>
+    <a class="btn ghost" href="tel:${esc(tag.backup_phone)}" style="margin-top:8px">${esc(t.backupCall)}</a>` : "";
+  const owner = `<p class="small"><a href="${esc(ownLink(code))}&degistir">${esc(t.owner)}</a></p>`;
   if (quiet) {
-    show(`
+    showScan(`
       ${plate(code)}
-      <h1>Araç sahibi şu an sessiz saatlerde</h1>
-      <p>Araç sahibi ${hhmm(tag.quiet_start)}–${hhmm(tag.quiet_end)} arasında arama almıyor. Aşağıdan ona SMS ya da WhatsApp mesajı gönderebilirsiniz; acil durumlar için de hazır mesaj var.</p>
+      <h1>${esc(t.quietTitle)}</h1>
+      <p>${esc(t.quietText(hhmm(tag.quiet_start), hhmm(tag.quiet_end)))}</p>
       ${quickMessagesHtml(phone, true)}
       ${backup}
-      <p class="small"><a href="${esc(ownLink(code))}&degistir">Aracın sahibi misiniz? Numarayı değiştirin</a></p>`);
+      ${owner}`, render);
     bindQuickMessages();
     return; // sessiz saatlerde otomatik arama yok
   }
-  show(`
+  showScan(`
     ${plate(code)}
-    <h1>Araç sahibini arayın</h1>
-    <p>Arama ekranı açılmadıysa aşağıdaki butona dokunun.</p>
-    <a class="btn call" href="tel:${esc(phone)}">Ara: ${esc(prettyPhone(phone))}</a>
+    <h1>${esc(t.callTitle)}</h1>
+    <p>${esc(t.callIntro)}</p>
+    <a class="btn call" href="tel:${esc(phone)}">${esc(t.call)}: <span dir="ltr">${esc(prettyPhone(phone))}</span></a>
     ${quickMessagesHtml(phone)}
     ${backup}
-    <p class="small"><a href="${esc(ownLink(code))}&degistir">Aracın sahibi misiniz? Numarayı değiştirin</a></p>`);
+    ${owner}`, render);
   bindQuickMessages();
-  setTimeout(() => { location.href = "tel:" + phone; }, 250);
+  if (!again) setTimeout(() => { location.href = "tel:" + phone; }, 250);  // dil değiştirince yeniden arama açılmasın
 }
 
 function showSaved(code, phone) {
@@ -511,6 +605,7 @@ async function showAdmin() {
   if (adminTab === "requests") return showRequests(rows, given, requests);
   if (adminTab === "orders") return showOrders(orderRows, requests);
   if (adminTab === "settings") return showSettings(requests);
+  if (adminTab === "stats") return showStats(rows, given, requests);
   const state = r => r.phone ? "used" : given?.has(String(r.code).toUpperCase()) ? "given" : "ready";
   const count = {ready: 0, given: 0, used: 0};
   rows.forEach(r => count[state(r)]++);
@@ -731,7 +826,7 @@ let orderBadge = 0;
 function tabsHtml(newCount) {
   const tab = (id, name, n) => `<button data-tab="${id}" class="${adminTab === id ? "on" : ""}">${name}${n ? `<span class="badge">${n}</span>` : ""}</button>`;
   return `<div class="tabs noprint">
-    ${tab("tags", "Etiketler")}${tab("requests", "QR talepleri", newCount)}${tab("orders", "Siparişler", orderBadge)}${tab("settings", "Ayarlar")}
+    ${tab("tags", "Etiketler")}${tab("requests", "QR talepleri", newCount)}${tab("orders", "Siparişler", orderBadge)}${tab("stats", "İstatistik")}${tab("settings", "Ayarlar")}
   </div>`;
 }
 
@@ -945,7 +1040,7 @@ async function showOrders(orders, requests) {
   show(`
     ${tabsHtml(requests ? requests.filter(r => r.status === "yeni").length : 0)}
     ${orders ? "" : setupHtml("Sipariş sistemi kurulu değil.", "siparis.sql")}
-    ${orders && shopVersion < 6 ? setupHtml("Sipariş sistemi güncellemesi var: Telegram ve e-posta bildiriminde baskı PDF'i, siparişte seçilen söz, sipariş iptali.", "siparis.sql") : ""}
+    ${orders && shopVersion < 7 ? setupHtml("Sipariş sistemi güncellemesi var: İstatistik sekmesi, Telegram ve e-posta bildiriminde baskı PDF'i, siparişte seçilen söz, sipariş iptali.", "siparis.sql") : ""}
     ${orders && shop && !shop.active ? `<div class="msg err">Satış kapalı: uygulamada sipariş alınmıyor. <b>Ayarlar</b> sekmesinden açabilirsiniz.</div>` : ""}
     <div class="bar">
       <select id="ofilter" aria-label="Sipariş durumu">
@@ -1037,6 +1132,67 @@ async function showOrders(orders, requests) {
       if (e.name !== "AbortError") msg.innerHTML = `<div class="msg err">İşlem yapılamadı: ${esc(e.message)}</div>`;
     } finally { btn.disabled = false; }
   };
+}
+
+// İstatistik sekmesi: rakamlar ve son 14 günün okutma grafiği (supabase/siparis.sql sürüm 7: admin_stats)
+async function showStats(rows, given, requests) {
+  show(`${tabsHtml(requests ? requests.filter(r => r.status === "yeni").length : 0)}<p>Yükleniyor…</p>`, "wide");
+  bindTabs();
+  let st = null;
+  try { st = await rpc("admin_stats", {p_key: adminKey}); } catch (e) {}
+  const n = v => Number(v || 0).toLocaleString("tr-TR");
+  const tile = (value, label, sub = "") => `<div class="stat"><b>${value}</b><span>${esc(label)}</span>${sub ? `<small>${esc(sub)}</small>` : ""}</div>`;
+  const usedK = rows.filter(r => r.phone).length, givenK = rows.filter(r => !r.phone && given?.has(String(r.code).toUpperCase())).length;
+  const days = st?.days || [], max = Math.max(1, ...days.map(d => d.scan));
+  const dayName = d => new Date(d + "T12:00:00").toLocaleDateString("tr-TR", {day: "numeric", month: "short"});
+  show(`
+    ${tabsHtml(requests ? requests.filter(r => r.status === "yeni").length : 0)}
+    ${st ? `
+    <h2 class="stat-h">Uygulama QR'ları</h2>
+    <div class="stat-grid">
+      ${tile(n(st.qr_total), "QR oluşturuldu", `son 7 günde ${n(st.qr_7)}`)}
+      ${tile(n(st.qr_scanned), "En az bir kez okutulan QR", st.qr_total ? `%${Math.round(100 * st.qr_scanned / st.qr_total)}` : "")}
+      ${tile(n(st.scan_total), "Toplam okutma", `son 7 günde ${n(st.scan_7)} · 30 günde ${n(st.scan_30)}`)}
+      ${tile(n(st.qr_off), "Kapalı QR")}
+    </div>
+    <h2 class="stat-h">Siparişler</h2>
+    <div class="stat-grid">
+      ${tile(n(st.order_total), "Sipariş", `son 7 günde ${n(st.order_7)}`)}
+      ${tile(n(st.order_open), "Bekleyen (aranacak)")}
+      ${tile(`${n(st.revenue_month)} TL`, "Bu ayın cirosu", "onaylanan + baskıda + kargolanan")}
+      ${tile(`${n(st.revenue_total)} TL`, "Toplam ciro", `${n(st.paid_total)} sipariş · ${n(st.order_cancel)} iptal`)}
+    </div>
+    <h2 class="stat-h">Günlük okutma · son 14 gün</h2>
+    <div class="bars" id="bars" role="img" aria-label="Son 14 günün günlük okutma sayıları">
+      ${days.map((d, i) => `<div class="col" tabindex="0" data-i="${i}"><div class="bar" style="height:${Math.round(100 * d.scan / max)}%"></div></div>`).join("")}
+      <div class="bar-tip" id="bar-tip"></div>
+    </div>
+    <div class="bar-x">${days.map((d, i) => `<span>${i % 2 === days.length % 2 ? "" : esc(dayName(d.day))}</span>`).join("")}</div>
+    <details style="margin-top:12px"><summary>Tablo olarak göster</summary>
+      <table class="small" style="width:100%;border-collapse:collapse;margin-top:8px">
+        <tr><th align="left">Gün</th><th align="right">Okutma</th><th align="right">Yeni QR</th><th align="right">Sipariş</th></tr>
+        ${days.slice().reverse().map(d => `<tr><td>${esc(dayName(d.day))}</td><td align="right">${d.scan}</td><td align="right">${d.qr}</td><td align="right">${d.order}</td></tr>`).join("")}
+      </table></details>` : setupHtml("İstatistikler için veritabanı güncellemesi gerekiyor.", "siparis.sql")}
+    <h2 class="stat-h">Yönetimden verilen etiketler</h2>
+    <div class="stat-grid">
+      ${tile(n(rows.length), "Etiket")}
+      ${tile(n(usedK), "Numarası kayıtlı")}
+      ${tile(n(givenK), "Verildi, numara bekleniyor")}
+      ${tile(n(rows.length - usedK - givenK), "Henüz verilmedi")}
+    </div>`, "wide");
+  bindTabs();
+  const bars = document.getElementById("bars"), tip = document.getElementById("bar-tip");
+  if (bars) bars.querySelectorAll(".col").forEach(c => {
+    const on = () => {
+      const d = days[c.dataset.i];
+      tip.innerHTML = `<b>${esc(dayName(d.day))}</b><br>${d.scan} okutma · ${d.qr} yeni QR · ${d.order} sipariş`;
+      tip.style.display = "block"; tip.style.top = "0px";
+      const half = tip.offsetWidth / 2, x = c.offsetLeft + c.offsetWidth / 2;
+      tip.style.left = Math.min(Math.max(x, half), bars.clientWidth - half) + "px";  // kenarlardan taşmasın
+    };
+    c.onmouseenter = on; c.onfocus = on; c.onclick = on;
+    c.onmouseleave = c.onblur = () => { tip.style.display = "none"; };
+  });
 }
 
 async function showSettings(requests, error = "") {
@@ -1140,9 +1296,9 @@ async function route() {
 
   let tag;
   try { tag = await rpc(SELF ? "self_tag_lookup" : "tag_lookup", {p_code: code}); }
-  catch (e) { return showMessage("Bağlantı hatası", "Sayfayı yenileyip tekrar deneyin."); }
+  catch (e) { return scanMessage("net"); }
 
-  if (!tag?.exists) return showMessage("Etiket bulunamadı", "Bu QR kod geçerli bir etikete ait değil.");
+  if (!tag?.exists) return scanMessage("none");
   if (tag.disabled) return showCall(code, tag);  // sahibi QR'ı kapatmış: form da numara da gösterilmez
   if (params.has("degistir")) return showForm(code, SELF ? CHANGE_SELF : CHANGE);
   if (!tag.phone) return showForm(code, CLAIM);

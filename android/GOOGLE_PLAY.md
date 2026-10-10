@@ -181,6 +181,12 @@ Numaranız QR'ın içinde değil, güvenli sunucuda durur. Uygulamadan PIN'inizl
 ★ QR'ı kapatın / açın
 Araç satıldı, sticker kayboldu ya da tatildesiniz: QR'ı tek dokunuşla kapatın, kimse numaranıza ulaşamaz.
 
+★ Yabancı da okutabilir
+QR'ı okutan kişinin sayfası telefonunun diline göre Türkçe, İngilizce ya da Arapça açılır; mesaj size Türkçe gelir.
+
+★ Telefon değiştirince kaybolmaz
+Yedek koduyla QR'larınızı yeni telefona tek seferde taşıyın.
+
 ★ Okutma sayacı ve sipariş bildirimleri
 QR'ınızın kaç kez okutulduğunu görün. Siparişinizin durumu değişince bildirim alın.
 
