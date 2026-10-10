@@ -794,8 +794,35 @@ async function showOrder(tagCode, error = "", v = null) {
         busy: "Şu an çok yoğun, birkaç dakika sonra tekrar deneyin."}[res?.error] || "Sipariş gönderilemedi.", v2);
     }
     saveOrder({code: res.code, token: res.token, amount: res.amount, status: res.status, tagCode: t.code, design: t.design, created: Date.now()});
+    sendOrderPdf(res, t);  // arka planda; başarısız olsa da sipariş alınmıştır
     location.replace(`#/siparis/${encodeURIComponent(res.code)}/yeni`);
   });
+}
+
+// Siparişin A4 baskı PDF'ini (6 ölçü, 9 sticker) hazırlayıp sunucuya yükler; sunucu bunu Telegram'a belge,
+// e-postaya ek olarak gönderir (siparis.sql sürüm 6). Kurulu değilse ya da bağlantı yoksa sessizce vazgeçer.
+async function sendOrderPdf(res, t) {
+  try {
+    await loadPdfLibs();
+    const box = document.createElement("div");
+    box.style.cssText = "position:fixed;left:-30000px;top:0;background:#fff";
+    box.innerHTML = orderSheetHtml(t.code, t.design, qrLink(t.code), t.phrase);
+    document.body.append(box);
+    let blob;
+    try {
+      await document.fonts?.ready;
+      const canvas = await html2canvas(box.firstElementChild, {scale: 4, backgroundColor: "#ffffff", logging: false});
+      const pdf = new window.jspdf.jsPDF({unit: "mm", format: "a4"});
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 10, 10, 190, 277, undefined, "FAST");
+      blob = pdf.output("blob");
+    } finally { box.remove(); }
+    const headers = {"Content-Type": "application/pdf", apikey: SUPABASE_KEY, "x-upsert": "false"};
+    if (SUPABASE_KEY.startsWith("eyJ")) headers.Authorization = "Bearer " + SUPABASE_KEY;
+    const name = `siparis/${res.code}-${res.token}.pdf`;
+    const up = await fetch(`${SUPABASE_URL}/storage/v1/object/aracqr-pdf/${name}`, {method: "POST", headers, body: blob});
+    if (!up.ok) return;
+    await rpc("order_pdf_ready", {p_code: res.code, p_token: res.token});
+  } catch (e) { /* PDF'siz bildirim zaten gitti */ }
 }
 
 async function showOrderStatus(orderCode, isNew) {

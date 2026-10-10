@@ -67,10 +67,11 @@ alter table public.orders drop constraint if exists orders_status_check;
 alter table public.orders add column if not exists phrase text;          -- sürüm 5: sticker sözü (shared/sticker.js PHRASES anahtarı)
 alter table public.orders add column if not exists cancelled_by text;   -- 'musteri' | 'yonetici'
 alter table public.orders add column if not exists cancelled_at timestamptz;
+alter table public.orders add column if not exists pdf_sent_at timestamptz;  -- sürüm 6: baskı PDF'i bildirimle gönderildi
 alter table public.orders add constraint orders_status_check
   check (status in ('yeni', 'odeme_bekleniyor', 'odeme_bildirildi', 'onaylandi', 'baskida', 'kargolandi', 'iptal'));
 
-create or replace function public.aracqr_shop_version() returns integer language sql immutable as 'select 5';
+create or replace function public.aracqr_shop_version() returns integer language sql immutable as 'select 6';
 
 -- ---------------------------------------------------------------- bildirim
 -- Telegram ve/veya e-posta (Resend) gönderir. Hata olursa siparişi bozmaz, yalnızca uyarı yazar.
@@ -148,6 +149,86 @@ drop trigger if exists orders_paid_notify on public.orders;
 create trigger orders_paid_notify after update of status on public.orders
   for each row when (new.status = 'odeme_bildirildi' and old.status is distinct from new.status)
   execute function public.orders_notify_paid();
+
+-- ---------------------------------------------------------------- sürüm 6: bildirimde baskı PDF'i
+-- Veritabanı Telegram'a dosya yükleyemez (pg_net yalnızca JSON gönderir). Bu yüzden siparişi veren uygulama baskı PDF'ini
+-- hazırlayıp Supabase Storage'a "siparis/AQ-XXXXXX-<gizli anahtar>.pdf" adıyla yükler; ardından order_pdf_ready çağrılır ve
+-- PDF'in bağlantısı Telegram'a belge olarak (sendDocument), e-postaya ek olarak gönderilir. Adı yalnızca siparişi veren
+-- telefonun bildiği gizli anahtarı içerdiği için tahmin edilemez. PDF'te yalnızca sticker'lar var, kişisel bilgi yok.
+do $$ begin
+  insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+    values ('aracqr-pdf', 'aracqr-pdf', true, 5242880, array['application/pdf'])
+    on conflict (id) do update set public = true, file_size_limit = 5242880, allowed_mime_types = array['application/pdf'];
+exception when others then raise notice 'Storage kovası oluşturulamadı, bildirimde PDF olmayacak: %', sqlerrm;
+end $$;
+
+create or replace function public.aracqr_project_url() returns text language sql immutable
+  as $q$ select 'https://icedhptvywmqsiarxpio.supabase.co' $q$;
+
+-- Yüklemeye yalnızca son 1 günün siparişi için, doğru gizli anahtarla izin verilir
+create or replace function public.order_pdf_ok(p_name text)
+returns boolean
+language sql stable security definer set search_path = public
+as $$
+  select exists (select 1 from orders o
+    where p_name = 'siparis/' || o.code || '-' || o.token::text || '.pdf'
+      and o.created_at > now() - interval '1 day' and o.pdf_sent_at is null);
+$$;
+revoke all on function public.order_pdf_ok(text) from public;
+grant execute on function public.order_pdf_ok(text) to anon, authenticated;
+
+do $$ begin
+  drop policy if exists "aracqr siparis pdf yukleme" on storage.objects;
+  create policy "aracqr siparis pdf yukleme" on storage.objects for insert to anon, authenticated
+    with check (bucket_id = 'aracqr-pdf' and public.order_pdf_ok(name));
+exception when others then raise notice 'Storage izni eklenemedi, bildirimde PDF olmayacak: %', sqlerrm;
+end $$;
+
+-- PDF yüklendi: Telegram'a belge, e-postaya ek olarak gönder (her sipariş için bir kez)
+create or replace function public.order_pdf_ready(p_code text, p_token uuid)
+returns json
+language plpgsql security definer set search_path = public
+as $$
+declare
+  o orders;
+  s shop_settings;
+  v_name text;
+  v_url text;
+  v_caption text;
+begin
+  select * into o from orders where code = upper(trim(coalesce(p_code, ''))) and token = p_token for update;
+  if not found then return json_build_object('ok', false, 'error', 'not_found'); end if;
+  if o.pdf_sent_at is not null then return json_build_object('ok', true, 'already', true); end if;
+  v_name := 'siparis/' || o.code || '-' || o.token::text || '.pdf';
+  if not exists (select 1 from storage.objects where bucket_id = 'aracqr-pdf' and name = v_name) then
+    return json_build_object('ok', false, 'error', 'no_file');
+  end if;
+  if to_regprocedure('net.http_post(text,jsonb,jsonb,jsonb,integer)') is null then return json_build_object('ok', false, 'error', 'no_pg_net'); end if;
+  v_url := public.aracqr_project_url() || '/storage/v1/object/public/aracqr-pdf/' || v_name;
+  v_caption := '🖨 Baskı PDF''i · ' || o.code || ' · ' || o.full_name || E'\nTasarım: ' || o.design || coalesce(' · söz: ' || o.phrase, '') || ' · QR: ' || o.tag_code;
+  select * into s from shop_settings where id = 1;
+  if coalesce(s.telegram_bot_token, '') <> '' and coalesce(s.telegram_chat_id, '') <> '' then
+    execute 'select net.http_post(url := $1, body := $2, headers := $3)'
+      using 'https://api.telegram.org/bot' || s.telegram_bot_token || '/sendDocument',
+            jsonb_build_object('chat_id', s.telegram_chat_id, 'document', v_url, 'caption', v_caption),
+            '{"Content-Type": "application/json"}'::jsonb;
+  end if;
+  if coalesce(s.resend_api_key, '') <> '' and coalesce(s.notify_email, '') <> '' then
+    execute 'select net.http_post(url := $1, body := $2, headers := $3)'
+      using 'https://api.resend.com/emails',
+            jsonb_build_object('from', 'Araç QR <onboarding@resend.dev>', 'to', jsonb_build_array(s.notify_email),
+              'subject', 'Araç QR: baskı PDF''i ' || o.code, 'text', v_caption || E'\n\nPDF ektedir: ' || v_url,
+              'attachments', jsonb_build_array(jsonb_build_object('filename', 'baski-' || o.code || '.pdf', 'path', v_url))),
+            jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || s.resend_api_key);
+  end if;
+  update orders set pdf_sent_at = now() where id = o.id;
+  return json_build_object('ok', true);
+exception when others then
+  raise warning 'Baskı PDF bildirimi gönderilemedi: %', sqlerrm;
+  return json_build_object('ok', false, 'error', 'failed');
+end $$;
+revoke all on function public.order_pdf_ready(text, uuid) from public;
+grant execute on function public.order_pdf_ready(text, uuid) to anon, authenticated;
 
 -- ---------------------------------------------------------------- herkese açık
 -- Uygulamanın göstereceği satış bilgileri (baskıcı e-postası hariç)

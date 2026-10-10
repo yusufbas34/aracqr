@@ -945,7 +945,7 @@ async function showOrders(orders, requests) {
   show(`
     ${tabsHtml(requests ? requests.filter(r => r.status === "yeni").length : 0)}
     ${orders ? "" : setupHtml("Sipariş sistemi kurulu değil.", "siparis.sql")}
-    ${orders && shopVersion < 5 ? setupHtml("Sipariş sistemi güncellemesi var: siparişte seçilen söz, sipariş iptali ve Telegram bildirimi.", "siparis.sql") : ""}
+    ${orders && shopVersion < 6 ? setupHtml("Sipariş sistemi güncellemesi var: Telegram ve e-posta bildiriminde baskı PDF'i, siparişte seçilen söz, sipariş iptali.", "siparis.sql") : ""}
     ${orders && shop && !shop.active ? `<div class="msg err">Satış kapalı: uygulamada sipariş alınmıyor. <b>Ayarlar</b> sekmesinden açabilirsiniz.</div>` : ""}
     <div class="bar">
       <select id="ofilter" aria-label="Sipariş durumu">
