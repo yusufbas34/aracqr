@@ -33,12 +33,10 @@ APK: `android/app/build/outputs/apk/release/app-release.apk`
 
 ## Yapı
 
-- `app/src/main/assets/app.html`, `app.js`, `app.css`: uygulamanın arayüzü.
-- `../shared/sticker.js`, `sticker.css`: sticker tasarımları ve ölçüleri. Web sitesiyle ortaktır;
-  derlemede uygulamanın içine otomatik eklenir.
+- `../app/`: uygulamanın arayüzü (index.html, app.js, app.css, onboarding.js, sticker tasarımları). Aynı klasör web'de /aracqr/app/ adresinde de yayınlanır; derlemede uygulamanın içine eklenir.
 - `MainActivity.java`: arayüzü gösterir; Android yazdırma ekranını açar, PDF'i İndirilenler/AracQR
   klasörüne kaydedip paylaşma ekranını açar.
-- `app/src/main/assets/vendor`, `fonts`: çevrimdışı çalışmak için gömülü kütüphaneler ve fontlar
+- `../app/vendor`, `../app/fonts`: çevrimdışı çalışmak için gömülü kütüphaneler ve fontlar
   (lisanslar `vendor/LICENSES.txt` ve `fonts/OFL.txt`).
 
 ## İmza anahtarı hakkında

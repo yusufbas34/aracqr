@@ -87,20 +87,24 @@ input:focus,select:focus{outline:none;border-color:var(--band)}
   #printarea{position:static}
 }
 
-/* reels: tasarımlar tam ekran, yukarı-aşağı kaydırılarak */
+/* tasarım seçimi: tam ekran, yana kaydırmalı */
 main.full{max-width:none;padding:0}
-.reels{height:calc(100vh - 56px);height:calc(100dvh - 56px);overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain;
-  background:#0f1115;scrollbar-width:none}
-.reels::-webkit-scrollbar{display:none}
-.reel{height:100%;scroll-snap-align:start;scroll-snap-stop:always;display:flex;flex-direction:column;align-items:center;
-  justify-content:space-between;padding:14px 16px 18px;color:#fff;background:radial-gradient(circle at 50% 42%,#2b3557,#0f1115 70%)}
-.reel-top{font-size:14px;font-weight:600;letter-spacing:.04em;opacity:.75}
+.carousel{height:calc(100vh - 56px);height:calc(100dvh - 56px);display:flex;flex-direction:column;background:#0f1115;color:#fff}
+.car-track{flex:1;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior:contain;scrollbar-width:none}
+.car-track::-webkit-scrollbar{display:none}
+.reel{flex:0 0 100%;scroll-snap-align:start;scroll-snap-stop:always;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;padding:12px 16px;background:radial-gradient(circle at 50% 42%,#2b3557,#0f1115 70%)}
+.reel-top{font-size:14px;font-weight:600;letter-spacing:.04em;opacity:.8}
 .reel-sticker .sticker{border-color:transparent;box-shadow:0 18px 50px #0008;border-radius:3mm}
-.reel-bottom{width:100%;max-width:420px;text-align:center}
-.reel-bottom b{display:block;font-size:24px}
-.reel-bottom .btn{margin-top:10px}
-.swipe{margin-top:10px;font-size:14px;opacity:.75;animation:bob 1.6s ease-in-out infinite}
-@keyframes bob{50%{transform:translateY(-4px)}}
+.reel-name{font-size:22px}
+.car-hint{text-align:center;font-size:14px;opacity:.8;padding:4px 0;animation:nudge 1.6s ease-in-out infinite}
+.car-nav{display:flex;align-items:center;gap:10px;padding:10px 16px 16px}
+.car-arrow{flex:none;width:54px;height:54px;border-radius:50%;border:2px solid #ffffff66;background:#ffffff14;color:#fff;font-size:32px;
+  line-height:1;cursor:pointer}
+.car-arrow:disabled{opacity:.25}
+.car-pick{flex:1;margin:0;font-size:18px}
+@keyframes nudge{50%{transform:translateX(-10px)}}
+
 
 /* sipariş */
 .ordercard{display:flex;align-items:center;gap:12px;background:#fff;border-radius:12px;padding:14px;text-decoration:none;color:var(--ink);
@@ -134,25 +138,33 @@ textarea:focus{outline:none;border-color:var(--band)}
 .timeline li.on::before{content:"● ";color:var(--ok)}
 .appbar .logo{width:30px;height:30px;flex:none;border-radius:8px;box-shadow:0 0 0 1.5px #ffffff55}
 
-/* ilk açılış tanıtımı (reels) */
+/* ilk açılış tanıtımı: yana kaydırmalı slaytlar */
 body.onb-open{overflow:hidden}
-.onb{position:fixed;inset:0;z-index:40;background:#0f1115;color:#fff}
-.onb-reels{height:100vh;height:100dvh;overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain;scrollbar-width:none}
-.onb-reels::-webkit-scrollbar{display:none}
-.onb-slide{height:100%;scroll-snap-align:start;scroll-snap-stop:always;display:flex;flex-direction:column;justify-content:center;
-  gap:22px;padding:64px 22px 30px}
+.onb{position:fixed;inset:0;z-index:40;background:#0f1115;color:#fff;display:flex;flex-direction:column}
+.onb-track{flex:1;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior:contain;scrollbar-width:none}
+.onb-track::-webkit-scrollbar{display:none}
+.onb-slide{flex:0 0 100%;scroll-snap-align:start;scroll-snap-stop:always;display:flex;flex-direction:column;justify-content:center;
+  gap:20px;padding:58px 22px 18px;overflow-y:auto}
 .onb-artbox{display:flex;justify-content:center}
-.onb-art{width:100%;max-width:420px;height:auto;border-radius:22px;box-shadow:0 20px 60px #0007}
+.onb-art{width:100%;max-width:400px;height:auto;max-height:38vh;border-radius:22px;box-shadow:0 20px 60px #0007}
 .onb-copy{max-width:460px;margin:0 auto;text-align:center}
-.onb-copy h1{font-size:28px;line-height:1.15;margin:0 0 10px;color:#fff}
-.onb-copy p{color:#ffffffcc;font-size:17px;margin:0}
-.onb-copy .swipe{margin-top:18px}
-.onb-copy .btn{margin-top:22px;background:#fff;color:var(--band);font-size:19px}
-.onb-skip{position:absolute;top:max(14px,env(safe-area-inset-top));right:14px;z-index:2;font:inherit;font-size:16px;font-weight:700;
+.onb-step{font-size:13px;font-weight:700;letter-spacing:.08em;opacity:.7;margin-bottom:6px}
+.onb-copy h1{font-size:27px;line-height:1.15;margin:0 0 10px;color:#fff}
+.onb-copy p{color:#ffffffd9;font-size:16.5px;margin:0}
+.onb-hint{margin-top:16px;font-size:14px;opacity:.85;animation:nudge 1.6s ease-in-out infinite}
+@keyframes nudge{50%{transform:translateX(-10px)}}
+.onb-skip{position:absolute;top:max(12px,env(safe-area-inset-top));right:12px;z-index:2;font:inherit;font-size:16px;font-weight:700;
   color:#fff;background:#ffffff26;border:0;border-radius:999px;padding:8px 16px;cursor:pointer}
-.onb-dots{position:absolute;right:12px;top:50%;transform:translateY(-50%);z-index:2;display:flex;flex-direction:column;gap:8px}
-.onb-dots span{width:7px;height:7px;border-radius:50%;background:#ffffff55;transition:height .2s}
-.onb-dots span.on{height:22px;border-radius:4px;background:#fff}
+.onb-nav{display:flex;align-items:center;gap:12px;padding:12px 16px max(16px,env(safe-area-inset-bottom));background:#0f1115}
+.onb-prev{flex:none;width:52px;height:52px;border-radius:50%;border:2px solid #ffffff55;background:transparent;color:#fff;font-size:30px;
+  line-height:1;cursor:pointer}
+.onb-prev:disabled{opacity:.25}
+.onb-dots{flex:1;display:flex;justify-content:center;gap:8px}
+.onb-dots button{width:9px;height:9px;padding:0;border:0;border-radius:5px;background:#ffffff55;cursor:pointer;transition:width .2s}
+.onb-dots button.on{width:26px;background:#fff}
+.onb-next{flex:none;min-width:132px;height:52px;border:0;border-radius:999px;background:#fff;color:var(--band);font:inherit;font-size:18px;
+  font-weight:700;padding:0 22px;cursor:pointer;box-shadow:0 6px 20px #0006}
+.onb-next.go{background:linear-gradient(135deg,#ff7a18,#ff4e50);color:#fff}
 /* 4. slayt: yelpaze kartlar */
 .onb-fan{position:relative;width:100%;max-width:420px;height:300px;margin:0 auto}
 .onb-card{position:absolute;left:50%;top:50%;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
@@ -181,8 +193,14 @@ body.onb-open{overflow:hidden}
 @keyframes onbRing{0%,40%,100%{transform:rotate(0)}10%,30%{transform:rotate(-12deg)}20%{transform:rotate(12deg)}}
 .onb-wave{transform-box:fill-box;transform-origin:center;animation:onbWave 1.4s ease-out infinite}
 @keyframes onbWave{from{transform:scale(1);opacity:.9}to{transform:scale(2.2);opacity:0}}
+.play .onb-paper{animation:onbPaper 1.2s .2s ease-out both}
+@keyframes onbPaper{from{transform:translateY(-40px);opacity:0}}
+.play .onb-bob{animation:onbBob 1.6s .4s ease-in-out infinite}
+@keyframes onbBob{50%{transform:translateY(-8px)}}
+.play .onb-pop2{animation:onbPop .5s .6s both;transform-box:fill-box;transform-origin:left bottom}
 @media (prefers-reduced-motion:reduce){.onb *{animation:none!important;transition:none!important}}
-@media (min-height:760px){.onb-copy h1{font-size:31px}}
+@media (max-height:640px){.onb-art{max-height:30vh}.onb-copy h1{font-size:23px}.onb-copy p{font-size:15px}}
+
 .stat{background:#eef3ff;border-radius:8px;padding:10px 12px;font-size:15px;color:var(--ink);margin-bottom:12px}
 .stat:empty{display:none}
 .card .scan{display:block;margin-top:4px;color:var(--band);font-weight:600;font-size:14px}
@@ -259,3 +277,4 @@ body.has-tabbar main{padding-bottom:96px}
 .switch input{width:22px;height:22px;flex:none;margin:2px 0 0;accent-color:var(--ok)}
 .switch:has(input:not(:checked)){border-color:#f0c7c4;background:#fdf3f2}
 .off-chip{display:inline-block;margin:2px 0 4px;background:#fdf3f2;color:var(--err);border-radius:999px;padding:1px 8px;font-size:13px;font-weight:700}
+.check b{display:block;color:var(--ink);font-size:15px}

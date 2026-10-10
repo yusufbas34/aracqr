@@ -3,7 +3,7 @@ name: Android APK
 on:
   push:
     branches: [main]
-    paths: ["android/**", "shared/**", ".github/workflows/android.yml"]
+    paths: ["android/**", "app/**", ".github/workflows/android.yml"]
   workflow_dispatch:
 
 permissions:

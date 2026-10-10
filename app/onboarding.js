@@ -40,11 +40,14 @@ function miniQr(x, y, s, fg = "#111418", bg = "#fff") {
   return `<rect x="${x - c * .5}" y="${y - c * .5}" width="${s + c}" height="${s + c}" rx="${c * .6}" fill="${bg}"/>${f(0, 0)}${f(4, 0)}${f(0, 4)}${dots}`;
 }
 
+// Fiyat panelden değişebilir; son bilinen fiyatı göster
+const onbPrice = () => (typeof store !== "undefined" && store.get("shop", null)?.price) || 150;
+
 const ONB_SLIDES = [
   {
     bg: "linear-gradient(160deg,#1b2a52,#0f1115)",
     title: "Önünüz mü kapandı?",
-    text: "Aracınızın önü kapanınca kimi arayacağınızı bilemezsiniz. Ya da birinin önünü kapattığınızda size ulaşamazlar.",
+    text: "Aracınızın önü kapanınca kimi arayacağınızı bilemezsiniz. Ya da siz birinin önünü kapattığınızda size ulaşamazlar. Araç QR bunu çözer.",
     art: () => `<svg viewBox="0 0 360 300" class="onb-art" role="img" aria-label="Park etmiş bir aracın arkasını başka bir araba kapatmış">
       <rect width="360" height="300" rx="22" fill="#3a3f4b"/>
       <g stroke="#ffffff" stroke-opacity=".55" stroke-width="3">
@@ -63,9 +66,42 @@ const ONB_SLIDES = [
     </svg>`,
   },
   {
+    bg: "linear-gradient(160deg,#5b2a86,#1a0f2b)",
+    title: "Kendi tasarımınızı yapın",
+    text: () => `${Object.keys(DESIGNS).length} tasarım ve ${Object.keys(PHRASES).length} hazır söz arasından seçin; “-1000 aura” gibi esprili sözler de var. Ölçüsünü de siz belirleyin.`,
+    art: () => `<div class="onb-fan" role="img" aria-label="Üç farklı sticker tasarımı">
+      ${[["kedi", "npc"], ["klasik", ""], ["mim", "aura"]].map(([d, ph], i) => `<div class="onb-card c${i}">${stickerAt("ÖRNEK", d, SITE, "40x60", ph || undefined)}</div>`).join("")}
+    </div>`,
+  },
+  {
+    bg: "linear-gradient(160deg,#a8461a,#3a1606)",
+    title: "Ücretsiz yazdırın ya da biz basalım",
+    text: () => `Evde ya da kırtasiyede kendiniz ücretsiz yazdırın. İsterseniz su geçirmez vinil sticker setinizi ${onbPrice()} TL'ye biz basıp kapınıza gönderelim.`,
+    art: () => `<svg viewBox="0 0 360 300" class="onb-art" role="img" aria-label="Solda yazıcı, sağda kargo kutusu">
+      <rect width="360" height="300" rx="22" fill="#fff4ea"/>
+      <g transform="translate(14 58)">
+        <rect x="18" y="0" width="104" height="70" rx="6" fill="#fff" stroke="#3a1606" stroke-width="3"/>
+        ${miniQr(52, 14, 36)}
+        <rect x="0" y="56" width="140" height="70" rx="14" fill="#2b3240"/>
+        <rect x="16" y="76" width="18" height="8" rx="4" fill="#5ef2a0"/>
+        <rect x="20" y="110" width="100" height="44" rx="4" fill="#fff" stroke="#3a1606" stroke-width="3" class="onb-paper"/>
+        <text x="70" y="186" text-anchor="middle" font-family="Barlow,sans-serif" font-weight="700" font-size="18" fill="#3a1606">Ücretsiz</text>
+      </g>
+      <text x="186" y="150" text-anchor="middle" font-family="Barlow,sans-serif" font-weight="700" font-size="18" fill="#a8461a">ya da</text>
+      <g transform="translate(214 66)"><g class="onb-bob">
+        <path d="M0 40 60 14l60 26-60 26z" fill="#e8a95b"/>
+        <path d="M0 40v76l60 28V66z" fill="#c9813a"/>
+        <path d="M120 40v76l-60 28V66z" fill="#b06d2b"/>
+        <path d="M30 27l60 26v18l-14-6V49L18 24z" fill="#f6d39c"/>
+        <rect x="72" y="92" width="34" height="22" rx="3" fill="#fff" transform="rotate(-24 89 103)"/>
+        <text x="60" y="178" text-anchor="middle" font-family="Barlow,sans-serif" font-weight="700" font-size="18" fill="#3a1606">${onbPrice()} TL</text>
+      </g></g>
+    </svg>`,
+  },
+  {
     bg: "linear-gradient(160deg,#0a3a9e,#071d4f)",
-    title: "Camınıza QR'ınızı yapıştırın",
-    text: "Size özel QR'ı tasarımını seçerek oluşturun ve aracınızın camına yapıştırın. Numaranız camda yazmaz.",
+    title: "Camınıza yapıştırın",
+    text: "QR'ınızı aracınızın camına yapıştırın. Numaranız camda yazmaz; istediğiniz zaman uygulamadan değiştirirsiniz.",
     art: () => `<svg viewBox="0 0 360 300" class="onb-art" role="img" aria-label="Önden görünen bir arabanın ön camına QR sticker yapışıyor">
       <rect width="360" height="300" rx="22" fill="#dfe9ff"/>
       <circle cx="300" cy="56" r="28" fill="#ffd400" opacity=".8"/>
@@ -90,8 +126,8 @@ const ONB_SLIDES = [
   },
   {
     bg: "linear-gradient(160deg,#0c5e37,#06291a)",
-    title: "Okutan sizi tek dokunuşla arar",
-    text: "QR'ı telefon kamerasıyla okutan kişi uygulama indirmeden sizi arar. Numaranızı istediğiniz zaman değiştirirsiniz.",
+    title: "Okutan sizi arar ya da mesaj atar",
+    text: "QR'ı telefon kamerasıyla okutan kişi uygulama indirmeden sizi arar ya da “Önümü kapattınız”, “Farlarınız açık” gibi hazır bir mesaj gönderir.",
     art: () => `<svg viewBox="0 0 360 300" class="onb-art" role="img" aria-label="Telefon kamerası QR'ı tarıyor, ardından arama ekranı açılıyor">
       <rect width="360" height="300" rx="22" fill="#e6f4ec"/>
       <g transform="translate(46 26)">
@@ -121,13 +157,29 @@ const ONB_SLIDES = [
     </svg>`,
   },
   {
-    bg: "linear-gradient(160deg,#5b2a86,#1a0f2b)",
-    title: "Tasarımını seç, yazdır ya da biz gönderelim",
-    text: "17 tasarım, 8 baskı ölçüsü. Evde yazdırın ya da su geçirmez vinil sticker setinizi biz basıp kargolayalım.",
-    art: () => `<div class="onb-fan" role="img" aria-label="Üç farklı sticker tasarımı ve kargo kutusu">
-      ${["kedi", "klasik", "nazar"].map((d, i) => `<div class="onb-card c${i}">${stickerAt("ÖRNEK", d, SITE, "40x60")}</div>`).join("")}
-      <div class="onb-box" aria-hidden="true">📦</div>
-    </div>`,
+    bg: "linear-gradient(160deg,#141c3d,#05070f)",
+    title: "Gece rahat uyuyun",
+    text: "Sessiz saatleri siz belirleyin (ör. 23:00–07:00). Bu saatlerde arama butonu gösterilmez; okutan kişi size yalnızca SMS ya da WhatsApp mesajı gönderebilir.",
+    art: () => `<svg viewBox="0 0 360 300" class="onb-art" role="img" aria-label="Gece, telefonda arama kapalı, SMS balonu">
+      <rect width="360" height="300" rx="22" fill="#1b2550"/>
+      ${[[30, 40], [80, 24], [300, 30], [330, 90], [40, 120], [270, 140], [20, 230], [340, 240]].map(([x, y], i) =>
+        `<circle cx="${x}" cy="${y}" r="${i % 2 ? 1.6 : 2.4}" fill="#fff" opacity=".8"/>`).join("")}
+      <path d="M312 66a26 26 0 1 1-24-40 21 21 0 0 0 24 40z" fill="#ffe28a"/>
+      <g transform="translate(70 34)">
+        <rect width="120" height="236" rx="20" fill="#0d1226" stroke="#4b5a9a" stroke-width="3"/>
+        <rect x="10" y="12" width="100" height="212" rx="14" fill="#232d5c"/>
+        <text x="60" y="56" text-anchor="middle" font-family="Barlow,sans-serif" font-weight="700" font-size="22" fill="#fff">23:40</text>
+        <circle cx="60" cy="120" r="24" fill="#3b4475"/>
+        <g transform="translate(48 108)"><path d="M6.62,10.79c1.44,2.83 3.76,5.14 6.59,6.59l2.2,-2.2c0.27,-0.27 0.67,-0.36 1.02,-0.24 1.12,0.37 2.33,0.57 3.57,0.57 0.55,0 1,0.45 1,1V20c0,0.55 -0.45,1 -1,1 -9.39,0 -17,-7.61 -17,-17 0,-0.55 0.45,-1 1,-1h3.5c0.55,0 1,0.45 1,1 0,1.25 0.2,2.45 0.57,3.57 0.11,0.35 0.03,0.74 -0.25,1.02l-2.2,2.2z" fill="#8f99c9"/></g>
+        <path d="M38 98l44 44" stroke="#ff5a5f" stroke-width="5" stroke-linecap="round"/>
+        <text x="60" y="176" text-anchor="middle" font-family="Barlow,sans-serif" font-weight="600" font-size="13" fill="#c9d0f0">Arama kapalı</text>
+      </g>
+      <g transform="translate(196 118)"><g class="onb-pop2">
+        <path d="M0 14a14 14 0 0 1 14-14h108a14 14 0 0 1 14 14v40a14 14 0 0 1-14 14H40l-22 18 4-18h-8A14 14 0 0 1 0 54z" fill="#2ecc71"/>
+        <text x="68" y="31" text-anchor="middle" font-family="Barlow,sans-serif" font-weight="700" font-size="15" fill="#fff">SMS: Önümü</text>
+        <text x="68" y="51" text-anchor="middle" font-family="Barlow,sans-serif" font-weight="700" font-size="15" fill="#fff">kapattınız 🙏</text>
+      </g></g>
+    </svg>`,
   },
 ];
 
@@ -136,39 +188,57 @@ function showOnboarding(onDone) {
   wrap.className = "onb";
   wrap.setAttribute("role", "dialog");
   wrap.setAttribute("aria-label", "Araç QR tanıtımı");
-  const last = ONB_SLIDES.length - 1;
+  const last = ONB_SLIDES.length - 1, val = v => typeof v === "function" ? v() : v;
   wrap.innerHTML = `
     <button class="onb-skip" type="button">Geç</button>
-    <div class="onb-dots" aria-hidden="true">${ONB_SLIDES.map((_, i) => `<span class="${i ? "" : "on"}"></span>`).join("")}</div>
-    <div class="onb-reels">
+    <div class="onb-track" tabindex="0">
       ${ONB_SLIDES.map((sl, i) => `
-        <section class="onb-slide" style="background:${sl.bg}" data-i="${i}">
+        <section class="onb-slide" style="background:${sl.bg}" data-i="${i}" aria-label="${i + 1} / ${ONB_SLIDES.length}">
           <div class="onb-artbox">${sl.art()}</div>
           <div class="onb-copy">
-            <h1>${esc(sl.title)}</h1>
-            <p>${esc(sl.text)}</p>
-            ${i === last ? `<button class="btn onb-go" type="button">Başlayalım</button>` : `<div class="swipe">⌃ Devam etmek için yukarı kaydırın</div>`}
+            <div class="onb-step">${i + 1} / ${ONB_SLIDES.length}</div>
+            <h1>${esc(val(sl.title))}</h1>
+            <p>${esc(val(sl.text))}</p>
+            ${i === 0 ? `<div class="onb-hint" aria-hidden="true">👆 Yana kaydırın ya da <b>İleri</b>'ye dokunun</div>` : ""}
           </div>
         </section>`).join("")}
+    </div>
+    <div class="onb-nav">
+      <button class="onb-prev" type="button" aria-label="Önceki" disabled>‹</button>
+      <div class="onb-dots">${ONB_SLIDES.map((_, i) => `<button type="button" data-go="${i}" aria-label="${i + 1}. sayfa" class="${i ? "" : "on"}"></button>`).join("")}</div>
+      <button class="onb-next" type="button">İleri →</button>
     </div>`;
   document.body.append(wrap);
   document.body.classList.add("onb-open");
-  const reels = wrap.querySelector(".onb-reels"), dots = wrap.querySelectorAll(".onb-dots span");
-  const slides = wrap.querySelectorAll(".onb-slide");
-  // Görünür slaytın animasyonlarını yeniden başlat
+  const track = wrap.querySelector(".onb-track"), slides = wrap.querySelectorAll(".onb-slide");
+  const next = wrap.querySelector(".onb-next"), prev = wrap.querySelector(".onb-prev");
+  let current = 0;
+  const go = i => slides[Math.max(0, Math.min(last, i))].scrollIntoView({behavior: "smooth", inline: "start", block: "nearest"});
+  const setCurrent = i => {
+    current = i;
+    wrap.querySelectorAll(".onb-dots button").forEach((d, k) => d.classList.toggle("on", k === i));
+    next.textContent = i === last ? "Başlayalım 🚀" : "İleri →";
+    next.classList.toggle("go", i === last);
+    prev.disabled = i === 0;
+  };
+  // Görünen slaytı izle: noktalar, buton yazısı ve animasyonlar
   const io = new IntersectionObserver(entries => entries.forEach(e => {
-    if (!e.isIntersecting) { e.target.classList.remove("play"); return; }
-    e.target.classList.add("play");
-    dots.forEach((d, i) => d.classList.toggle("on", i === Number(e.target.dataset.i)));
-  }), {root: reels, threshold: .6});
+    e.target.classList.toggle("play", e.isIntersecting);
+    if (e.isIntersecting) setCurrent(Number(e.target.dataset.i));
+  }), {root: track, threshold: .6});
   slides.forEach(s => io.observe(s));
   const close = () => {
     io.disconnect();
+    removeEventListener("keydown", onKey);
     store.set("onboarded", true);
     document.body.classList.remove("onb-open");
     wrap.remove();
     onDone && onDone();
   };
+  const onKey = ev => { if (ev.key === "ArrowRight") go(current + 1); if (ev.key === "ArrowLeft") go(current - 1); };
+  addEventListener("keydown", onKey);
+  next.onclick = () => current === last ? close() : go(current + 1);
+  prev.onclick = () => go(current - 1);
+  wrap.querySelector(".onb-dots").onclick = ev => { const b = ev.target.closest("[data-go]"); if (b) go(Number(b.dataset.go)); };
   wrap.querySelector(".onb-skip").onclick = close;
-  wrap.querySelector(".onb-go").onclick = close;
 }

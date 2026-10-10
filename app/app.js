@@ -147,7 +147,7 @@ function showHome() {
             <span class="scan" data-scan="${esc(t.code)}">${scanChip(store.get("stats", {})[t.code])}</span></div>
         </a>`).join("")}
     </div>
-    <a class="btn" href="#/yeni">+ Yeni QR etiket oluştur</a>`, false, "", "qr");
+    <a class="btn" href="#/yeni">+ Yeni QR oluştur</a>`, false, "", "qr");
   updateBanner("update-slot");
   loadShop().then(shop => {
     const slot = document.getElementById("promo-slot");
@@ -226,36 +226,53 @@ function bindHowto() {
 
 let draft = {design: store.get("lastDesign", "klasik")};
 
-// Tasarımlar reels gibi: tam ekran, yukarı-aşağı kaydırarak gezilir. tagCode verilirse o etiketin tasarımı değişir.
+// Tasarımlar tam ekran, yana kaydırarak gezilir (oklar ve "Bu tasarımı seç" ile). tagCode verilirse o QR'ın tasarımı değişir.
 function showDesigns(tagCode) {
   const t = tagCode ? findTag(tagCode) : null;
   if (tagCode && !t) { location.replace("#/"); return; }
   const keys = Object.keys(DESIGNS), current = t ? t.design : draft.design;
   const code = t ? t.code : "ÖRNEK", link = t ? qrLink(t.code) : SITE;
   show(t ? "Tasarımı değiştir" : "1. Tasarım seçin", `
-    <div class="reels" id="reels">
-      ${keys.map((k, i) => `
-        <section class="reel" data-d="${k}" aria-label="${esc(DESIGNS[k].name)}">
-          <div class="reel-top">${DESIGNS[k].isNew ? `<span class="new">🆕 Yeni</span> ` : ""}${i + 1} / ${keys.length} · ${DESIGNS[k].group ? "Eğlenceli" : "Klasik"}</div>
-          <div class="reel-sticker">${stickerAt(code, k, link, "60x90", t?.phrase)}</div>
-          <div class="reel-bottom">
-            <b>${esc(DESIGNS[k].name)}</b>
-            <button class="btn" type="button" data-pick="${k}">${k === current && t ? "Şu anki tasarım" : t ? "Bu tasarımı kullan" : "Bu tasarımı seç"}</button>
-            <div class="swipe">${i < keys.length - 1 ? "⌃ Sonraki tasarım için yukarı kaydırın" : "Son tasarım · ⌄ geri kaydırabilirsiniz"}</div>
-          </div>
-        </section>`).join("")}
+    <div class="carousel">
+      <div class="car-track" id="reels" tabindex="0">
+        ${keys.map((k, i) => `
+          <section class="reel" data-d="${k}" data-i="${i}" aria-label="${esc(DESIGNS[k].name)}">
+            <div class="reel-top">${DESIGNS[k].isNew ? `<span class="new">🆕 Yeni</span> ` : ""}${i + 1} / ${keys.length} · ${DESIGNS[k].group ? "Eğlenceli" : "Klasik"}</div>
+            <div class="reel-sticker">${stickerAt(code, k, link, "60x90", t?.phrase)}</div>
+            <b class="reel-name">${esc(DESIGNS[k].name)}</b>
+          </section>`).join("")}
+      </div>
+      <div class="car-hint" aria-hidden="true">👆 Diğer tasarımlar için yana kaydırın</div>
+      <div class="car-nav">
+        <button class="car-arrow" type="button" id="car-prev" aria-label="Önceki tasarım">‹</button>
+        <button class="btn car-pick" type="button" id="car-pick">Bu tasarımı seç</button>
+        <button class="car-arrow" type="button" id="car-next" aria-label="Sonraki tasarım">›</button>
+      </div>
     </div>`, true, "full");
-  const reels = document.getElementById("reels");
+  const track = document.getElementById("reels"), slides = [...track.querySelectorAll(".reel")];
+  const pickBtn = document.getElementById("car-pick");
+  let index = Math.max(0, keys.indexOf(current));
   // Sticker'ı slayta sığacak kadar büyüt
-  const fitStickers = () => {
-    const slide = reels.clientHeight, room = Math.min((slide - 200) / 340, (reels.clientWidth - 48) / 227, 1.7);
-    reels.querySelectorAll(".reel-sticker").forEach(el => el.style.zoom = Math.max(.6, room).toFixed(3));
+  const room = Math.min((track.clientHeight - 90) / 340, (track.clientWidth - 48) / 227, 1.7);
+  track.querySelectorAll(".reel-sticker").forEach(el => el.style.zoom = Math.max(.6, room).toFixed(3));
+  const label = i => t ? (keys[i] === t.design ? "Şu anki tasarım ✓" : "Bu tasarımı kullan") : "Bu tasarımı seç →";
+  const setIndex = i => {
+    index = i;
+    pickBtn.textContent = label(i);
+    document.getElementById("car-prev").disabled = i === 0;
+    document.getElementById("car-next").disabled = i === keys.length - 1;
   };
-  fitStickers();
-  reels.scrollTop = keys.indexOf(current) * reels.clientHeight;
-  reels.onclick = ev => {
-    const pick = ev.target.closest("[data-pick]")?.dataset.pick;
-    if (!pick) return;
+  const go = i => slides[Math.max(0, Math.min(keys.length - 1, i))].scrollIntoView({behavior: "smooth", inline: "start", block: "nearest"});
+  track.scrollLeft = index * track.clientWidth;
+  setIndex(index);
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) setIndex(Number(e.target.dataset.i)); }), {root: track, threshold: .6});
+  slides.forEach(sl => io.observe(sl));
+  document.getElementById("car-prev").onclick = () => go(index - 1);
+  document.getElementById("car-next").onclick = () => go(index + 1);
+  track.onkeydown = ev => { if (ev.key === "ArrowRight") go(index + 1); if (ev.key === "ArrowLeft") go(index - 1); };
+  pickBtn.onclick = () => {
+    const pick = keys[index];
+    io.disconnect();
     if (t) { saveTag({...t, design: pick}); toast(`Tasarım: ${DESIGNS[pick].name}`, 1500); history.back(); return; }
     draft.design = pick;
     store.set("lastDesign", pick);
@@ -285,8 +302,8 @@ function showPhone(error = "", value = "") {
     catch (e) { return showPhone(navigator.onLine === false ? "İnternet bağlantısı yok. Bağlanıp tekrar deneyin." : "Sunucuya ulaşılamadı, biraz sonra tekrar deneyin.", raw); }
     if (!res?.ok) {
       return showPhone({bad_phone: "Numara geçersiz. Örnek: 0532 123 45 67",
-        too_many: "Bugün çok fazla etiket oluşturdunuz. Yarın tekrar deneyin ya da Etiketlerim'deki etiketi kullanın.",
-        busy: "Şu an çok yoğun, birkaç dakika sonra tekrar deneyin."}[res?.error] || "Etiket oluşturulamadı, tekrar deneyin.", raw);
+        too_many: "Bugün çok fazla QR oluşturdunuz. Yarın tekrar deneyin ya da QR'larım'daki QR'ı kullanın.",
+        busy: "Şu an çok yoğun, birkaç dakika sonra tekrar deneyin."}[res?.error] || "QR oluşturulamadı, tekrar deneyin.", raw);
     }
     store.set("lastPhone", raw);
     saveTag({code: res.code, pin: res.pin, phone, design: draft.design, size: "60x90", paper: "a4", copies: 1, created: Date.now()});
@@ -327,7 +344,7 @@ function showTag(code, isNew) {
   const fit = Math.min(1, (Math.min(innerWidth, 560) - 64) / (w * 96 / 25.4));
   show(isNew ? "3. Yazdırın" : (t.name || t.code), `
     ${isNew ? `<div class="steps"><span class="on"></span><span class="on"></span><span class="on"></span></div>
-      <div class="msg ok"><b>QR'ınız hazır!</b> Bu etiket ${esc(prettyPhone(t.phone))} numarasını arar.</div>` : ""}
+      <div class="msg ok"><b>QR'ınız hazır!</b> Okutan kişi ${esc(prettyPhone(t.phone))} numarasına ulaşır.</div>` : ""}
     <div class="preview"><div style="zoom:${fit.toFixed(3)}">${stickerAt(t.code, t.design, qrLink(t.code), t.size, t.phrase)}</div></div>
     <div id="promo-slot"></div>
 
@@ -349,7 +366,7 @@ function showTag(code, isNew) {
         <label><input type="radio" name="paper" value="a4"${t.paper === "a4" ? " checked" : ""}> A4 kağıda diz</label>
         <label><input type="radio" name="paper" value="tek"${t.paper === "tek" ? " checked" : ""}> Sayfa = sticker ölçüsü</label>
       </div>
-      <div class="hint">${t.paper === "a4" ? `A4'e ${perA4({w, h})} adet sığar. Kesik çizgilerden kesin.` : "Etiket yazıcısı ya da matbaa için: her sticker kendi ölçüsünde ayrı sayfa."}</div>
+      <div class="hint">${t.paper === "a4" ? `A4'e ${perA4({w, h})} adet sığar. Kesik çizgilerden kesin.` : "Sticker yazıcısı ya da matbaa için: her sticker kendi ölçüsünde ayrı sayfa."}</div>
       <label for="copies">Adet</label>
       <input id="copies" type="number" inputmode="numeric" min="1" max="${maxCopies}" value="${Math.min(t.copies || 1, maxCopies)}">
       <button class="btn" id="print" type="button">Yazdır / PDF olarak kaydet</button>
@@ -357,16 +374,16 @@ function showTag(code, isNew) {
       <div class="hint">Yazdırırken ölçeği <b>%100 / Gerçek boyut</b> seçin; “Sayfaya sığdır” ölçüleri bozar.</div>
     </div>
 
-    <h2>Etiket bilgileri</h2>
+    <h2>QR bilgileri</h2>
     <div class="opts" style="padding-top:4px">
       <label for="t-name">Araç adı <span class="opt">(isteğe bağlı, yalnızca sizde görünür)</span></label>
       <input id="t-name" maxlength="30" placeholder="Örn. Beyaz Clio, Motor" value="${esc(t.name || "")}">
       <label class="switch"><input type="checkbox" id="t-active"${t.disabled ? "" : " checked"}>
-        <span><b>QR açık</b>Kapatırsanız okutan kişi “Bu etiket şu an kullanılmıyor” görür, numaranız gösterilmez. Araç satıldığında ya da etiket kaybolduğunda işe yarar.</span></label>
+        <span><b>QR açık</b>Kapatırsanız okutan kişi “Bu QR şu an kullanılmıyor” görür, numaranız gösterilmez. Araç satıldığında ya da sticker kaybolduğunda işe yarar.</span></label>
       <div id="active-msg"></div>
       <div class="stat" id="stat" style="margin-top:12px">${statText(store.get("stats", {})[t.code])}</div>
       <dl class="kv">
-        <dt>Etiket kodu</dt><dd>${esc(t.code)}</dd>
+        <dt>QR kodu</dt><dd>${esc(t.code)}</dd>
         <dt>Aranacak numara</dt><dd>${esc(prettyPhone(t.phone))}</dd>
         <dt>PIN</dt><dd><span class="secret" id="pin">••••••</span> <button type="button" class="btn ghost" id="showpin" style="display:inline;width:auto;margin:0 0 0 6px;padding:4px 12px;font-size:14px">Göster</button></dd>
       </dl>
@@ -379,7 +396,7 @@ function showTag(code, isNew) {
     <h2>Arama ayarları</h2>
     <form class="opts" id="cs" novalidate style="padding-top:4px">
       <div id="cs-msg"></div>
-      <label class="check"><input type="checkbox" id="q-on"${t.quietStart != null ? " checked" : ""}> Sessiz saatler (bu saatlerde otomatik arama yapılmaz, SMS önerilir)</label>
+      <label class="check"><input type="checkbox" id="q-on"${t.quietStart != null ? " checked" : ""}> <span><b>Sessiz saatler</b>Bu saatlerde QR'ı okutan kişiye arama butonu gösterilmez; size yalnızca SMS ya da WhatsApp mesajı gönderebilir.</span></label>
       <div class="row" id="q-times"${t.quietStart != null ? "" : " hidden"}>
         <div><label for="q-start">Başlangıç</label><input id="q-start" type="time" value="${hhmm(t.quietStart ?? 1380)}"></div>
         <div><label for="q-end">Bitiş</label><input id="q-end" type="time" value="${hhmm(t.quietEnd ?? 420)}"></div>
@@ -432,7 +449,7 @@ function showTag(code, isNew) {
     if (!res?.ok) {
       ev.submitter && (ev.submitter.disabled = false);
       return fail({bad_hours: "Sessiz saatler geçersiz.", bad_pin: "PIN eşleşmedi.",
-        locked: "Çok fazla deneme. 15 dakika sonra tekrar deneyin.", not_found: "Etiket sunucuda bulunamadı."}[res?.error] || "Kaydedilemedi.");
+        locked: "Çok fazla deneme. 15 dakika sonra tekrar deneyin.", not_found: "QR sunucuda bulunamadı."}[res?.error] || "Kaydedilemedi.");
     }
     saveTag({...findTag(code), backupPhone: null, backupName: "", quietStart: qs, quietEnd: qe});
     toast("Arama ayarları kaydedildi.");
@@ -475,7 +492,7 @@ function showChangeNumber(code, error = "", value = "") {
   const t = findTag(code);
   if (!t) { location.replace("#/"); return; }
   show("Numarayı değiştir", `
-    <p>${esc(t.code)} etiketini okutanlar artık bu numarayı arayacak. Sticker'ı yeniden basmanıza gerek yok.</p>
+    <p>${esc(t.code)} QR'ını okutanlar artık bu numaraya ulaşacak. Sticker'ı yeniden basmanıza gerek yok.</p>
     ${error ? `<div class="msg err" role="alert">${esc(error)}</div>` : ""}
     <form id="f" novalidate>
       <label for="phone">Yeni numara</label>
@@ -492,7 +509,7 @@ function showChangeNumber(code, error = "", value = "") {
     catch (e) { return showChangeNumber(code, "Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edin.", raw); }
     if (!res?.ok) {
       return showChangeNumber(code, {locked: `Çok fazla deneme. ${res?.minutes || 15} dakika sonra tekrar deneyin.`,
-        bad_phone: "Numara geçersiz.", bad_pin: "PIN eşleşmedi.", not_found: "Bu etiket sunucuda bulunamadı."}[res?.error] || "Kaydedilemedi.", raw);
+        bad_phone: "Numara geçersiz.", bad_pin: "PIN eşleşmedi.", not_found: "Bu QR sunucuda bulunamadı."}[res?.error] || "Kaydedilemedi.", raw);
     }
     saveTag({...t, phone: res.phone});
     toast(`Kaydedildi. QR artık ${prettyPhone(res.phone)} numarasını arar.`);
@@ -662,8 +679,8 @@ async function showOrder(tagCode, error = "", v = null) {
   const shop = await loadShop();
   if (!shop?.active) {
     return show("Biz basalım, gönderelim", `
-      <div class="msg info"><b>Basılı sipariş şu an kapalı.</b><br>Kısa süre içinde açılacak. Bu sırada etiketinizi kendiniz yazdırabilirsiniz.</div>
-      <a class="btn" href="#/etiket/${encodeURIComponent(t.code)}">Etikete dön</a>`, true);
+      <div class="msg info"><b>Basılı sipariş şu an kapalı.</b><br>Kısa süre içinde açılacak. Bu sırada QR'ınızı kendiniz ücretsiz yazdırabilirsiniz.</div>
+      <a class="btn" href="#/etiket/${encodeURIComponent(t.code)}">QR'a dön</a>`, true);
   }
   v = v || profile();
   const val = k => `value="${esc(v[k] || "")}"`;
@@ -717,7 +734,7 @@ async function showOrder(tagCode, error = "", v = null) {
         p_city: v2.city || null, p_district: v2.district || null, p_address: v2.address || null, p_note: v2.note || null, p_device: deviceId()});
     } catch (e) { return showOrder(tagCode, "Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.", v2); }
     if (!res?.ok) {
-      return showOrder(tagCode, {closed: "Basılı sipariş şu an kapalı.", no_tag: "Bu etiket sunucuda bulunamadı.",
+      return showOrder(tagCode, {closed: "Basılı sipariş şu an kapalı.", no_tag: "Bu QR sunucuda bulunamadı.",
         missing: "Ad soyad yazın.", bad_phone: "Telefon numarası geçersiz.", bad_email: "E-posta adresi geçersiz.",
         too_many: "Bugün çok fazla sipariş oluşturdunuz. Siparişlerim'den mevcut siparişinizi görebilirsiniz.",
         busy: "Şu an çok yoğun, birkaç dakika sonra tekrar deneyin."}[res?.error] || "Sipariş gönderilemedi.", v2);
@@ -731,23 +748,25 @@ async function showOrderStatus(orderCode, isNew) {
   const o = findOrder(orderCode);
   if (!o) { location.replace("#/"); return; }
   if (isNew) {
-    show("Sipariş alındı", `
+    show("Siparişlerim", `
       <div class="empty" style="padding-top:10px">
         <div style="font-size:64px" aria-hidden="true">🎉</div>
         <h1>Siparişiniz alındı!</h1>
         <p>En kısa sürede sizi arayıp ödeme ve teslimatı konuşacağız. Sipariş no: <b>${esc(o.code)}</b></p>
+        <p class="hint">Siparişiniz ilerledikçe (onaylandı, baskıda, kargoda) size bildirim gelir. Durumu bu sayfadan da takip edebilirsiniz.</p>
       </div>
-      <a class="btn" href="#/siparisler">Siparişlerim</a>`, false);
+      <a class="btn" href="#/siparisler">Siparişlerimi gör</a>`, false, "", "orders");
     confetti();
     return;
   }
-  show(`Sipariş ${o.code}`, "<p>Yükleniyor…</p>", true);
+  show("Siparişlerim", "<p>Yükleniyor…</p>", true, "", "orders");
   await refreshOrders();
   const cur = findOrder(orderCode);
   const steps = ["yeni", "onaylandi", "baskida", "kargolandi"];
   const cancellable = ["yeni", "odeme_bekleniyor", "odeme_bildirildi"].includes(cur.status);
   const at = steps.indexOf(["odeme_bekleniyor", "odeme_bildirildi"].includes(cur.status) ? "yeni" : cur.status);
-  show(`Sipariş ${cur.code}`, `
+  show("Siparişlerim", `
+    <h2 style="margin-top:0">Sipariş ${esc(cur.code)}</h2>
     <div class="msg ${cur.status === "iptal" ? "err" : "ok"}"><b>${esc(STATUS[cur.status] || cur.status)}</b>${
       cur.status === "iptal" ? `<br>${cur.cancelledBy === "musteri" ? "Siparişinizi siz iptal ettiniz." : "Sipariş tarafımızdan iptal edildi."}` : ""}${
       cur.tracking ? `<br>Kargo takip no: <b>${esc(cur.tracking)}</b>` : ""}</div>
@@ -756,7 +775,7 @@ async function showOrderStatus(orderCode, isNew) {
     <a class="btn ghost" href="#/siparisler">Siparişlerim</a>
     ${cancellable ? `<button class="btn danger" type="button" id="cancel">Siparişi iptal et</button>
       <div class="hint">Siparişiniz onaylanana kadar iptal edebilirsiniz.</div>`
-      : cur.status !== "iptal" && cur.status !== "kargolandi" ? `<div class="hint">Sipariş onaylandığı için uygulamadan iptal edilemez; iptal için sipariş numaranızla bize ulaşın.</div>` : ""}`, true);
+      : cur.status !== "iptal" && cur.status !== "kargolandi" ? `<div class="hint">Sipariş onaylandığı için uygulamadan iptal edilemez; iptal için sipariş numaranızla bize ulaşın.</div>` : ""}`, true, "", "orders");
   const cancel = document.getElementById("cancel");
   if (cancel) cancel.onclick = async () => {
     if (!confirm(`${cur.code} numaralı sipariş iptal edilsin mi?`)) return;

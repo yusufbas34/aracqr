@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Araç QR</title>
-<link rel="icon" type="image/svg+xml" href="shared/logo.svg">
+<link rel="icon" type="image/svg+xml" href="app/logo.svg">
 <meta name="theme-color" content="#0a3a9e">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=Barlow+Condensed:wght@700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<link rel="stylesheet" href="shared/sticker.css">
-<script src="shared/sticker.js"></script>
+<link rel="stylesheet" href="app/sticker.css">
+<script src="app/sticker.js"></script>
 <script>
   // ==================== AYARLAR (Supabase > Project Settings > API) ====================
   const SUPABASE_URL = "https://icedhptvywmqsiarxpio.supabase.co";
@@ -259,9 +259,9 @@ const QUICK_MESSAGES = [
   ["⚠️", "Araçta çocuk / hayvan var", "ACİL: Aracınızın içinde çocuk ya da hayvan kalmış görünüyor. Lütfen hemen gelin!"],
 ];
 
-function quickMessagesHtml(phone) {
+function quickMessagesHtml(phone, quietTitle = false) {
   const digits = String(phone).replace(/\D/g, ""), tail = "\n\n(Araç QR ile gönderildi)";
-  return `<h2 class="qm-title">Ya da hazır mesaj gönderin</h2>
+  return `<h2 class="qm-title">${quietTitle ? "Mesaj gönderin" : "Ya da hazır mesaj gönderin"}</h2>
     <div class="qm-switch" role="radiogroup" aria-label="Gönderme yolu">
       <label><input type="radio" name="qm" value="sms" checked> SMS</label>
       <label><input type="radio" name="qm" value="wa"> WhatsApp</label>
@@ -282,8 +282,8 @@ function showCall(code, tag) {
   if (tag.disabled) {
     return show(`
       ${plate(code)}
-      <h1>Bu etiket şu an kullanılmıyor</h1>
-      <p>Aracın sahibi bu QR etiketini geçici olarak kapatmış. Araç satılmış ya da etiket artık kullanılmıyor olabilir.</p>`);
+      <h1>Bu QR şu an kullanılmıyor</h1>
+      <p>Aracın sahibi bu QR'ı geçici olarak kapatmış. Araç satılmış ya da sticker artık kullanılmıyor olabilir.</p>`);
   }
   const phone = tag.phone, quiet = inQuietHours(tag);
   const backup = tag.backup_phone ? `
@@ -294,9 +294,8 @@ function showCall(code, tag) {
     show(`
       ${plate(code)}
       <h1>Araç sahibi şu an sessiz saatlerde</h1>
-      <p>Araç sahibi ${hhmm(tag.quiet_start)}–${hhmm(tag.quiet_end)} arasında aranmak istemiyor. Acil değilse mesaj gönderin.</p>
-      ${quickMessagesHtml(phone)}
-      <a class="btn ghost" href="tel:${esc(phone)}">Acil durum: yine de ara</a>
+      <p>Araç sahibi ${hhmm(tag.quiet_start)}–${hhmm(tag.quiet_end)} arasında arama almıyor. Aşağıdan ona SMS ya da WhatsApp mesajı gönderebilirsiniz; acil durumlar için de hazır mesaj var.</p>
+      ${quickMessagesHtml(phone, true)}
       ${backup}
       <p class="small"><a href="${esc(ownLink(code))}&degistir">Aracın sahibi misiniz? Numarayı değiştirin</a></p>`);
     bindQuickMessages();
@@ -622,116 +621,64 @@ const APK_URL = "https://github.com/yusufbas34/aracqr/releases/download/apk-son/
 function showcaseHtml() {
   if (typeof qrcode !== "function") return "";
   const keys = Object.keys(DESIGNS), d = keys[Math.floor(Math.random() * keys.length)];
-  return `<div class="grid" style="--w:52mm;--h:78mm;--k:${52 / 60}">${stickerHtml("ÖRNEK", d, BASE + "#talep")}</div>`;
+  const ph = Math.random() < .5 ? pickPhrase() : undefined;
+  return `<div class="grid" style="--w:52mm;--h:78mm;--k:${52 / 60}">${stickerHtml("ÖRNEK", d, BASE + "app/", ph)}</div>`;
 }
+
+const APP_URL = "app/";  // web uygulaması: Android uygulamasıyla aynı kod
 
 function showHome() {
   show(`
     <div class="hero">
       <div>
         <h1>Aracınızın önünü kapatan sizi tek dokunuşla arasın</h1>
-        <p class="lead">Camınıza yapıştırdığınız QR etiketi okutan kişi, numaranızı camda görmeden sizi doğrudan arar. Okutan kişinin uygulama indirmesine ya da üye olmasına gerek yok.</p>
-        <a class="btn cta" href="#talep">QR etiketi iste</a>
-        <a class="btn cta alt" href="${APK_URL}">📱 Android uygulamasını indir</a>
-        <p class="hint">Uygulamayla tasarımınızı seçip kendi QR'ınızı hemen oluşturabilir, istediğiniz ölçüde yazdırabilirsiniz.</p>
+        <p class="lead">Camınıza yapıştırdığınız QR'ı okutan kişi, numaranızı camda görmeden sizi arar ya da hazır bir mesaj gönderir. Okutan kişinin uygulama indirmesine gerek yok.</p>
+        <a class="btn cta" href="${APP_URL}">QR'ımı ücretsiz oluştur</a>
+        <a class="btn cta alt" href="${APK_URL}">📱 Android uygulaması</a>
+        <p class="hint">Tasarımınızı ve sözünüzü seçin, numaranızı girin, istediğiniz ölçüde yazdırın. Web'den de uygulamadan da aynı şekilde çalışır.</p>
       </div>
-      <div class="showcase" aria-label="Örnek etiket">
+      <div class="showcase" aria-label="Örnek QR sticker">
         <div id="sample">${showcaseHtml()}</div>
         <button type="button" id="another">🎲 Başka tasarım göster</button>
       </div>
     </div>
 
-    <div class="note">Bir aracın üzerindeki QR kodu okuttuysanız arama ekranı doğrudan açılır. Bu sayfa, etiket edinmek isteyenler içindir.</div>
+    <div class="note">Bir aracın üzerindeki QR'ı okuttuysanız arama ekranı doğrudan açılır. Bu sayfa, kendi QR'ını edinmek isteyenler içindir.</div>
 
     <section>
       <h2>Nasıl çalışır?</h2>
       <ol class="steps">
-        <li><b>Talep edin</b>Aşağıdaki formu doldurun. Bilgileriniz yalnızca size ulaşmak için kullanılır.</li>
-        <li><b>Etiketiniz gelsin</b>QR etiketinizi ve size özel PIN kartını e-postayla ya da isterseniz WhatsApp'tan göndeririz.</li>
-        <li><b>Numaranızı bağlayın</b>Etiketi kendi telefonunuzla okutun, numaranızı ve karttaki PIN'i girin.</li>
-        <li><b>Camınıza yapıştırın</b>Artık QR'ı okutan kişi sizi tek dokunuşla arayabilir.</li>
+        <li><b>Tasarımınızı seçin</b>${Object.keys(DESIGNS).length} tasarım ve ${Object.keys(PHRASES).length} hazır söz arasından seçin; yana kaydırarak bakın.</li>
+        <li><b>Numaranızı girin</b>QR'ınız anında oluşur. Numaranız QR'da ve camda yazmaz.</li>
+        <li><b>Yazdırın ya da sipariş verin</b>Kendiniz ücretsiz yazdırın ya da su geçirmez vinil setinizi <span class="price-tag">150 TL</span>'ye biz basıp gönderelim.</li>
+        <li><b>Camınıza yapıştırın</b>QR'ı okutan kişi sizi tek dokunuşla arar ya da mesaj atar.</li>
       </ol>
+      <a class="btn" href="${APP_URL}" style="max-width:360px">Hemen başla</a>
     </section>
 
     <section>
       <h2>Neden Araç QR?</h2>
       <div class="perks">
-        <div><b>Numaranız camda yazmaz</b>Yoldan geçen herkes numaranızı göremez; yalnızca QR'ı okutan kişi arama ekranında görür.</div>
-        <div><b>Uygulama gerekmez</b>Her telefonun kamerası okur, arama ekranı kendiliğinden açılır.</div>
-        <div><b>Numaranızı siz yönetin</b>Telefon değiştirdiğinizde PIN'inizle yeni numarayı saniyeler içinde girersiniz.</div>
-        <div><b>Size göre tasarım</b>Klasikten kedili, nazarlı, retro tasarımlara kadar ${Object.keys(DESIGNS).length} farklı seçenek.</div>
+        <div><b>Numaranız camda yazmaz</b>Yoldan geçen herkes numaranızı göremez; yalnızca QR'ı okutan kişi size ulaşır.</div>
+        <div><b>Gece rahat uyuyun</b>Sessiz saatlerde (ör. 23:00–07:00) arama butonu gösterilmez; okutan kişi size yalnızca SMS ya da WhatsApp mesajı gönderir.</div>
+        <div><b>Hazır mesajlar</b>“Önümü kapattınız”, “Farlarınız açık”, “Aracınıza çarpıldı” gibi mesajlar tek dokunuşla.</div>
+        <div><b>Ücretsiz ya da baskılı</b>Kendiniz ücretsiz yazdırın ya da 6 ölçüde 9 sticker'lık vinil seti kapınıza gelsin.</div>
+        <div><b>Numaranızı siz yönetin</b>Telefon değiştirince numarayı uygulamadan güncellersiniz; sticker'ı yeniden basmanız gerekmez.</div>
+        <div><b>QR'ı kapatabilirsiniz</b>Araç satılınca ya da sticker kaybolunca QR'ı tek dokunuşla kapatırsınız.</div>
       </div>
     </section>
 
     <section>
       <h2>Sık sorulanlar</h2>
-      <details><summary>Numaram herkese görünür mü?</summary><p>Camda numaranız yazmaz. QR'ı okutan kişi sizi arayabilsin diye arama ekranında numaranızı görür.</p></details>
-      <details><summary>Telefon numaram değişirse ne olacak?</summary><p>Etiketi okutun, sayfanın altındaki “Numarayı değiştirin” bağlantısına dokunun ve PIN'inizle yeni numaranızı girin.</p></details>
-      <details><summary>PIN kartımı kaybedersem?</summary><p>Talep formunun not alanından bize yazın, yardımcı olalım. PIN kartını araçta bırakmayın.</p></details>
-      <details><summary>Etiket dış koşullara dayanır mı?</summary><p>QR kod yüksek hata düzeltmeyle üretilir; biraz çizilse ya da solsa bile okunur. Camın iç tarafına yapıştırmanızı öneririz.</p></details>
-    </section>
-
-    <section id="talep">
-      <h2>QR etiket talep formu</h2>
-      <div class="card" id="formbox">${requestFormHtml()}</div>
+      <details><summary>Ücretli mi?</summary><p>QR oluşturmak ve kendiniz yazdırmak ücretsizdir. İsterseniz su geçirmez vinil sticker setini <span class="price-tag">150 TL</span>'ye biz basıp gönderiyoruz.</p></details>
+      <details><summary>Numaram herkese görünür mü?</summary><p>Camda ve QR'da numaranız yazmaz. QR'ı okutan kişi sizi arayabilsin ya da mesaj atabilsin diye numaranıza ulaşır. Sessiz saatlerde arama butonu gösterilmez.</p></details>
+      <details><summary>Telefon numaram değişirse ne olacak?</summary><p>Uygulamada QR'ınızı açıp “Numarayı değiştir”e dokunun. Sticker'ı yeniden basmanız gerekmez.</p></details>
+      <details><summary>Sticker'ı nereye yapıştırmalıyım?</summary><p>Camın dış yüzüne, kaportaya ya da tampona yapıştırın. Normal bir sticker camın içine yapıştırılırsa dışarıdan ters görünür ve okunmaz. QR kod yüksek hata düzeltmeyle üretilir; biraz çizilse de okunur.</p></details>
+      <details><summary>Telefonumu değiştirirsem QR'larım ne olur?</summary><p>QR'larınız çalışmaya devam eder. Numaranızı yeni telefondan değiştirebilmek için uygulamadaki PIN'inizi bir yere not edin.</p></details>
     </section>`, "home");
   document.getElementById("another").onclick = () => { document.getElementById("sample").innerHTML = showcaseHtml(); };
-  bindRequestForm();
-  if (location.hash === "#talep") document.getElementById("talep").scrollIntoView();
-}
-
-function requestFormHtml(error = "", v = {}) {
-  const val = k => `value="${esc(v[k] || "")}"`;
-  return `
-    ${error ? `<div class="msg err" role="alert">${esc(error)}</div>` : ""}
-    <form id="rf" novalidate>
-      <div class="row2">
-        <div><label for="r-first">Ad</label><input id="r-first" autocomplete="given-name" required ${val("first")}></div>
-        <div><label for="r-last">Soyad</label><input id="r-last" autocomplete="family-name" required ${val("last")}></div>
-      </div>
-      <label for="r-email">E-posta</label>
-      <input id="r-email" type="email" inputmode="email" autocomplete="email" placeholder="ornek@mail.com" required ${val("email")}>
-      <label for="r-phone">Telefon <span style="font-weight:400;color:var(--muted)">(isteğe bağlı)</span></label>
-      <input id="r-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="05xx xxx xx xx" aria-describedby="r-phone-hint" ${val("phone")}>
-      <small id="r-phone-hint" style="display:block;margin-top:6px;color:var(--muted);font-size:14px">Sticker'ı WhatsApp'tan isterseniz telefonunuzu girin.</small>
-      <label for="r-note">Notunuz <span style="font-weight:400;color:var(--muted)">(isteğe bağlı: tasarım tercihi, adet…)</span></label>
-      <textarea id="r-note" rows="3" maxlength="500">${esc(v.note || "")}</textarea>
-      <div class="hp" aria-hidden="true"><label for="r-web">Web sitesi</label><input id="r-web" tabindex="-1" autocomplete="off"></div>
-      <label class="check"><input type="checkbox" id="r-ok"${v.ok ? " checked" : ""}> Bilgilerimin yalnızca QR etiket talebimin işlenmesi ve benimle iletişim kurulması amacıyla kullanılmasını kabul ediyorum.</label>
-      <button class="btn" type="submit">Talep gönder</button>
-    </form>`;
-}
-
-function bindRequestForm() {
-  document.getElementById("rf").addEventListener("submit", async ev => {
-    ev.preventDefault();
-    const g = id => document.getElementById(id);
-    const v = {first: g("r-first").value.trim(), last: g("r-last").value.trim(), email: g("r-email").value.trim(),
-      phone: g("r-phone").value.trim(), note: g("r-note").value.trim(), ok: g("r-ok").checked};
-    const box = g("formbox");
-    const fail = msg => { box.innerHTML = requestFormHtml(msg, v); bindRequestForm(); box.querySelector(".msg").scrollIntoView({block: "center"}); };
-    if (!v.first || !v.last) return fail("Ad ve soyadınızı yazın.");
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.email)) return fail("E-posta adresi geçersiz. Örnek: ornek@mail.com");
-    const phone = v.phone ? normalizePhone(v.phone) : null;
-    if (v.phone && !phone) return fail("Telefon numarası geçersiz (örnek: 0532 123 45 67). İstemiyorsanız boş bırakabilirsiniz.");
-    if (!v.ok) return fail("Devam etmek için bilgilendirme onayını işaretleyin.");
-    const done = () => {
-      box.innerHTML = `<div class="msg ok" role="status"><b>Talebiniz alındı, teşekkürler ${esc(v.first)}!</b><br>${phone ? `Sticker'ınızı ${esc(prettyPhone(phone))} numarasına WhatsApp'tan göndereceğiz.` : `En kısa sürede ${esc(v.email)} adresinden size ulaşacağız.`}</div>`;
-      confetti();
-    };
-    if (g("r-web").value) return done(); // bot tuzağı: sessizce geç
-    ev.submitter && (ev.submitter.disabled = true);
-    try {
-      const res = await rpc("request_create", {p_first_name: v.first, p_last_name: v.last, p_email: v.email, p_phone: phone,
-        p_note: v.note || null});
-      if (res?.ok) return done();
-      fail({missing: "Ad ve soyadınızı yazın.", bad_email: "E-posta adresi geçersiz.", bad_phone: "Telefon numarası geçersiz.",
-        too_many: "Bugün bu bilgilerle zaten talep gönderdiniz; sizinle iletişime geçeceğiz.",
-        busy: "Şu an çok yoğunuz, birkaç dakika sonra tekrar deneyin."}[res?.error] || "Talep gönderilemedi, tekrar deneyin.");
-    } catch (e) {
-      fail("Bağlantı hatası. İnternetinizi kontrol edip tekrar deneyin.");
-    }
-  });
+  // Fiyat panelden değişebilir
+  rpc("shop_info", {}).then(sh => { if (sh?.price) document.querySelectorAll(".price-tag").forEach(el => { el.textContent = `${sh.price} TL`; }); }).catch(() => {});
 }
 
 // ---------------------------------------------------------------- kurulum yardımı
@@ -901,7 +848,7 @@ async function loadShopAdmin() {
   catch (e) { return null; }
 }
 
-// Siparişin A4 baskı PDF'i: 6 farklı ölçü, 9 sticker (shared/sticker.js orderSheetHtml)
+// Siparişin A4 baskı PDF'i: 6 farklı ölçü, 9 sticker (app/sticker.js orderSheetHtml)
 async function orderPdf(o) {
   await loadPdfLibs();
   const box = document.createElement("div");

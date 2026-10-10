@@ -1,5 +1,5 @@
 // Araç QR: sticker tasarımları ve baskı ölçüleri. Web sitesi (index.html) ve Android uygulaması ortak kullanır.
-// Gerekenler: qrcode-generator (global `qrcode`) ve shared/sticker.css.
+// Gerekenler: qrcode-generator (global `qrcode`) ve app/sticker.css.
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
@@ -123,7 +123,7 @@ const SIZES = {
   "60x90": "Standart 60×90 mm",
   "74x105": "A7 74×105 mm",
   "80x120": "Büyük 80×120 mm",
-  "100x150": "Etiket yazıcısı 100×150 mm (4×6 inç)",
+  "100x150": "Termal yazıcı 100×150 mm (4×6 inç)",
   "105x148": "A6 105×148 mm",
 };
 const A4 = {W: 210, H: 297, M: 10, G: 3};

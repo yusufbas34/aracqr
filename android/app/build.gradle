@@ -16,10 +16,10 @@ android {
         versionName "1.0.${run}"
     }
 
-    // Web sitesiyle aynı sticker tasarımları: ../../shared klasörü uygulama içeriğine eklenir.
+    // Uygulamanın arayüzü depo kökündeki app/ klasörüdür; aynı klasör web'de /aracqr/app/ adresinde yayınlanır.
     sourceSets {
         main {
-            assets.srcDirs += ["../../shared"]
+            assets.srcDirs = ["../../app"]
         }
     }
 

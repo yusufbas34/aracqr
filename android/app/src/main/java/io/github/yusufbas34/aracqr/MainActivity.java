@@ -35,7 +35,7 @@ import java.util.Locale;
  * web tarafının yapamadığı üç işi sağlar: Android yazdırma ekranı, PDF'i İndirilenler'e kaydetme ve paylaşma.
  */
 public class MainActivity extends Activity {
-    private static final String START_URL = "file:///android_asset/app.html";
+    private static final String START_URL = "file:///android_asset/index.html";
     private WebView web;
 
     @Override
