@@ -154,6 +154,14 @@ details.howto ol{margin:8px 0 0;padding-left:20px;line-height:1.6;font-size:15px
 .confetti{position:fixed;top:-12px;width:9px;height:14px;z-index:19;pointer-events:none;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(105vh) rotate(720deg)}}
 @media (prefers-reduced-motion:reduce){.confetti{display:none}}
+#a4print{display:none}
+.a4page{width:190mm;height:277mm;overflow:hidden;background:#fff;break-after:page;page-break-after:always}
+.a4page:last-child{break-after:auto;page-break-after:auto}
+.a4fill{display:flex;flex-wrap:wrap;gap:3mm;align-content:flex-start}
+.a4fill .grid{display:block}
+.a4help{font-size:14px;color:var(--muted);margin:6px 0 0}
+@media print{body.a4mode>main,body.a4mode>.toast{display:none!important}body.a4mode #a4print{display:block!important}
+  #a4print *{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 @media print{.noprint,.tag.skip{display:none!important}body{background:#fff;padding:0}main.wide{max-width:none}
   .grid{gap:3mm}
   .grid.tek{display:block}.tek .tag{display:block}.tek .sticker,.tek .pin{break-after:page;page-break-after:always}}
@@ -161,6 +169,7 @@ details.howto ol{margin:8px 0 0;padding-left:20px;line-height:1.6;font-size:15px
 </head>
 <body>
 <main id="app"><p>Yükleniyor…</p></main>
+<div id="a4print" aria-hidden="true"></div>
 
 <script>
 const app = document.getElementById("app");
@@ -961,6 +970,35 @@ async function orderPdf(o) {
   } finally { box.remove(); }
 }
 
+// ---------------------------------------------------------------- A4 vinil etikete doğrudan yazdırma
+// "set": siparişteki 6 ölçü / 9 sticker. Bir ölçü seçilirse A4 o ölçüdeki sticker'larla doldurulur.
+let a4Layout = pref("a4layout", "set", ["set", ...Object.keys(SIZES)]);
+function a4LayoutOptions() {
+  return [["set", "Düzen: sipariş seti (6 ölçü, 9 sticker)"],
+    ...Object.entries(SIZES).filter(([k]) => perA4(dims(k)) > 0).map(([k, n]) => [k, `Düzen: A4'ü doldur · ${n} × ${perA4(dims(k))}`])]
+    .map(([k, n]) => `<option value="${k}"${k === a4Layout ? " selected" : ""}>${esc(n)}</option>`).join("");
+}
+function a4PageHtml(o, layout) {
+  const link = selfLink(o.tag_code);
+  if (layout === "set" || !SIZES[layout]) return `<div class="a4page">${orderSheetHtml(o.tag_code, o.design, link, o.phrase)}</div>`;
+  const {w, h, k} = dims(layout), one = `<div class="grid${k < .75 ? " small-size" : ""}" style="--w:${w}mm;--h:${h}mm;--k:${k}">${stickerHtml(o.tag_code, o.design, link, o.phrase)}</div>`;
+  return `<div class="a4page a4fill">${one.repeat(perA4({w, h}))}</div>`;
+}
+async function printA4(pages) {
+  const box = document.getElementById("a4print");
+  box.innerHTML = pages.join("");
+  let st = document.getElementById("pagestyle");
+  if (!st) { st = document.createElement("style"); st.id = "pagestyle"; document.head.append(st); }
+  const old = st.textContent;
+  st.textContent = `@page{size:A4 portrait;margin:${A4.M}mm}`;
+  document.body.classList.add("a4mode");
+  await document.fonts?.ready;
+  await Promise.all([...box.querySelectorAll("img")].map(img => img.complete ? 0 : new Promise(r => { img.onload = img.onerror = r; })));
+  const done = () => { document.body.classList.remove("a4mode"); box.innerHTML = ""; st.textContent = old; window.removeEventListener("afterprint", done); };
+  window.addEventListener("afterprint", done);
+  window.print();
+}
+
 function downloadBlob(blob, name) {
   const a = Object.assign(document.createElement("a"), {href: URL.createObjectURL(blob), download: name});
   document.body.append(a); a.click(); a.remove();
@@ -1047,7 +1085,10 @@ async function showOrders(orders, requests) {
         ${[...Object.entries(ORDER_STATUS).map(([k, n]) => [k, `${n} (${count(k)})`]), ["all", `Tümü (${orders?.length || 0})`]]
           .map(([k, n]) => `<option value="${k}"${k === orderFilter ? " selected" : ""}>${esc(n)}</option>`).join("")}
       </select>
+      <select id="a4layout" aria-label="A4 baskı düzeni">${a4LayoutOptions()}</select>
+      ${list.length ? `<button class="btn" type="button" id="a4all" style="width:auto;margin:0">🖨 Listedekileri A4'e yazdır (${list.length} sayfa)</button>` : ""}
     </div>
+    <p class="a4help noprint">A4 yazdırırken: kağıt <b>A4</b>, ölçek <b>%100 / Gerçek boyut</b> (“Sayfaya sığdır” kapalı), <b>Arka plan grafikleri</b> açık. Vinil etiket kağıdında yazıcı ayarını “Etiket / Parlak kağıt” seçin. Önce düz kağıda bir deneme basıp cetvelle ölçün.</p>
     <div id="msg"></div>
     ${orders && !list.length ? "<p>Bu listede sipariş yok.</p>" : ""}
     <div class="reqs">
@@ -1069,6 +1110,7 @@ async function showOrders(orders, requests) {
           </div>
           <div class="act">
             ${NEW_ORDER.includes(o.status) ? `<button data-act="approve" style="background:var(--ok)">✓ Görüşüldü, onayla</button>` : ""}
+            <button data-act="a4" style="background:var(--band)">🖨 A4'e yazdır</button>
             <button data-act="pdf">Baskı PDF'i indir</button>
             ${["onaylandi", "baskida"].includes(o.status) ? `<button data-act="mail" title="PDF ekli e-posta taslağı (.eml) indirir; açınca Outlook / Posta'da hazır gelir">Baskıcıya e-posta (PDF ekli)</button>
               ${canShareFiles ? `<button data-act="share">PDF'i paylaş (e-posta ekli)</button>` : ""}` : ""}
@@ -1085,6 +1127,10 @@ async function showOrders(orders, requests) {
   bindTabs();
   const filter = document.getElementById("ofilter");
   filter.onchange = () => { orderFilter = filter.value; showOrders(orders, requests); };
+  const layoutSel = document.getElementById("a4layout");
+  layoutSel.onchange = () => { a4Layout = layoutSel.value; savePref("a4layout", a4Layout); };
+  const all = document.getElementById("a4all");
+  if (all) all.onclick = () => printA4(list.map(o => a4PageHtml(o, a4Layout)));
   document.querySelector(".reqs").onclick = async ev => {
     const btn = ev.target.closest("button[data-act]");
     if (!btn) return;
@@ -1102,6 +1148,8 @@ async function showOrders(orders, requests) {
       if (act === "approve") {
         if (!confirm(`${o.code}: müşteriyle görüşüp ödemeyi aldınız mı? Onaylanınca sipariş baskıya gönderilecekler listesine geçer.`)) return;
         await update("onaylandi", () => { confetti(); toast("Onaylandı. Sırada baskı PDF'i ve baskıcıya e-posta var."); });
+      } else if (act === "a4") {
+        await printA4([a4PageHtml(o, a4Layout)]);
       } else if (act === "pdf") {
         toast("Baskı PDF'i hazırlanıyor…", 30000);
         downloadBlob(await orderPdf(o), fileName);
