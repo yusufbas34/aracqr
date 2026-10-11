@@ -367,7 +367,7 @@ function showDesigns(tagCode) {
       <div class="car-track" id="reels" tabindex="0">
         ${keys.map((k, i) => `
           <section class="reel" data-d="${k}" data-i="${i}" aria-label="${esc(DESIGNS[k].name)}">
-            <div class="reel-top">${DESIGNS[k].isNew ? `<span class="new">🆕 Yeni</span> ` : ""}${i + 1} / ${keys.length} · ${DESIGNS[k].group ? "Eğlenceli" : "Klasik"}</div>
+            <div class="reel-top">${DESIGNS[k].isNew ? `<span class="new">🆕 Yeni</span> ` : ""}${i + 1} / ${keys.length} · ${DESIGNS[k].group || "Klasik"}</div>
             <div class="reel-sticker">${stickerAt(code, k, link, "60x90", t?.phrase)}</div>
             <b class="reel-name">${esc(DESIGNS[k].name)}</b>
           </section>`).join("")}

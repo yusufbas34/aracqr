@@ -32,10 +32,15 @@ const svgTea = `<svg class="ic-tea" viewBox="0 0 24 30" aria-hidden="true"><path
 const svgPin = `<svg class="ic-smile" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="6" fill="#e4002b"/><circle cx="10" cy="7" r="2" fill="#fff" opacity=".5"/><path d="M12 15v8" stroke="#555" stroke-width="2" stroke-linecap="round"/></svg>`;
 const svgGrade = `<span class="grade" aria-label="10 üzerinden 2">2<small>/10</small></span>`;
 const svgStarRow = `<div class="kamyon-stars" aria-hidden="true">★ ✿ ★ ✿ ★ ✿ ★</div>`;
+// Takım renkleri: yalnızca renk ve genel futbol esprileri. Kulüp adı, arma, logo, lakap ya da kuruluş yılı
+// KULLANILMAZ (tescilli markalar); renk kombinasyonları tek başına kimseye ait değildir.
+const svgBall = `<svg class="ic-smile" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#fff" stroke="#111" stroke-width="1.2"/><path d="M12 7.2l4.3 3.1-1.6 5h-5.4l-1.6-5z" fill="#111"/><path d="M12 7.2V1.3M16.3 10.3l5.4-2M14.7 15.3l3.4 4.8M9.3 15.3l-3.4 4.8M7.7 10.3l-5.4-2" stroke="#111" stroke-width="1.1"/></svg>`;
+const teamStripe = `<div class="tstripe" aria-hidden="true"></div>`;
 const MSG = "Bu aracın sahibine ulaşmak için QR kodu okutun";
 const HOW = "Telefon kameranızı açın, kodu okutun,<br>tek dokunuşla arayın.";
 
 const FUN = "Eğlenceli";
+const TEAM = "Takım renkleri";
 const DESIGNS = {
   klasik:   {name: "Klasik mavi", top: "ARAÇ SAHİBİNE ULAŞIN", msg: MSG, how: HOW},
   plaka:    {name: "Plaka", top: `<span class="tr">TR</span><span class="t">SAHİBİNE ULAŞ</span>`, msg: MSG, how: HOW},
@@ -76,6 +81,18 @@ const DESIGNS = {
   piksel:   {name: "Piksel oyun", group: FUN, top: `${svgHeart}PRESS START${svgHeart}`, msg: "OYUNCU 2: Sahibini çağırmak için QR'ı okut!",
              how: "1 OYUNCU · TEK DOKUNUŞ<br>SINIRSIZ CAN"},
   nazar:    {name: "Nazar boncuğu", group: FUN, top: `${svgNazar}MAŞALLAH!`, msg: MSG, how: "Nazar değmesin,<br>park sorunu da olmasın."},
+  sarikirmizi: {name: "Sarı-Kırmızı", group: TEAM, cls: "team", isNew: true, top: `${svgBall}MAÇ VAR, GELİYORUM!`, post: teamStripe,
+             msg: "Aklım maçta ama yolunu açarım! QR'ı okut, hemen geleyim.", how: "Gol olmadan dönerim,<br>tek dokunuşla ara."},
+  sarilacivert: {name: "Sarı-Lacivert", group: TEAM, cls: "team", isNew: true, top: `${svgBall}DERBİ GÜNÜ!`, post: teamStripe,
+             msg: "Tribündeyim ama telefonum açık: QR'ı okut, ara!", how: "Uzatmalara kalmadan<br>gelirim."},
+  siyahbeyaz: {name: "Siyah-Beyaz", group: TEAM, cls: "team", isNew: true, top: `${svgBall}DEVRE ARASINDAYIM`, post: teamStripe,
+             msg: "Devre arasında gelirim! Acilse QR'ı okut, ara.", how: "Taç atışı kadar sürer,<br>tek dokunuşla ara."},
+  bordomavi: {name: "Bordo-Mavi", group: TEAM, cls: "team", isNew: true, top: `${svgBall}DEPLASMANDAYIM`, post: teamStripe,
+             msg: "Deplasmandan dönüyorum! QR'ı okut, sahibi koşsun.", how: "Hakem düdüğü çalmadan<br>gelirim."},
+  kirmizibeyaz: {name: "Kırmızı-Beyaz", group: TEAM, cls: "team", isNew: true, top: `${svgBall}MİLLİ MAÇ VAR!`, post: teamStripe,
+             msg: "Maçı izliyorum ama yolunu kapatmam! QR'ı okut, ara.", how: "Penaltılara kalmadan<br>gelirim."},
+  yesilbeyaz: {name: "Yeşil-Beyaz", group: TEAM, cls: "team", isNew: true, top: `${svgBall}ISINMA TURUNDAYIM`, post: teamStripe,
+             msg: "Kenardan oyuna giriyorum! QR'ı okut, hemen geleyim.", how: "Oyuncu değişikliği kadar<br>kısa sürer."},
 };
 const RANDOM = "rastgele";
 const pickRandom = () => { const k = Object.keys(DESIGNS); return k[Math.floor(Math.random() * k.length)]; };
@@ -106,7 +123,7 @@ const pickPhrase = () => { const k = Object.keys(PHRASES); return k[Math.floor(M
 function stickerHtml(code, design, link = tagLink(code), phrase) {
   const d = DESIGNS[design] ? design : "klasik", D = DESIGNS[d];
   const msg = PHRASES[phrase] ? esc(PHRASES[phrase]) : D.msg;
-  return `<div class="sticker d-${d}"><div class="in">${D.pre || ""}
+  return `<div class="sticker d-${d}${D.cls ? " " + D.cls : ""}"><div class="in">${D.pre || ""}
       <div class="top">${D.top}</div>
       <div class="msgline">${msg}</div>
       <div class="qr"><div class="box">${qrSvg(link)}</div></div>

@@ -81,6 +81,23 @@
 .d-sarikart .in{background:#1f8a3b;border-color:#14612a;color:#fff}
 .d-sarikart .top{background:transparent;font-size:calc(var(--k)*13pt);letter-spacing:.04em}
 .d-sarikart .code{background:#ffd400;color:#111}
+/* takım renkleri: --c1 ana renk, --c2 ikinci renk, --t1 / --t2 üstlerindeki yazı rengi */
+.team .in{border-color:var(--c1);background:color-mix(in srgb,var(--c2) 12%,#fff)}
+.team .top{background:var(--c1);color:var(--t1);font-size:calc(var(--k)*12pt);letter-spacing:.03em;border-bottom:calc(var(--k)*1.6mm) solid var(--c2)}
+.team .code{background:var(--c1);color:var(--t1);border-top:calc(var(--k)*.6mm) solid var(--c2)}
+.team .tstripe{order:1;flex:none;height:calc(var(--k)*2.2mm);
+  background:repeating-linear-gradient(90deg,var(--c1) 0 calc(var(--k)*3mm),var(--c2) calc(var(--k)*3mm) calc(var(--k)*6mm))}
+.team .code{order:2}
+.d-sarikirmizi{--c1:#a6192e;--c2:#fdb913;--t1:#fff}
+.d-sarilacivert{--c1:#0b2147;--c2:#ffd200;--t1:#ffd200}
+.d-siyahbeyaz{--c1:#111;--c2:#fff;--t1:#fff}
+.d-siyahbeyaz .in{background:#f4f4f4}
+.d-siyahbeyaz .top{border-bottom:calc(var(--k)*1.6mm) solid transparent;background:linear-gradient(#111,#111) padding-box,repeating-linear-gradient(90deg,#111 0 calc(var(--k)*3mm),#fff calc(var(--k)*3mm) calc(var(--k)*6mm)) border-box}
+.d-bordomavi{--c1:#6d1a36;--c2:#7cc0ea;--t1:#fff}
+.d-kirmizibeyaz{--c1:#d71a28;--c2:#fff;--t1:#fff}
+.d-kirmizibeyaz .in{background:#fff5f5}
+.d-yesilbeyaz{--c1:#00843d;--c2:#fff;--t1:#fff}
+.d-yesilbeyaz .in{background:#f2faf5}
 /* çiçek */
 .d-cicek .in{background:#fff0f5;border-color:#e05a8a}
 .d-cicek .top{background:transparent;color:#c2185b;font-size:calc(var(--k)*13pt);padding:calc(var(--k)*1.8mm) calc(var(--k)*1.5mm) 0}

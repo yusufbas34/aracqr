@@ -627,7 +627,8 @@ const designOptions = (sel, withRandom) => {
   const all = Object.entries(DESIGNS);
   return (withRandom ? `<option value="${RANDOM}"${sel === RANDOM ? " selected" : ""}>Rastgele (her etikete farklı)</option>` : "") +
     `<optgroup label="Klasik">${all.filter(([, d]) => !d.group).map(opt).join("")}</optgroup>` +
-    `<optgroup label="${FUN}">${all.filter(([, d]) => d.group === FUN).map(opt).join("")}</optgroup>`;
+    `<optgroup label="${FUN}">${all.filter(([, d]) => d.group === FUN).map(opt).join("")}</optgroup>` +
+    `<optgroup label="${TEAM}">${all.filter(([, d]) => d.group === TEAM).map(opt).join("")}</optgroup>`;
 };
 
 async function showAdmin() {
