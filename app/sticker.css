@@ -4,6 +4,12 @@
 .block{background:#fff}
 .sticker{width:var(--w);height:var(--h);background:#fff;border:calc(var(--k)*.4mm) dashed #9aa0a8;border-radius:calc(var(--k)*3mm);padding:calc(var(--k)*2.5mm);
   display:flex;flex-direction:column;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+/* alt kenar boşluğunda küçük reklam satırı: kesim çizgisinin içinde kalır, sticker'la birlikte yapışır */
+.sticker{position:relative;padding-bottom:calc(var(--k)*5.2mm)}
+.sticker .brand{position:absolute;left:0;right:0;bottom:calc(var(--k)*1.3mm);text-align:center;font-family:"Barlow",system-ui,sans-serif;
+  font-size:calc(var(--k)*6pt);line-height:1;color:#4b5360;white-space:nowrap;letter-spacing:.01em}
+.sticker .brand b{color:#0a3a9e}
+.tek .sticker .brand{bottom:calc(var(--k)*1mm)}
 .sticker .in{position:relative;flex:1;display:flex;flex-direction:column;border:calc(var(--k)*.8mm) solid var(--ink);border-radius:calc(var(--k)*2mm);
   overflow:hidden;background:#fff;color:var(--ink)}
 .sticker .in > *{position:relative}
@@ -15,6 +21,9 @@
 .sticker .qr{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:calc(var(--k)*1mm) 0}
 .sticker .qr .box{background:#fff;padding:calc(var(--k)*1mm);border-radius:calc(var(--k)*1.5mm);line-height:0}
 .sticker .qr svg{width:calc(var(--k)*38mm);height:calc(var(--k)*38mm);display:block}
+/* yer darsa (uzun söz, reklam satırı) QR kalan yüksekliğe sığacak kadar küçülür, hiçbir yazının üstüne binmez */
+.sticker .qr .box{max-height:100%;box-sizing:border-box;display:flex}
+.sticker .qr svg{max-height:100%;max-width:100%;aspect-ratio:1/1;height:auto;flex:1 1 auto;min-height:0}
 .sticker .how{text-align:center;font-size:calc(var(--k)*7pt);line-height:1.2;opacity:.85;padding:0 calc(var(--k)*2mm) calc(var(--k)*1.2mm)}
 .sticker .code{background:var(--ink);color:#fff;text-align:center;font-family:"Barlow Condensed","Barlow",sans-serif;
   font-weight:700;font-size:calc(var(--k)*10pt);letter-spacing:.12em;padding:calc(var(--k)*1mm)}

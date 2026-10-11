@@ -112,7 +112,7 @@ function stickerHtml(code, design, link = tagLink(code), phrase) {
       <div class="qr"><div class="box">${qrSvg(link)}</div></div>
       <div class="how">${D.how}</div>
       <div class="code">${esc(code)}</div>${D.post || ""}
-    </div></div>`;
+    </div><div class="brand">Sen de yap: <b>Araç QR</b> uygulaması</div></div>`;
 }
 
 // ---------------------------------------------------------------- baskı ölçüleri

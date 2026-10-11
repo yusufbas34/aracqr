@@ -159,6 +159,7 @@ details.howto ol{margin:8px 0 0;padding-left:20px;line-height:1.6;font-size:15px
 .a4page:last-child{break-after:auto;page-break-after:auto}
 .a4fill{display:flex;flex-wrap:wrap;gap:3mm;align-content:flex-start}
 .a4fill .grid{display:block}
+.a4pin{height:var(--h);border-top:calc(var(--k)*.4mm) dashed #9aa0a8;border-radius:calc(var(--k)*3mm);display:flex;flex-direction:column;justify-content:center;box-sizing:border-box;overflow:hidden}
 .a4help{font-size:14px;color:var(--muted);margin:6px 0 0}
 @media print{body.a4mode>main,body.a4mode>.toast{display:none!important}body.a4mode #a4print{display:block!important}
   #a4print *{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
@@ -571,9 +572,14 @@ function adminError(text) {
 }
 
 // Yazdırır ya da PDF kaydeder; ardından verilmemiş olanları verildi olarak işaretlemeyi önerir.
+let lastAdminRows = null;
 async function deliver(codes, how, givenSupported) {
   if (!codes.length) return;
-  if (how === "pdf") {
+  if (how === "a4") {
+    const pinOf = Object.fromEntries((lastAdminRows || []).map(r => [r.code, r.pin]));
+    const withPin = printMode !== "only-sticker";
+    await printA4(codes.map(c => a4SheetHtml({code: c, design: designOf[c], link: tagLink(c), pin: withPin ? pinOf[c] : null}, a4Layout)));
+  } else if (how === "pdf") {
     toast("PDF hazırlanıyor…", 60000);
     try { await savePdf(codes); toast("PDF kaydedildi."); }
     catch (e) { document.querySelector(".toast")?.remove(); return adminError("PDF oluşturulamadı: " + e.message); }
@@ -615,6 +621,7 @@ async function showAdmin() {
   if (adminTab === "orders") return showOrders(orderRows, requests);
   if (adminTab === "settings") return showSettings(requests);
   if (adminTab === "stats") return showStats(rows, given, requests);
+  lastAdminRows = rows;
   const state = r => r.phone ? "used" : given?.has(String(r.code).toUpperCase()) ? "given" : "ready";
   const count = {ready: 0, given: 0, used: 0};
   rows.forEach(r => count[state(r)]++);
@@ -643,6 +650,8 @@ async function showAdmin() {
       <select id="design" aria-label="Tümü için tasarım">${designOptions(defaultDesign, true)}</select>
       <button class="btn" id="dice" title="Hepsine rastgele tasarım">🎲 Karıştır</button>
       <button class="btn" id="print">Listedekileri yazdır</button>
+      <select id="a4layout" aria-label="A4 baskı düzeni">${a4LayoutOptions()}</select>
+      <button class="btn" id="a4all">🖨 Listedekileri A4'e yazdır (her etikete bir sayfa)</button>
       <button class="btn" id="pdf">Listedekileri PDF kaydet</button>
       <button class="btn" id="add">10 etiket daha üret</button>
     </div>
@@ -662,6 +671,7 @@ async function showAdmin() {
           <div class="state noprint">
             <div>${label[state(r)]}${r.phone ? ": " + esc(prettyPhone(r.phone)) : ""}</div>
             <select data-act="design" aria-label="${esc(r.code)} tasarımı">${designOptions(designOf[r.code], false)}</select>
+            <button class="mini" data-act="a4" title="Bu etiket için bir A4 sayfa: seçili düzen + PIN kartı">🖨 A4 sayfa</button>
             ${state(r) === "ready" ? `<button class="mini" data-act="give">Yazdır ve ver</button>
               <button class="mini alt" data-act="givepdf">PDF kaydet ve ver</button>` :
               `<button class="mini alt" data-act="pdf">PDF kaydet</button>`}
@@ -692,6 +702,8 @@ async function showAdmin() {
   };
   $("dice").onclick = () => { codes.forEach(c => redesign(c, pickRandom())); toast("Tasarımlar karıştırıldı!", 1500); };
   $("print").onclick = () => deliver(codes, "print", !!given);
+  $("a4layout").onchange = () => { a4Layout = $("a4layout").value; savePref("a4layout", a4Layout); };
+  $("a4all").onclick = () => deliver(codes, "a4", !!given);
   $("pdf").onclick = async ev => { ev.target.disabled = true; await deliver(codes, "pdf", !!given); ev.target.disabled = false; };
   const grid = document.querySelector(".grid");
   grid.onchange = ev => {
@@ -703,6 +715,7 @@ async function showAdmin() {
     const code = btn.closest(".tag").dataset.code, act = btn.dataset.act;
     btn.disabled = true;
     try {
+      if (act === "a4") return await deliver([code], "a4", !!given);
       if (act === "give") return await deliver([code], "print", !!given);
       if (act === "givepdf" || act === "pdf") return await deliver([code], "pdf", !!given);
       await setGiven([code], act === "mark");
@@ -978,12 +991,23 @@ function a4LayoutOptions() {
     ...Object.entries(SIZES).filter(([k]) => perA4(dims(k)) > 0).map(([k, n]) => [k, `Düzen: A4'ü doldur · ${n} × ${perA4(dims(k))}`])]
     .map(([k, n]) => `<option value="${k}"${k === a4Layout ? " selected" : ""}>${esc(n)}</option>`).join("");
 }
-function a4PageHtml(o, layout) {
-  const link = selfLink(o.tag_code);
-  if (layout === "set" || !SIZES[layout]) return `<div class="a4page">${orderSheetHtml(o.tag_code, o.design, link, o.phrase)}</div>`;
-  const {w, h, k} = dims(layout), one = `<div class="grid${k < .75 ? " small-size" : ""}" style="--w:${w}mm;--h:${h}mm;--k:${k}">${stickerHtml(o.tag_code, o.design, link, o.phrase)}</div>`;
-  return `<div class="a4page a4fill">${one.repeat(perA4({w, h}))}</div>`;
+// Siparişler: a4PageHtml(order, düzen). Etiketler: a4SheetHtml({code, design, link, pin}, düzen); pin verilirse
+// sayfadaki son sticker'ın yerine aynı ölçüde PIN kartı konur (etiketi verdiğiniz kişi PIN'i de alsın).
+const a4PageHtml = (o, layout) => a4SheetHtml({code: o.tag_code, design: o.design, phrase: o.phrase, link: selfLink(o.tag_code)}, layout);
+function a4SheetHtml({code, design, phrase, link, pin}, layout) {
+  const cell = (size, card) => {
+    const {w, h, k} = dims(size);
+    return `<div class="grid${k < .75 ? " small-size" : ""}" style="--w:${w}mm;--h:${h}mm;--k:${k}">${card ? pinCardHtml(code, pin) : stickerHtml(code, design, link, phrase)}</div>`;
+  };
+  if (layout === "set" || !SIZES[layout]) {
+    const rows = ORDER_SHEET.map(r => r.slice());
+    return `<div class="a4page"><div class="sheet">${rows.map((row, i) => `<div class="sheet-row">${row.map((size, j) =>
+      cell(size, pin && i === rows.length - 1 && j === row.length - 1)).join("")}</div>`).join("")}</div></div>`;
+  }
+  const n = perA4(dims(layout));
+  return `<div class="a4page a4fill">${Array.from({length: n}, (_, i) => cell(layout, pin && n > 1 && i === n - 1)).join("")}</div>`;
 }
+const pinCardHtml = (code, pin) => `<div class="pin a4pin"><b>${esc(code)}</b> etiketinin PIN'i<span>${esc(pin)}</span><small>Numarayı kaydetmek ve değiştirmek için gerekir. Bu kartı araçta bırakmayın.</small></div>`;
 async function printA4(pages) {
   const box = document.getElementById("a4print");
   box.innerHTML = pages.join("");
