@@ -36,6 +36,11 @@ jobs:
       - name: APK dosyasını hazırla
         run: cp android/app/build/outputs/apk/github/release/app-github-release.apk arac-qr.apk
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: arac-qr-apk
+          path: arac-qr.apk
+
       # Google Play sürümü: kendini güncellemez. Gizli anahtar (Secrets) varsa imzalı, yoksa imzasız derlenir;
       # imzasız paket sonradan yükleme anahtarıyla jarsigner ile imzalanabilir (android/GOOGLE_PLAY.md).
       - name: Google Play paketi (AAB) derle
