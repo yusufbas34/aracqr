@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Araç QR Büyüme Planı</title>
+<link rel="icon" type="image/svg+xml" href="../app/logo.svg">
+<style>
+@font-face{font-family:"Barlow";font-weight:400;src:url(../app/fonts/barlow-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow";font-weight:400;src:url(../app/fonts/barlow-latin-ext-400-normal.woff2) format("woff2");unicode-range:U+0100-02AF,U+1E00-1EFF}
+@font-face{font-family:"Barlow";font-weight:600;src:url(../app/fonts/barlow-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow";font-weight:600;src:url(../app/fonts/barlow-latin-ext-600-normal.woff2) format("woff2");unicode-range:U+0100-02AF,U+1E00-1EFF}
+@font-face{font-family:"Barlow";font-weight:700;src:url(../app/fonts/barlow-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow";font-weight:700;src:url(../app/fonts/barlow-latin-ext-700-normal.woff2) format("woff2");unicode-range:U+0100-02AF,U+1E00-1EFF}
+@font-face{font-family:"Barlow Condensed";font-weight:700;src:url(../app/fonts/barlow-condensed-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-weight:700;src:url(../app/fonts/barlow-condensed-latin-ext-700-normal.woff2) format("woff2");unicode-range:U+0100-02AF,U+1E00-1EFF}
+</style>
+<style>
+/* Düzen: tek sütun yapılacaklar listesi; üstte genel ilerleme, her dönem kendi ilerleme çubuğuyla. Plaka/park dünyasından: lacivert bant + sarı vurgu. */
+:root{
+  --bg:#eef1f6; --card:#ffffff; --fg:#121722; --muted:#566074; --line:#d6dbe5;
+  --band:#0a3a9e; --accent:#f5c518; --done:#0c7a43; --done-bg:#e7f5ee;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e131d; --card:#171e2b; --fg:#e8ecf3; --muted:#9aa4b8; --line:#2a3345;
+  --band:#6f9bff; --accent:#f5c518; --done:#4cc98a; --done-bg:#15301f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e131d; --card:#171e2b; --fg:#e8ecf3; --muted:#9aa4b8; --line:#2a3345;
+  --band:#6f9bff; --accent:#f5c518; --done:#4cc98a; --done-bg:#15301f; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:16px/1.45 var(--body)}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:24px 56px;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-direction:column;gap:10px}
+.plate{display:inline-flex;align-self:flex-start;border:2.5px solid var(--fg);border-radius:8px;overflow:hidden;font-family:var(--display);font-size:15px;letter-spacing:.08em}
+.plate b{background:var(--band);color:#fff;padding:3px 8px}
+.plate span{padding:3px 10px;background:var(--card)}
+h1{font-family:var(--display);font-size:clamp(30px,6vw,44px);line-height:1.02;margin:0;text-wrap:balance}
+.lead{color:var(--muted);margin:0;max-width:62ch}
+.total{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.total .row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.total .big{font-family:var(--display);font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+.bar{height:10px;border-radius:999px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--done);border-radius:999px;transition:width .3s}
+.status{font-size:14px;color:var(--muted)}
+.status.err{color:#c2410c}
+section{display:flex;flex-direction:column;gap:8px}
+.phase{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.phase h2{font-family:var(--display);font-size:22px;margin:0;letter-spacing:.01em}
+.phase .tag{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:var(--band);color:#fff;border-radius:6px;padding:3px 8px}
+.phase .cnt{margin-left:auto;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+.phase .mini{flex-basis:100%;height:5px}
+ul{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+li+li{border-top:1px solid var(--line)}
+label.item{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start;padding:12px 14px;cursor:pointer}
+label.item:hover{background:color-mix(in srgb,var(--band) 5%,transparent)}
+label.item input{appearance:none;width:24px;height:24px;margin:1px 0 0;border:2px solid var(--muted);border-radius:6px;display:grid;place-items:center;cursor:pointer;background:var(--card)}
+label.item input:checked{background:var(--done);border-color:var(--done)}
+label.item input:checked::after{content:"";width:6px;height:12px;border:solid #fff;border-width:0 3px 3px 0;transform:rotate(45deg) translate(-1px,-1px)}
+label.item input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.txt{min-width:0}
+.txt b{font-weight:700}
+.txt small{display:block;color:var(--muted);font-size:14px;margin-top:2px}
+li.is-done{background:var(--done-bg)}
+li.is-done .txt>span{text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--done) 60%,transparent);color:var(--muted)}
+.when{font-size:12px;color:var(--done);font-weight:600;margin-top:3px}
+.foot{font-size:13px;color:var(--muted)}
+.nav{display:flex;flex-wrap:wrap;gap:8px}
+.nav a{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-weight:700;font-size:15px;color:var(--band);background:var(--card);border:1.5px solid var(--line);border-radius:999px;padding:7px 14px}
+.nav a:hover,.nav a:focus-visible{border-color:var(--band)}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.gal a{display:block;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;text-decoration:none;color:var(--muted);font-size:12px}
+.gal img{display:block;width:100%;height:auto;aspect-ratio:9/16;object-fit:cover;background:var(--line)}
+.gal img.sq{aspect-ratio:4/5}
+.gal span{display:block;padding:5px 7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+h2.sec{font-family:var(--display);font-size:24px;margin:10px 0 0}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="plate"><b>TR</b><span>ARAÇ QR</span></div>
+    <h1>Büyüme planı takibi</h1>
+    <p class="lead">90 günlük planın yapılacakları. Biteni işaretleyin; işaretler bu tarayıcıda saklanır.</p>
+    <nav class="nav" aria-label="Plan belgeleri">
+      <a href="buyume-plani.html">📄 Planın tamamı</a>
+      <a href="Arac-QR-Buyume-Plani.pdf">⬇️ PDF</a>
+      <a href="#instagram">📸 Instagram görselleri</a>
+      <a href="https://github.com/yusufbas34/aracqr/blob/main/android/GOOGLE_PLAY.md">▶️ Google Play rehberi</a>
+    </nav>
+  </header>
+
+  <div class="total">
+    <div class="row"><span class="big" id="pct">0%</span><span class="status" id="status">Yükleniyor…</span></div>
+    <div class="bar"><i id="totalbar" style="width:0%"></i></div>
+    <span class="status" id="count"></span>
+  </div>
+
+  <div id="list"></div>
+
+  <h2 class="sec" id="instagram">Instagram görselleri</h2>
+  <p class="foot" style="margin:0">Görsele dokunun, açılınca basılı tutup kaydedin.</p>
+  <div class="gal">
+      <a href="instagram/reels-1-onunu-kapatan.png"><img src="instagram/reels-1-onunu-kapatan.png" alt="reels-1-onunu-kapatan" loading="lazy"><span>reels-1-onunu-kapatan</span></a>
+      <a href="instagram/reels-2-numarani-yazma.png"><img src="instagram/reels-2-numarani-yazma.png" alt="reels-2-numarani-yazma" loading="lazy"><span>reels-2-numarani-yazma</span></a>
+      <a href="instagram/reels-3-gece-3te.png"><img src="instagram/reels-3-gece-3te.png" alt="reels-3-gece-3te" loading="lazy"><span>reels-3-gece-3te</span></a>
+      <a href="instagram/reels-4-ucretsiz-yap.png"><img src="instagram/reels-4-ucretsiz-yap.png" alt="reels-4-ucretsiz-yap" loading="lazy"><span>reels-4-ucretsiz-yap</span></a>
+      <a href="instagram/reels-5-derbi-gunu.png"><img src="instagram/reels-5-derbi-gunu.png" alt="reels-5-derbi-gunu" loading="lazy"><span>reels-5-derbi-gunu</span></a>
+      <a href="instagram/reels-6-not-birakma.png"><img src="instagram/reels-6-not-birakma.png" alt="reels-6-not-birakma" loading="lazy"><span>reels-6-not-birakma</span></a>
+      <a href="instagram/profil-fotografi.png"><img src="instagram/profil-fotografi.png" alt="profil-fotografi" loading="lazy" class="sq"><span>profil-fotografi</span></a>
+      <a href="instagram/one-cikan-nasil.png"><img src="instagram/one-cikan-nasil.png" alt="one-cikan-nasil" loading="lazy"><span>one-cikan-nasil</span></a>
+      <a href="instagram/one-cikan-tasarimlar.png"><img src="instagram/one-cikan-tasarimlar.png" alt="one-cikan-tasarimlar" loading="lazy"><span>one-cikan-tasarimlar</span></a>
+      <a href="instagram/one-cikan-siparis.png"><img src="instagram/one-cikan-siparis.png" alt="one-cikan-siparis" loading="lazy"><span>one-cikan-siparis</span></a>
+      <a href="instagram/one-cikan-sss.png"><img src="instagram/one-cikan-sss.png" alt="one-cikan-sss" loading="lazy"><span>one-cikan-sss</span></a>
+      <a href="instagram/one-cikan-yorumlar.png"><img src="instagram/one-cikan-yorumlar.png" alt="one-cikan-yorumlar" loading="lazy"><span>one-cikan-yorumlar</span></a>
+      <a href="instagram/gonderi-1-kapak.png"><img src="instagram/gonderi-1-kapak.png" alt="gonderi-1-kapak" loading="lazy" class="sq"><span>gonderi-1-kapak</span></a>
+      <a href="instagram/gonderi-2-adim1.png"><img src="instagram/gonderi-2-adim1.png" alt="gonderi-2-adim1" loading="lazy" class="sq"><span>gonderi-2-adim1</span></a>
+      <a href="instagram/gonderi-3-adim2.png"><img src="instagram/gonderi-3-adim2.png" alt="gonderi-3-adim2" loading="lazy" class="sq"><span>gonderi-3-adim2</span></a>
+      <a href="instagram/gonderi-4-adim3.png"><img src="instagram/gonderi-4-adim3.png" alt="gonderi-4-adim3" loading="lazy" class="sq"><span>gonderi-4-adim3</span></a>
+      <a href="instagram/gonderi-5-indir.png"><img src="instagram/gonderi-5-indir.png" alt="gonderi-5-indir" loading="lazy" class="sq"><span>gonderi-5-indir</span></a>
+      <a href="instagram/hikaye-baglanti.png"><img src="instagram/hikaye-baglanti.png" alt="hikaye-baglanti" loading="lazy"><span>hikaye-baglanti</span></a>
+  </div>
+
+  <p class="foot">Kaynak: Araç QR Hızlı Büyüme Planı. Senaryolar, rakip tablosu ve riskler “Planın tamamı” sayfasında.</p>
+</div>
+
+<script>
+const PLAN = [
+  {id: "hazirlik", tag: "Hazır", title: "Hazırlık", items: [
+    ["h1", "Google Play geliştirici hesabını aç", "25 $ ödendi, Play Console açıldı"],
+    ["h2", "Gizlilik politikası ve veri silme sayfası", "yusufbas34.github.io/aracqr/gizlilik.html"],
+    ["h3", "Play mağaza görselleri ve metinleri", "android/store ve GOOGLE_PLAY.md"],
+    ["h4", "Instagram görsel kiti", "6 reels kapağı, profil, öne çıkanlar, gönderiler"],
+    ["h5", "Büyüme planı PDF'i", ""],
+  ]},
+  {id: "hafta0", tag: "Bu hafta", title: "Başlangıç", items: [
+    ["w0a", "Play Console kimlik ve cihaz doğrulamasını bitir", "Telefona Play Console uygulamasını kur, giriş yap"],
+    ["w0b", "Uygulamayı oluştur ve formları doldur", "Gizlilik, reklam yok, içerik derecelendirmesi, hedef kitle 18+, veri güvenliği"],
+    ["w0c", "Yükleme anahtarını oluştur, GitHub Secrets'a ekle", "Sonra Actions'tan ilk AAB'yi al"],
+    ["w0d", "Google Grubu aç, 15–20 testçi ekle", "Aile, arkadaş, mahalle esnafı"],
+    ["w0e", "Kapalı testi yayınla, katılım bağlantısını gönder", "14 gün sayacı buradan başlar"],
+    ["w0f", "Instagram işletme hesabını aç", "Profil fotoğrafı, bio, öne çıkan kapakları"],
+    ["w0g", "Supabase'de bekleyen SQL güncellemelerini çalıştır", "Panelde uyarı varsa"],
+  ]},
+  {id: "hafta12", tag: "Hafta 1–2", title: "İlk dağıtım", items: [
+    ["w1a", "Panelden 100 etiket üret, PIN kartıyla A4'e bas", ""],
+    ["w1b", "Etiketleri elden dağıt", "Site yönetimi, oto yıkama, otopark görevlisi, iş yeri"],
+    ["w1c", "İlk 3 reels'i paylaş", "Önün mü kapandı · Numaranı yazma · Gece 3'te"],
+    ["w1d", "Testçilerden geri bildirim topla, küçük bir güncelleme yayınla", ""],
+  ]},
+  {id: "hafta34", tag: "Hafta 3–4", title: "Play'e çıkış", items: [
+    ["w3a", "14 gün dolunca üretim erişimi başvurusu yap", ""],
+    ["w3b", "Yayın günü testçilerden Play'de yorum ve puan iste", ""],
+    ["w3c", "Instagram bağlantısını Play sayfasına çevir", ""],
+    ["w3d", "3 işletmeyle ortaklık görüşmesi", "Oto yıkama, lastikçi/servis, otopark"],
+    ["w3e", "Haftada 3 reels'e devam et", "En çok izlenenin benzerini yap"],
+  ]},
+  {id: "ay2", tag: "Ay 2", title: "Ortaklıklar", items: [
+    ["m2a", "Ortak işletmelere tezgâh kartı ve örnek sticker'lar", ""],
+    ["m2b", "3–5 mikro hesapla iş birliği", "Ücretsiz set karşılığı paylaşım"],
+    ["m2c", "Derbi haftasında takım renkleri reels'i", "Kulüp adı ve logosu yok"],
+    ["m2d", "Müşterilerden yapıştırılmış sticker fotoğrafı topla", "İzinle hikâyede paylaş"],
+  ]},
+  {id: "ay3", tag: "Ay 3", title: "Büyütme", items: [
+    ["m3a", "En iyi reels'i küçük bütçeyle öne çıkar", "Önce 3–5 gün test"],
+    ["m3b", "Aile seti / 2 araç fiyatını dene", "Site yönetimlerine toplu teklif"],
+    ["m3c", "Play mağaza görsellerini yenile, yorumlara cevap ver", ""],
+    ["m3d", "90 gün değerlendirmesi", "Hedeflerle karşılaştır, en iyi 2 kanala yüklen"],
+  ]},
+];
+const ALL = PLAN.flatMap(p => p.items.map(i => i[0]));
+const LS = "aracqr-plan-takip";
+let done = {};          // id -> ISO tarih (işaretlendiği an) ya da yok
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const day = iso => { try { return new Date(iso).toLocaleDateString("tr-TR", {day: "numeric", month: "long"}); } catch (e) { return ""; } };
+
+function render() {
+  const n = ALL.filter(id => done[id]).length, pct = Math.round(100 * n / ALL.length);
+  document.getElementById("pct").textContent = pct + "%";
+  document.getElementById("totalbar").style.width = pct + "%";
+  document.getElementById("count").textContent = `${n} / ${ALL.length} adım tamamlandı`;
+  document.getElementById("list").innerHTML = PLAN.map(p => {
+    const k = p.items.filter(i => done[i[0]]).length;
+    return `<section>
+      <div class="phase"><span class="tag">${esc(p.tag)}</span><h2>${esc(p.title)}</h2><span class="cnt">${k}/${p.items.length}</span>
+        <div class="bar mini"><i style="width:${Math.round(100 * k / p.items.length)}%"></i></div></div>
+      <ul>${p.items.map(([id, t, d]) => `<li class="${done[id] ? "is-done" : ""}"><label class="item">
+        <input type="checkbox" id="c-${id}" data-id="${id}"${done[id] ? " checked" : ""}>
+        <span class="txt"><span><b>${esc(t)}</b></span>${d ? `<small>${esc(d)}</small>` : ""}${done[id] ? `<span class="when">✓ ${esc(day(done[id]))}</span>` : ""}</span>
+      </label></li>`).join("")}</ul></section>`;
+  }).join("");
+}
+
+function setStatus(t, err) { const el = document.getElementById("status"); el.textContent = t; el.className = "status" + (err ? " err" : ""); }
+
+document.getElementById("list").addEventListener("change", ev => {
+  const id = ev.target.dataset.id; if (!id) return;
+  if (ev.target.checked) done[id] = new Date().toISOString(); else delete done[id];
+  render();
+  try { localStorage.setItem(LS, JSON.stringify(done)); } catch (e) {}
+  setStatus("Kaydedildi");
+});
+
+const PREP = {h1: "2026-10-11", h2: "2026-10-10", h3: "2026-10-10", h4: "2026-10-12", h5: "2026-10-12"};  // tamamlanmış hazırlık
+try { const v = localStorage.getItem(LS); done = v ? JSON.parse(v) || {} : {...PREP}; } catch (e) { done = {...PREP}; }
+render();
+
+setStatus("Bu tarayıcıda saklanıyor");
+</script>
+</body>
+</html>
