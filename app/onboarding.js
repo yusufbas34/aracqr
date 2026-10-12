@@ -46,8 +46,8 @@ const onbPrice = () => (typeof store !== "undefined" && store.get("shop", null)?
 const ONB_SLIDES = [
   {
     bg: "linear-gradient(160deg,#1b2a52,#0f1115)",
-    title: "Önünüz mü kapandı?",
-    text: "Aracınızın önü kapanınca kimi arayacağınızı bilemezsiniz. Ya da siz birinin önünü kapattığınızda size ulaşamazlar. Araç QR bunu çözer.",
+    title: "Hatalı mı park ettiniz?",
+    text: "Acele ettiniz, birinin yolunu kapattınız. Size ulaşamazlarsa ceza, çekici ya da kızgın bir not gelir. Araç QR ile sizi tek dokunuşla ararlar, gelip aracınızı çekersiniz.",
     art: () => `<svg viewBox="0 0 360 300" class="onb-art" role="img" aria-label="Park etmiş bir aracın arkasını başka bir araba kapatmış">
       <rect width="360" height="300" rx="22" fill="#3a3f4b"/>
       <g stroke="#ffffff" stroke-opacity=".55" stroke-width="3">

@@ -8,7 +8,7 @@
 .sticker{position:relative;padding-bottom:calc(var(--k)*5.2mm)}
 .sticker .brand{position:absolute;left:0;right:0;bottom:calc(var(--k)*1.3mm);text-align:center;font-family:"Barlow",system-ui,sans-serif;
   font-size:calc(var(--k)*6pt);line-height:1;color:#4b5360;white-space:nowrap;letter-spacing:.01em}
-.sticker .brand b{color:#0a3a9e}
+.sticker .brand b{display:inline;font-size:inherit;font-weight:700;color:#0a3a9e}  /* uygulamanın .card b gibi stilleri büyütmesin */
 .tek .sticker .brand{bottom:calc(var(--k)*1mm)}
 .sticker .in{position:relative;flex:1;display:flex;flex-direction:column;border:calc(var(--k)*.8mm) solid var(--ink);border-radius:calc(var(--k)*2mm);
   overflow:hidden;background:#fff;color:var(--ink)}

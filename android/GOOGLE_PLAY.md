@@ -155,16 +155,16 @@ Konum, kişiler, fotoğraf, finans, sağlık, mesaj, dosya, takvim, web geçmiş
 
 ## 7. Mağaza metinleri
 
-**Uygulama adı** (en fazla 30): `Araç QR: Önünü Kapatan Arasın`
+**Uygulama adı** (en fazla 30): `Araç QR: Hatalı Park, Beni Ara`
 
-**Kısa açıklama** (en fazla 80): `Camınıza QR sticker. Okutan sizi arar; numaranız camda yazmaz. Ücretsiz.`
+**Kısa açıklama** (en fazla 80): `Hatalı park ettiğinde seni arasınlar. Numaran camda yazmaz. Ücretsiz QR sticker.`
 
 **Tam açıklama:**
 
 ```
-Arabanız birinin önünü mü kapattı? Camdaki numaranızı herkes görsün istemiyor musunuz?
+Acele edip hatalı mı park ettiniz? Birinin yolunu kapattıysanız size ulaşamazlarsa ceza, çekici ya da kızgın bir not gelir. Camınıza numaranızı yazmak da istemiyorsunuz.
 
-Araç QR ile aracınıza size özel bir QR sticker yapıştırırsınız. Önü kapanan kişi QR'ı telefon kamerasıyla okutur ve tek dokunuşla sizi arar ya da hazır bir mesaj gönderir ("Önümü kapattınız", "Farlarınız açık kaldı" gibi). Numaranız camda ya da QR'ın üstünde yazmaz.
+Araç QR ile aracınıza size özel bir QR sticker yapıştırırsınız. Yolunu kapattığınız kişi QR'ı telefon kamerasıyla okutur ve tek dokunuşla sizi arar ya da hazır bir mesaj gönderir ("Önümü kapattınız", "Farlarınız açık kaldı" gibi). Numaranız camda ya da QR'ın üstünde yazmaz.
 
 ★ Kendi tasarımınızı yapın
 20'den fazla hazır tasarım ve komik sözler arasından seçin. Tasarımları yana kaydırarak gezin, sözünüzü değiştirin.

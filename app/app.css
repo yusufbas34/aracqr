@@ -51,6 +51,7 @@ input:focus,select:focus{outline:none;border-color:var(--band)}
 .card{display:flex;gap:14px;align-items:center;background:#fff;border-radius:12px;padding:12px;text-decoration:none;color:var(--ink)}
 .card .grid{--w:30mm;--h:45mm;--k:.5;pointer-events:none;flex:none}
 .card .sticker{border-color:transparent;padding:0}
+.card .sticker .brand{display:none}  /* küçük önizlemede okunmaz; basılı sticker'da durur */
 .card b{display:block;font-size:18px}
 .card span{color:var(--muted);font-size:15px}
 .empty{text-align:center;padding:10px 0 4px}

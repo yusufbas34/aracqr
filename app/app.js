@@ -130,7 +130,7 @@ function showHome() {
       <div class="empty">
         ${stickerAt("ÖRNEK", "klasik", SITE, "50x75")}
         <h1>Kendi araç QR'ınızı oluşturun</h1>
-        <p>Aracınızın önünü kapatan kişi QR'ı okutup sizi tek dokunuşla arasın. Numaranız camda yazmaz.</p>
+        <p>Hatalı park ettiğinizde, yolunu kapattığınız kişi QR'ı okutup sizi tek dokunuşla arasın; ceza, çekici ya da kızgın not yerine bir telefon. Numaranız camda yazmaz.</p>
       </div>
       <ol class="msg info" style="padding-left:30px;margin:0">
         <li>Bir tasarım seçin</li>
@@ -275,7 +275,7 @@ async function wipeAll(ev) {
 const PLAY_URL = "https://play.google.com/store/apps/details?id=io.github.yusufbas34.aracqr";
 function bindShareApp() {
   document.querySelectorAll(".share-app").forEach(b => b.onclick = async () => {
-    const text = `Arabana QR sticker yap: önünü kapatan seni tek dokunuşla arasın ya da mesaj atsın, numaran camda yazmaz. Ücretsiz 👉 ${PLAY ? PLAY_URL : SITE}`;
+    const text = `Arabana QR sticker yap: hatalı park ettiğinde seni tek dokunuşla arasınlar ya da mesaj atsınlar, numaran camda yazmaz. Ücretsiz 👉 ${PLAY ? PLAY_URL : SITE}`;
     if (!bridge && navigator.share) { try { await navigator.share({text}); return; } catch (e) { if (e.name === "AbortError") return; } }
     location.href = `https://wa.me/?text=${encodeURIComponent(text)}`;
   });

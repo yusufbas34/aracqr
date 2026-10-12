@@ -59,10 +59,10 @@ const add = (name, w, h, cls, html) => AB.push(`<div class="ab ${cls}" data-name
 
 // ---------------- Reels kapakları 1080x1920 (yazılar üstte 250 px'ten sonra; alt 400 px'te yalnızca marka satırı)
 const fan = (a, b, c, sz = "55x85", z = 2.1) => `<div style="display:flex;align-items:center">${st(a, sz, null, "SAB3C9DE", "transform:rotate(-10deg) translate(14mm,4mm)", z)}${st(b, "60x90", null, "SAB3C9DE", "position:relative;z-index:2", z)}${st(c, sz, null, "SAB3C9DE", "transform:rotate(10deg) translate(-14mm,4mm)", z)}</div>`;
-add("reels-1-onunu-kapatan", 1080, 1920, "blue", frame(`
+add("reels-1-hatali-park", 1080, 1920, "blue", frame(`
     <span class="pill" style="font-size:40px;padding:12px 30px">PARK DERDİ</span>
-    <h1 class="h" style="font-size:150px;margin-top:30px">Önün mü <span class="mark">kapandı?</span></h1>
-    <p class="p" style="font-size:52px;margin-top:22px">Camdaki QR'ı okut, sahibi tek dokunuşla gelsin.</p>`,
+    <h1 class="h" style="font-size:150px;margin-top:30px">Hatalı mı <span class="mark">park ettin?</span></h1>
+    <p class="p" style="font-size:52px;margin-top:22px">Yolunu kapattığın kişi seni tek dokunuşla arasın.</p>`,
   st("klasik", "74x105", null, "SAB3C9DE", "transform:rotate(-4deg)", 2.5)) + brand(120));
 
 add("reels-2-numarani-yazma", 1080, 1920, "yellow", frame(`
@@ -117,7 +117,7 @@ add("gonderi-5-indir", 1080, 1350, "yellow", `
     ${logo(260)}
     <h1 class="h" style="font-size:120px">Ücretsiz dene</h1>
     <p class="p" style="font-size:50px">Play Store'da <b>“Araç QR”</b> ara<br>ya da profildeki bağlantıya dokun.</p>
-    <span class="pill" style="font-size:44px;padding:16px 40px">Önünü kapatan seni arasın</span>
+    <span class="pill" style="font-size:44px;padding:16px 40px">Hatalı parkta seni arasınlar</span>
   </div>`);
 
 // ---------------- Hikâye şablonu 1080x1920
