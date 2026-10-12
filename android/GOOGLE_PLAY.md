@@ -213,3 +213,57 @@ Hesap açmanız gerekmez. Reklam yok. Verilerinizi istediğiniz an uygulamadan s
 - `icon-512.png`: uygulama simgesi
 - `feature-1024x500.png`: öne çıkan görsel
 - `screen-*.png`: telefon ekran görüntüleri (en az 2, en fazla 8)
+
+## 8. Hazır metinler (kopyala-yapıştır)
+
+### Google Grubu
+groups.google.com › **Grup oluştur**:
+
+| Alan | Değer |
+|---|---|
+| Grup adı | `Araç QR Test` |
+| Grup e-postası | `aracqr-test` (sonuna @googlegroups.com eklenir) |
+| Kimler arayabilir | Grup üyeleri |
+| Kimler katılabilir | **Herkes katılabilir** (testçiler bağlantıyla kendileri katılsın) |
+
+Grubun adresini (`https://groups.google.com/g/aracqr-test`) ve Play'in verdiği katılım bağlantısını bana gönderin;
+testçi sayfasına (`https://yusufbas34.github.io/aracqr/test.html`) eklerim. Testçilere yalnızca bu sayfayı göndermeniz yeterli olur.
+
+### WhatsApp davet mesajı
+
+```
+Selam! 🙌 Araç QR diye bir uygulama yaptım: arabanın camına QR sticker yapıştırıyorsun, hatalı park ettiğinde yolunu kapattığın kişi seni tek dokunuşla arıyor, numaran camda yazmıyor.
+
+Google Play'e çıkması için 14 gün test eden 12 kişi lazım. 5 dakikanı alır, sonra telefonda dursun yeter:
+👉 https://yusufbas34.github.io/aracqr/test.html
+
+Çok teşekkürler! 💙
+```
+
+### Sürüm notu (kapalı test ve ilk yayın)
+
+- **Türkçe:** `İlk sürüm: QR sticker oluşturma, 29 tasarım, sessiz saatler, hazır mesajlar, yedekleme, basılı sticker siparişi. 4 dil.`
+- **English:** `First release: create QR stickers, 29 designs, quiet hours, ready messages, backup, printed sticker orders. 4 languages.`
+
+### Üretim erişimi başvurusu (14 gün sonra) cevap taslakları
+Play Console sorularına kendi deneyiminizle tamamlayın; testte gerçekten olanları yazın.
+
+1. **Testçileri nasıl buldunuz?** `Aile, arkadaşlar ve çevremdeki araç sahipleri; WhatsApp üzerinden Google Grubu ile davet ettim.`
+2. **Testçi bulmak ne kadar kolaydı?** `Kolaydı; uygulama araç sahiplerine yönelik ve herkesin günlük karşılaştığı bir sorunu çözüyor.`
+3. **Testçiler uygulamayı nasıl kullandı?** `QR oluşturdular, başka telefonla okutup aramayı ve hazır mesajları denediler, sessiz saatleri, tasarım/söz değiştirmeyi, PDF paylaşmayı, yedeklemeyi ve bildirimleri test ettiler.`
+4. **Hangi geri bildirimleri aldınız, nasıl topladınız?** `WhatsApp üzerinden topladım. (Buraya gerçek örnekler: ör. "şu metin anlaşılmıyordu", "şu ölçü eklensin".)`
+5. **Geri bildirime göre ne değiştirdiniz?** `(Buraya yapılan düzeltmeler; test sırasında yayınlanan güncellemeleri yazın.)`
+6. **Uygulama kime yönelik, ne değer sağlıyor?** `Türkiye'deki araç sahipleri. Hatalı park edildiğinde araç sahibine numarası görünmeden ulaşılmasını sağlar; ceza, çekici ve tartışmanın önüne geçer.`
+7. **İlk yıl beklenen indirme:** `1.000 – 10.000`
+8. **Yayına hazır olduğuna nasıl karar verdiniz?** `14 günlük testte çökme ya da kritik hata kalmadı, testçilerin bildirdiği sorunlar düzeltildi.`
+
+Çökme olup olmadığını Play Console › **Android vitals** bölümünden kontrol edin.
+
+### İmzasız AAB'yi imzalama (GitHub'a anahtar eklemediyseniz)
+GitHub Actions anahtar yoksa `arac-qr-play-imzasiz.aab` üretir. Java yüklü bir bilgisayarda:
+
+```
+jarsigner -keystore aracqr-play.jks -sigalg SHA256withRSA -digestalg SHA-256 -signedjar arac-qr-play.aab arac-qr-play-imzasiz.aab aracqr
+```
+
+Kolay yol: 2. bölümdeki 4 gizli değeri GitHub'a bir kez ekleyin; sonra her derleme imzalı `arac-qr-play.aab` verir.

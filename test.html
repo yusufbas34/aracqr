@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Araç QR Test Ekibi</title>
+<link rel="icon" type="image/svg+xml" href="app/logo.svg">
+<meta name="theme-color" content="#0a3a9e">
+<style>
+@font-face{font-family:"Barlow";font-weight:400;src:url(app/fonts/barlow-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow";font-weight:400;src:url(app/fonts/barlow-latin-ext-400-normal.woff2) format("woff2");unicode-range:U+0100-02AF,U+1E00-1EFF}
+@font-face{font-family:"Barlow";font-weight:700;src:url(app/fonts/barlow-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow";font-weight:700;src:url(app/fonts/barlow-latin-ext-700-normal.woff2) format("woff2");unicode-range:U+0100-02AF,U+1E00-1EFF}
+@font-face{font-family:"Barlow Condensed";font-weight:700;src:url(app/fonts/barlow-condensed-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-weight:700;src:url(app/fonts/barlow-condensed-latin-ext-700-normal.woff2) format("woff2");unicode-range:U+0100-02AF,U+1E00-1EFF}
+:root{--bg:#eef1f6;--card:#fff;--fg:#121722;--muted:#566074;--line:#d6dbe5;--band:#0a3a9e;--accent:#f5c518;--ok:#0c7a43}
+@media (prefers-color-scheme:dark){:root{--bg:#0e131d;--card:#171e2b;--fg:#e8ecf3;--muted:#9aa4b8;--line:#2a3345;--band:#6f9bff;--ok:#4cc98a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.5 "Barlow",system-ui,sans-serif}
+.wrap{max-width:620px;margin:0 auto;padding:24px 16px 56px;display:flex;flex-direction:column;gap:16px}
+h1{font-family:"Barlow Condensed",sans-serif;font-size:clamp(32px,8vw,44px);line-height:1.02;margin:0}
+h2{font-family:"Barlow Condensed",sans-serif;font-size:24px;margin:8px 0 0}
+p{margin:0;color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+ol.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;counter-reset:s}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:start;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+ol.steps li::before{content:counter(s);display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--band);color:#fff;font:700 20px "Barlow Condensed",sans-serif}
+ol.steps b{display:block;font-size:18px}
+ol.steps span{color:var(--muted);font-size:16px}
+.btn{display:block;text-align:center;text-decoration:none;font-weight:700;font-size:18px;color:#fff;background:var(--band);border-radius:12px;padding:14px;margin-top:10px}
+.btn.wait{background:var(--line);color:var(--muted);pointer-events:none}
+.warn{background:color-mix(in srgb,var(--accent) 22%,var(--card));border-color:color-mix(in srgb,var(--accent) 60%,transparent)}
+ul.try{margin:0;padding-left:20px;color:var(--muted)}
+ul.try li{margin:4px 0}
+.plate{display:inline-flex;align-self:flex-start;border:2.5px solid var(--fg);border-radius:8px;overflow:hidden;font:700 15px "Barlow Condensed",sans-serif;letter-spacing:.08em}
+.plate b{background:var(--band);color:#fff;padding:3px 8px}.plate span{padding:3px 10px;background:var(--card)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="plate"><b>TR</b><span>ARAÇ QR</span></div>
+  <h1>Araç QR'ı test eder misin? 🙏</h1>
+  <p>Uygulamanın Google Play'e çıkması için Google, 12 kişinin 14 gün boyunca test etmesini istiyor. 5 dakikanı alır, sonra sadece telefonda dursun yeter.</p>
+
+  <ol class="steps">
+    <li><div><b>Gmail hesabınla gruba katıl</b><span>Telefonundaki Play Store'da hangi Gmail açıksa onunla katıl.</span>
+      <a class="btn" id="group" href="#">Gruba katıl</a></div></li>
+    <li><div><b>Test bağlantısına dokun</b><span>Açılan sayfada <b style="display:inline;font-size:inherit">“Test kullanıcısı ol”</b>a bas.</span>
+      <a class="btn" id="optin" href="#">Test bağlantısı</a></div></li>
+    <li><div><b>Play Store'dan indir</b><span>Aynı sayfadaki “Google Play'den indir” bağlantısıyla kur. Biraz bekleyince Play'de görünür.</span></div></li>
+    <li><div><b>14 gün silme</b><span>Ara sıra açman yeterli. Sayaç ancak 12 kişi 14 gün kalınca doluyor.</span></div></li>
+  </ol>
+
+  <div class="card warn"><b>Daha önce elden APK kurduysan:</b> Play sürümü farklı imzalı. Önce eskisini kaldır; QR'ların varsa önce Profilim › Yedekle / taşı ile yedek kodunu al, Play sürümünde geri yükle.</div>
+
+  <h2>Neleri dener misin?</h2>
+  <div class="card">
+    <ul class="try">
+      <li>Bir tasarım seç, kendi numaranla QR oluştur</li>
+      <li>QR'ı başka bir telefonla okut: arama ve hazır mesajlar geliyor mu?</li>
+      <li>Sessiz saatleri aç: o saatte okutunca sadece mesaj seçeneği çıkıyor mu?</li>
+      <li>Sözü ve tasarımı değiştir, PDF paylaş ya da yazdır</li>
+      <li>Profilim'den “Deneme bildirimi gönder”: bildirim geldi mi?</li>
+      <li>Dili değiştir (English, العربية, Русский)</li>
+    </ul>
+  </div>
+  <p>Takıldığın, beğenmediğin ya da önerin olan her şeyi sana bu sayfayı gönderen kişiye WhatsApp'tan yaz. Çok teşekkürler! 💙</p>
+</div>
+<script>
+// Grup ve Play katılım bağlantıları belli olunca buraya yazılır
+const GROUP_URL = "";
+const OPTIN_URL = "";
+for (const [id, url] of [["group", GROUP_URL], ["optin", OPTIN_URL]]) {
+  const a = document.getElementById(id);
+  if (url) a.href = url; else { a.classList.add("wait"); a.textContent = "Bağlantı birkaç gün içinde burada olacak"; }
+}
+</script>
+</body>
+</html>
