@@ -36,30 +36,29 @@ jobs:
       - name: APK dosyasını hazırla
         run: cp android/app/build/outputs/apk/github/release/app-github-release.apk arac-qr.apk
 
-      # Google Play sürümü: kendini güncellemez, gizli anahtarla imzalanır. Play Console'a bu .aab yüklenir.
+      # Google Play sürümü: kendini güncellemez. Gizli anahtar (Secrets) varsa imzalı, yoksa imzasız derlenir;
+      # imzasız paket sonradan yükleme anahtarıyla jarsigner ile imzalanabilir (android/GOOGLE_PLAY.md).
       - name: Google Play paketi (AAB) derle
-        if: env.PLAY_KEYSTORE_BASE64 != ''
         working-directory: android
         env:
           PLAY_KEYSTORE_PASSWORD: ${{ secrets.PLAY_KEYSTORE_PASSWORD }}
           PLAY_KEY_ALIAS: ${{ secrets.PLAY_KEY_ALIAS }}
           PLAY_KEY_PASSWORD: ${{ secrets.PLAY_KEY_PASSWORD }}
         run: |
-          echo "$PLAY_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/play.jks"
-          PLAY_KEYSTORE_FILE="$RUNNER_TEMP/play.jks" ./gradlew --no-daemon bundlePlayRelease
-          cp app/build/outputs/bundle/playRelease/app-play-release.aab ../arac-qr-play.aab
-          rm -f "$RUNNER_TEMP/play.jks"
+          if [ -n "$PLAY_KEYSTORE_BASE64" ]; then
+            echo "$PLAY_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/play.jks"
+            PLAY_KEYSTORE_FILE="$RUNNER_TEMP/play.jks" ./gradlew --no-daemon bundlePlayRelease
+            rm -f "$RUNNER_TEMP/play.jks"
+            cp app/build/outputs/bundle/playRelease/app-play-release.aab ../arac-qr-play.aab
+          else
+            ./gradlew --no-daemon bundlePlayRelease
+            cp app/build/outputs/bundle/playRelease/app-play-release.aab ../arac-qr-play-imzasiz.aab
+          fi
 
       - uses: actions/upload-artifact@v4
-        if: env.PLAY_KEYSTORE_BASE64 != ''
         with:
           name: arac-qr-play-aab
-          path: arac-qr-play.aab
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: arac-qr-apk
-          path: arac-qr.apk
+          path: arac-qr-play*.aab
 
       # Sabit indirme bağlantısı: https://github.com/<sahip>/<repo>/releases/download/apk-son/arac-qr.apk
       - name: Son sürüm bağlantısını güncelle
