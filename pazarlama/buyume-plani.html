@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Araç QR Büyüme Planı</title>
+<style>
+@font-face{font-family:"Barlow";font-weight:400;src:url(../app/fonts/barlow-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow";font-weight:400;src:url(../app/fonts/barlow-latin-ext-400-normal.woff2) format("woff2");unicode-range:U+0100-02AF,U+1E00-1EFF}
+@font-face{font-family:"Barlow";font-weight:600;src:url(../app/fonts/barlow-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow";font-weight:600;src:url(../app/fonts/barlow-latin-ext-600-normal.woff2) format("woff2");unicode-range:U+0100-02AF,U+1E00-1EFF}
+@font-face{font-family:"Barlow";font-weight:700;src:url(../app/fonts/barlow-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow";font-weight:700;src:url(../app/fonts/barlow-latin-ext-700-normal.woff2) format("woff2");unicode-range:U+0100-02AF,U+1E00-1EFF}
+@font-face{font-family:"Barlow Condensed";font-weight:700;src:url(../app/fonts/barlow-condensed-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-weight:700;src:url(../app/fonts/barlow-condensed-latin-ext-700-normal.woff2) format("woff2");unicode-range:U+0100-02AF,U+1E00-1EFF}
+</style>
+<style>
+@page{size:A4;margin:16mm 15mm 18mm}
+:root{--b:#0a3a9e;--y:#ffd23f;--ink:#111418;--mut:#4b5360;--line:#d5d9e0}
+html,body{background:#fff}
+body{font-family:"Barlow",system-ui,sans-serif;color:var(--ink);font-size:10.5pt;line-height:1.45;margin:0;padding:0}
+h1,h2,h3{font-family:"Barlow Condensed","Barlow",sans-serif;font-weight:700;line-height:1.1;margin:0}
+h1{font-size:34pt;color:var(--b)}
+h2{font-size:18pt;color:var(--b);margin:18pt 0 6pt;padding-top:4pt;border-top:2px solid var(--b);break-after:avoid}
+h3{font-size:13pt;margin:10pt 0 4pt;break-after:avoid}
+p{margin:0 0 6pt}
+ul,ol{margin:0 0 6pt;padding-left:16pt}
+li{margin:0 0 2.5pt}
+table{width:100%;border-collapse:collapse;margin:4pt 0 8pt;font-size:9.5pt;break-inside:avoid}
+th,td{text-align:left;vertical-align:top;border-bottom:1px solid var(--line);padding:4pt 5pt}
+th{background:#eef3ff;color:var(--b)}
+.cover{height:262mm;display:flex;flex-direction:column;justify-content:space-between;break-after:page}
+.cover .band{background:linear-gradient(135deg,#0a3a9e,#1e5fd8);color:#fff;border-radius:14px;padding:22mm 16mm}
+.cover .band h1{color:#fff;font-size:46pt}
+.cover .band p{font-size:15pt;opacity:.95;margin-top:8pt}
+.cover .y{display:inline-block;background:var(--y);color:var(--ink);font-weight:700;border-radius:999px;padding:3pt 12pt;font-size:11pt;margin-bottom:12pt}
+.box{border:1.5px solid var(--b);border-radius:10px;padding:8pt 10pt;margin:6pt 0 10pt;break-inside:avoid;background:#f6f8ff}
+.warn{border-color:#c77700;background:#fff8ec}
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:6pt;margin:6pt 0 10pt}
+.kpi div{border:1px solid var(--line);border-radius:8px;padding:6pt 8pt}
+.kpi b{display:block;font-family:"Barlow Condensed",sans-serif;font-size:20pt;color:var(--b);line-height:1}
+.kpi span{font-size:9pt;color:var(--mut)}
+.wk{display:grid;grid-template-columns:24mm 1fr;gap:4pt 10pt;margin:4pt 0 8pt;break-inside:avoid}
+.wk>b{font-family:"Barlow Condensed",sans-serif;font-size:12pt;color:#fff;background:var(--b);border-radius:6px;padding:4pt 6pt;height:fit-content}
+.chk li{list-style:none;margin-left:-14pt}
+.chk li::before{content:"☐ ";color:var(--b);font-weight:700}
+.small{font-size:8.8pt;color:var(--mut)}
+.rl{border-left:4px solid var(--y);padding:2pt 0 2pt 8pt;margin:0 0 8pt;break-inside:avoid}
+.rl b{color:var(--b)}
+.src a{color:var(--b);word-break:break-all}
+.pb{break-before:page}
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <div class="band">
+    <span class="y">90 GÜNLÜK PLAN</span>
+    <h1>Araç QR<br>Hızlı Büyüme Planı</h1>
+    <p>Google Play'e çıkış, Instagram, sahada dağıtım ve ortaklıklar: adım adım, işaretleyerek ilerleyin.</p>
+  </div>
+  <div>
+    <div class="kpi">
+      <div><b>29</b><span>sticker tasarımı</span></div>
+      <div><b>3 dil</b><span>okutma sayfası (TR/EN/AR)</span></div>
+      <div><b>150 TL</b><span>basılı set (rakipler ~120–390 TL)</span></div>
+      <div><b>0 TL</b><span>kendin yazdır</span></div>
+    </div>
+    <p class="small">Hazırlanma: Ekim 2026. Fiyat ve kurallar araştırma anındaki halka açık sayfalardan alınmıştır; uygulamadan önce güncelliğini kontrol edin. Kaynaklar son sayfada.</p>
+  </div>
+</section>
+
+<h2>1. Kısaca: önümüzdeki 3 öncelik</h2>
+<ol>
+  <li><b>Google Play'e çıkmak.</b> Kişisel hesapta 12 testçi × 14 gün kapalı test şart; bu takvimin en uzun kalemi, bugün başlatın.</li>
+  <li><b>Sahada “canlı reklam”.</b> Her sticker'ın altında “Sen de yap: Araç QR uygulaması” yazıyor ve okutulan her sayfa uygulamayı tanıtıyor. Ne kadar çok araçta sticker olursa o kadar çok kişi görür: ilk ay <b>en az 300 sticker</b> dağıtın.</li>
+  <li><b>Instagram'da haftada 3 reels.</b> Kapaklar hazır (pazarlama/instagram). Komik, kısa, gerçek otopark sahneleri.</li>
+</ol>
+
+<h2>2. Pazar ve rakipler</h2>
+<p>Türkiye'de aynı fikirle çalışan birkaç ürün var; çoğu yalnızca hazır sticker satıyor. Sizin farkınız: <b>ücretsiz oluşturma</b>, <b>29 tasarım + komik sözler</b>, <b>sessiz saatler</b>, <b>yabancı dil desteği</b>, <b>numara değiştirme</b> ve <b>takım renkleri</b>.</p>
+<table>
+  <tr><th>Ürün</th><th>Nasıl çalışıyor</th><th>Görülen fiyat</th></tr>
+  <tr><td>Numaratik</td><td>QR'lı cam etiketi, numara gizli</td><td>~131 TL (4'lü 351 TL); resmi sitede 390 TL</td></tr>
+  <tr><td>PARKALO</td><td>Uygulama gerektirmeyen QR</td><td>349 TL, tek seferlik</td></tr>
+  <tr><td>LIFYTAG (Amazon)</td><td>Akıllı QR numaratör</td><td>~264 TL</td></tr>
+  <tr><td>Oto QR-matik</td><td>Pazaryerlerinde QR cam etiketi</td><td>~121–135 TL</td></tr>
+  <tr><td>Otoqr</td><td>Android uygulaması + satın alınan sticker</td><td>Sticker e-ticaretten</td></tr>
+  <tr><td><b>Araç QR</b></td><td><b>Ücretsiz oluştur/yazdır, istersen basılı set</b></td><td><b>0 TL / 150 TL set</b></td></tr>
+</table>
+<div class="box"><b>Fiyat önerisi:</b> 150 TL'lik set rakiplerin ortasında ve 9 sticker içeriyor; bu güçlü bir mesaj: <i>“Rakipler tek sticker'a 349 TL istiyor, biz 9 sticker'ı 150 TL'ye basıyoruz, istersen ücretsiz yazdır.”</i> İlk 50 siparişe kadar fiyatı değiştirmeyin; sonra “2 araçlı aile seti” (ör. 250 TL) deneyin.</div>
+
+<h2>3. 90 gün hedefleri (öneri)</h2>
+<div class="kpi">
+  <div><b>1.000</b><span>oluşturulan QR</span></div>
+  <div><b>75</b><span>basılı sipariş</span></div>
+  <div><b>1.500</b><span>Instagram takipçi</span></div>
+  <div><b>4,5★</b><span>Play puanı, 30+ yorum</span></div>
+</div>
+<p class="small">Bunlar başlangıç için makul hedeflerdir, garanti değildir. Panel › İstatistik sekmesinden her pazartesi kontrol edin.</p>
+
+<h2 class="pb">4. Adım adım yapılacaklar</h2>
+
+<div class="wk"><b>Bu hafta</b><ul class="chk">
+  <li>Play Console: kimlik ve cihaz doğrulamasını bitir, uygulamayı oluştur, formları doldur (android/GOOGLE_PLAY.md).</li>
+  <li>Yükleme anahtarını oluştur, GitHub Secrets'a ekle, ilk AAB'yi al.</li>
+  <li>Google Grubu aç, <b>15–20 testçi</b> ekle (aile, arkadaş, mahalle esnafı). Kapalı testi yayınla ve katılım bağlantısını WhatsApp'tan gönder. 14 gün sayacı buradan başlar.</li>
+  <li>Instagram işletme hesabı aç: kullanıcı adı örn. <b>@aracqr</b>; profil fotoğrafı, bio ve öne çıkan kapakları yükle (bölüm 5).</li>
+  <li>Supabase'de son SQL güncellemelerini çalıştır (panelde uyarı varsa).</li>
+</ul></div>
+
+<div class="wk"><b>Hafta 1–2</b><ul class="chk">
+  <li>Panelden <b>100 etiket üret</b>, “Sticker + PIN kartı” ile A4'lere bas (sayfada 4–5 etiket + PIN kartı).</li>
+  <li>Elden dağıt: site/apartman yöneticileri, oto yıkama, otopark görevlileri, iş yerinizdeki araç sahipleri. “Ücretsiz, cama yapıştır, QR'ı okutup numaranı gir” diye kısaca anlatın.</li>
+  <li>İlk 3 reels'i paylaş (kapaklar: önün mü kapandı, numaranı yazma, gece 3'te).</li>
+  <li>Testçilerden geri bildirim topla; küçük bir düzeltme sürümü yayınla (Google aktif geliştirme görmek ister).</li>
+</ul></div>
+
+<div class="wk"><b>Hafta 3–4</b><ul class="chk">
+  <li>14 gün dolunca <b>Üretim erişimi başvurusu</b> (cevapları birlikte yazarız). Onaydan sonra yayın.</li>
+  <li>Yayın günü: tüm testçilerden <b>Play'de yorum ve puan</b> isteyin; profildeki bağlantıyı Play sayfasına çevirin.</li>
+  <li>3 işletmeyle ortaklık görüşmesi (bölüm 6): oto yıkama, lastikçi/servis, otopark.</li>
+  <li>Haftada 3 reels'e devam; en çok izlenen kapağın benzerini yap.</li>
+</ul></div>
+
+<div class="wk"><b>Ay 2</b><ul class="chk">
+  <li>Ortak işletmelere tezgâh standı: “Sticker'ını 1 dakikada yap” QR'lı A5 kart + örnek sticker'lar.</li>
+  <li>Araba/otopark mizahı yapan 3–5 mikro hesapla iş birliği (ücretsiz set karşılığı paylaşım).</li>
+  <li>Takım renkleri haftası: derbi haftasında “Derbi günü park ettim” reels'i.</li>
+  <li>Sipariş verenlere teslimden sonra WhatsApp'tan “cama yapıştırınca fotoğrafını atar mısın?” deyin; izinle hikâyede paylaşın (sosyal kanıt).</li>
+</ul></div>
+
+<div class="wk"><b>Ay 3</b><ul class="chk">
+  <li>En iyi performanslı reels'i küçük bütçeyle öne çıkar (önce düşük günlük bütçeyle 3–5 gün test, sonra karar).</li>
+  <li>Aile seti / 2 araç fiyatını dene; site yönetimlerine toplu fiyat teklifi (ör. 20+ daire).</li>
+  <li>Play mağaza girişinde ekran görüntülerini yenile; yorumlara tek tek cevap ver.</li>
+  <li>90 gün değerlendirmesi: hedeflerle karşılaştır, en verimli 2 kanala yüklen.</li>
+</ul></div>
+
+<h2 class="pb">5. Instagram</h2>
+<h3>Profil</h3>
+<table>
+  <tr><th style="width:28%">Alan</th><th>Öneri</th></tr>
+  <tr><td>Ad</td><td>Araç QR · Park sticker'ı</td></tr>
+  <tr><td>Bio</td><td>Önünü kapatan seni arasın 📲<br>Numaran camda yazmaz · Ücretsiz yap<br>29 tasarım · Sessiz saatler 🌙<br>👇 Uygulamayı indir</td></tr>
+  <tr><td>Bağlantı</td><td>Play yayına kadar: yusufbas34.github.io/aracqr · sonra Play Store sayfası</td></tr>
+  <tr><td>Öne çıkanlar</td><td>NASIL? · TASARIM · SİPARİŞ · SSS · YORUMLAR (kapaklar hazır)</td></tr>
+</table>
+
+<h3>Paylaşım ritmi</h3>
+<ul>
+  <li><b>Reels:</b> haftada 3 (Pzt/Çar/Cum akşam). 7–15 saniye, ilk saniyede derdi göster.</li>
+  <li><b>Hikâye:</b> her gün 1–3 (anket: “Hiç önün kapandı mı?”, yeni tasarım, sipariş paketleme).</li>
+  <li><b>Kaydırmalı gönderi:</b> haftada 1 (“3 adımda QR'ın hazır” hazır).</li>
+</ul>
+
+<h3>6 reels senaryosu (kapaklar hazır)</h3>
+<div class="rl"><b>1 · Önün mü kapandı?</b> Sahne: arabaya binip önü kapalı görüyorsun, sinirli bekleyiş → camdaki QR'ı okut → 10 sn sonra sahibi koşarak geliyor. Yazı: “Bunu 2 dakikada çözdük.” CTA: “Profildeki bağlantıdan ücretsiz yap.”</div>
+<div class="rl"><b>2 · Camına numaranı yazma!</b> Camda kâğıda yazılmış numara → “Bunu herkes görüyor, kaydediyor…” → QR sticker'a geçiş. Yazı: “Numaran görünmeden sana ulaşsınlar.”</div>
+<div class="rl"><b>3 · Gece 3'te aranmak istemiyor musun?</b> Gece telefon çalıyor, uykulu yüz → uygulamada sessiz saatleri açma → “Bu saatlerde sadece mesaj gelir.”</div>
+<div class="rl"><b>4 · Ücretsiz yap, evde yazdır</b> Ekran kaydı: tasarımları yana kaydırma → söz seçme → yazıcıdan çıkış → makasla kesme → cama yapıştırma. Hızlandırılmış, müzikli.</div>
+<div class="rl"><b>5 · Derbi günü park ettim</b> Maç günü stadyum çevresi kalabalığı → takım renklerinde sticker'lar. Yazı: “Renklerini seç, maçı kaçırma, yolunu kapatma.” (Kulüp adı/logosu kullanmayın.)</div>
+<div class="rl"><b>6 · Not bırakma devri bitti</b> Silecek altında yağmurda ıslanmış not → QR'ı okut → hazır mesaj “Farlarınız açık” gönderiliyor.</div>
+
+<h3>Açıklama ve etiketler</h3>
+<p>Örnek açıklama: <i>“Önün kapandığında kimi arayacağını bilemiyor musun? 📲 Araç QR ile camına QR yapıştır, okutan seni tek dokunuşla arasın; numaran görünmesin. Ücretsiz yap, istersen biz basalım. 👉 Bağlantı profilde.”</i></p>
+<p>Etiketler (5–8 tane yeter): #otopark #parksorunu #araba #arabamania #qrkod #sticker #arabasticker #şoförlük</p>
+
+<h2>6. Sahada dağıtım ve ortaklıklar</h2>
+<div class="box warn"><b>Dikkat:</b> Başkasının aracına izinsiz sticker yapıştırmayın ve sileceklere toplu el ilanı bırakmayın (araç sahibini kızdırır, belediye kurallarına takılabilir). Sticker'ı <b>elden, isteyene</b> verin; PIN kartıyla birlikte.</div>
+<table>
+  <tr><th style="width:24%">Kanal</th><th>Teklif</th><th style="width:28%">Neden işe yarar</th></tr>
+  <tr><td>Site / apartman yönetimi</td><td>Tüm sakinlere ücretsiz sticker; otopark kavgası azalır. Duyuru panosuna A4 afiş.</td><td>Tek görüşmede onlarca araç</td></tr>
+  <tr><td>Oto yıkama</td><td>Yıkanan araca isteğe bağlı sticker; işletmenin adı “Sen de yap” satırının yanında anılabilir (özel tasarım).</td><td>Araç sahibi zaten orada bekliyor</td></tr>
+  <tr><td>Lastikçi / servis / galeri</td><td>Satılan ya da servisten çıkan araca hediye sticker.</td><td>“Hediye” algısı, sıfır maliyet</td></tr>
+  <tr><td>Otopark işletmeleri</td><td>Girişte QR'lı tabela: “Önün kapanırsa okut”.</td><td>Derdin yaşandığı yer</td></tr>
+  <tr><td>Kurye / taksi durakları</td><td>Toplu ücretsiz set, karşılığında tavsiye.</td><td>Gün boyu şehirde, çok görünür</td></tr>
+</table>
+<p>İşletmeler için ileride: kendi logolu “özel tasarım” (ör. 20 set ve üzeri) ya da yönlendirdikleri her sipariş için küçük bir komisyon.</p>
+
+<h2>7. Her pazartesi bakılacak 5 rakam</h2>
+<ol>
+  <li>Bu hafta oluşturulan QR (Panel › İstatistik)</li>
+  <li>Toplam okutma ve okutulan QR oranı (sticker'lar gerçekten araçta mı?)</li>
+  <li>Bekleyen ve onaylanan sipariş, ciro</li>
+  <li>Instagram: en çok izlenen reels ve takipçi artışı</li>
+  <li>Play: yükleme, puan, yorumlar</li>
+</ol>
+
+<h2>8. Riskler ve dikkat edilecekler</h2>
+<ul>
+  <li><b>Play kapalı test:</b> 12 testçi 14 gün kesintisiz kalmalı; düşen olursa sayaç bozulur. Fazla testçi ekleyin.</li>
+  <li><b>APK ile dağıtım:</b> Google, mağaza dışından kurulan uygulamalar için geliştirici doğrulamasını 30 Eylül 2026'da 4 ülkede başlattı, 2027'de dünyaya yaymayı planlıyor. Play hesabınız doğrulanınca bu sorun olmaz; APK bağlantısını yavaş yavaş Play'e çevirin.</li>
+  <li><b>Marka adı:</b> “Araç QR” genel bir ad. Logo ve adı ileride tescil etmek isterseniz önce TÜRKPATENT'te benzer marka araması yapın.</li>
+  <li><b>Takım renkleri:</b> kulüp adı, arma, lakap ve logo kullanmayın; reklamda “resmi ürün” izlenimi vermeyin.</li>
+  <li><b>KVKK:</b> gizlilik sayfası hazır; sipariş verilerini gereğinden uzun tutmayın, silme taleplerine 30 gün içinde dönün.</li>
+  <li><b>Dış mekân dayanımı:</b> evde mürekkep püskürtmeli yazıcıyla basılan sticker güneşte solabilir; satılan setlerde laminasyonlu vinil kullanın.</li>
+</ul>
+
+<h2>Kaynaklar</h2>
+<ul class="src small">
+  <li>Play Console Yardım, yeni kişisel hesaplar için test şartları: <a href="https://support.google.com/googleplay/android-developer/answer/14151465">support.google.com/googleplay/android-developer/answer/14151465</a></li>
+  <li>Geliştirici doğrulaması takvimi: <a href="https://www.androidauthority.com/android-sideloading-developer-verification-first-wave-rollout-3717921/">androidauthority.com</a>, <a href="https://www.gsmarena.com/google_android_developer_verification_app_sideloading_changes_timeline-news-73354.php">gsmarena.com</a></li>
+  <li>Rakipler: <a href="https://numaratik.com/">numaratik.com</a>, <a href="https://otodark.com/qr-numaratik/">otodark.com/qr-numaratik</a>, <a href="https://parkalo.com/">parkalo.com</a>, <a href="https://www.amazon.com.tr/Ak%C4%B1ll%C4%B1-QR-Numarat%C3%B6r-Ara%C3%A7-Parkmatik/dp/B0CGRZC3Z7">LIFYTAG (Amazon)</a>, <a href="https://www.ciceksepeti.com/oto-qr-matik-arac-numaratoru-oto-numarator-kcm31717561">Oto QR-matik (Çiçeksepeti)</a>, <a href="https://play.google.com/store/apps/details?id=com.frigoss.otoqrApp&hl=tr">Otoqr (Play)</a>, <a href="https://qrcarpark.com.tr/">qrcarpark.com.tr</a>, <a href="https://qrcar-d.com/">qrcar-d.com</a></li>
+  <li>Reels ölçüleri ve güvenli alan: <a href="https://postfa.st/blog/instagram-reel-cover-size-safe-zones">postfa.st</a>, <a href="https://invideo.io/blog/instagram-reel-size-guide/">invideo.io</a></li>
+</ul>
+</body>
+</html>
