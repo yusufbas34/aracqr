@@ -309,8 +309,16 @@ const SCAN_TEXT = {
     noneTitle: "لم يتم العثور على الرمز", noneText: "رمز QR هذا لا ينتمي إلى ملصق صالح.",
     netTitle: "خطأ في الاتصال", netText: "حدّث الصفحة وحاول مرة أخرى.",
     backup: "إذا لم تتمكن من الوصول", backupCall: "اتصل بالرقم الاحتياطي", owner: "هل أنت صاحب السيارة؟ غيّر الرقم"},
+  ru: {callTitle: "Позвоните владельцу автомобиля", callIntro: "Если экран звонка не открылся, нажмите кнопку ниже.", call: "Позвонить",
+    quietTitle: "У владельца сейчас тихие часы",
+    quietText: (a, b) => `Владелец не принимает звонки с ${a} до ${b} (по времени Турции). Вы можете отправить ему SMS или сообщение в WhatsApp ниже; для срочных случаев есть готовые сообщения.`,
+    msgTitle: "Отправьте сообщение", msgOr: "Или отправьте готовое сообщение", via: "Способ отправки", note: "Сообщение уходит на турецком вместе с текстом на вашем языке, чтобы владелец понял.",
+    offTitle: "Этот QR сейчас не используется", offText: "Владелец временно отключил этот QR. Возможно, автомобиль продан или наклейка больше не используется.",
+    noneTitle: "QR не найден", noneText: "Этот QR-код не относится к действующей наклейке.",
+    netTitle: "Ошибка соединения", netText: "Обновите страницу и попробуйте снова.",
+    backup: "Если не дозвонились", backupCall: "Позвонить на запасной номер", owner: "Вы владелец? Изменить номер"},
 };
-const LANG_NAMES = {tr: "Türkçe", en: "English", ar: "العربية"};
+const LANG_NAMES = {tr: "Türkçe", en: "English", ar: "العربية", ru: "Русский"};
 let LANG = (() => {
   const want = [params.get("lang"), (() => { try { return localStorage.getItem("aracqr-lang"); } catch (e) { return null; } })(),
     ...(navigator.languages || [navigator.language])].filter(Boolean).map(l => l.slice(0, 2).toLowerCase());
@@ -320,7 +328,7 @@ const T = () => SCAN_TEXT[LANG];
 let rerenderScan = null;
 
 function langBar() {
-  return `<div class="langs" role="group" aria-label="Dil / Language / اللغة">${Object.entries(LANG_NAMES).map(([k, n]) =>
+  return `<div class="langs" role="group" aria-label="Dil / Language / اللغة / Язык">${Object.entries(LANG_NAMES).map(([k, n]) =>
     `<button type="button" data-lang="${k}" lang="${k}" aria-pressed="${k === LANG}">${n}</button>`).join("")}</div>`;
 }
 // Okutma ekranlarını seçili dilde gösterir (sağdan sola yazım dahil)
@@ -345,22 +353,28 @@ function scanMessage(key) {
 const QUICK_MESSAGES = [
   ["🚗", {tr: ["Önümü kapatıyorsunuz", "Merhaba, aracınız önümü kapatıyor. Çıkabilmem için aracınızı çekebilir misiniz?"],
     en: ["You're blocking me", "Hello, your car is blocking me. Could you move it so I can get out?"],
-    ar: ["سيارتك تسد طريقي", "مرحبًا، سيارتك تسد طريقي. هل يمكنك تحريكها لأتمكن من الخروج؟"]}],
+    ar: ["سيارتك تسد طريقي", "مرحبًا، سيارتك تسد طريقي. هل يمكنك تحريكها لأتمكن من الخروج؟"],
+    ru: ["Вы меня заблокировали", "Здравствуйте, ваша машина блокирует мою. Не могли бы вы её переставить, чтобы я мог выехать?"]}],
   ["💡", {tr: ["Farlarınız açık", "Merhaba, aracınızın farları açık kalmış."],
     en: ["Your lights are on", "Hello, your car's lights were left on."],
-    ar: ["أضواء سيارتك مضاءة", "مرحبًا، أضواء سيارتك ما زالت مضاءة."]}],
+    ar: ["أضواء سيارتك مضاءة", "مرحبًا، أضواء سيارتك ما زالت مضاءة."],
+    ru: ["У вас горят фары", "Здравствуйте, у вашей машины остались включены фары."]}],
   ["🪟", {tr: ["Camınız açık", "Merhaba, aracınızın camı açık kalmış."],
     en: ["Your window is open", "Hello, your car's window was left open."],
-    ar: ["نافذة سيارتك مفتوحة", "مرحبًا، نافذة سيارتك تُركت مفتوحة."]}],
+    ar: ["نافذة سيارتك مفتوحة", "مرحبًا، نافذة سيارتك تُركت مفتوحة."],
+    ru: ["У вас открыто окно", "Здравствуйте, у вашей машины осталось открытым окно."]}],
   ["💥", {tr: ["Aracınıza çarpıldı", "Merhaba, aracınıza çarpıldı / hasar var. Lütfen aracınızın yanına gelin."],
     en: ["Your car was hit", "Hello, your car was hit / damaged. Please come to your car."],
-    ar: ["صُدمت سيارتك", "مرحبًا، تعرضت سيارتك لصدمة أو ضرر. يرجى الحضور إلى سيارتك."]}],
+    ar: ["صُدمت سيارتك", "مرحبًا، تعرضت سيارتك لصدمة أو ضرر. يرجى الحضور إلى سيارتك."],
+    ru: ["В вашу машину врезались", "Здравствуйте, в вашу машину врезались / есть повреждение. Пожалуйста, подойдите к машине."]}],
   ["🚓", {tr: ["Çekici / ceza", "Merhaba, aracınız çekilmek üzere ya da ceza yazılıyor. Lütfen hemen gelin."],
     en: ["Tow truck / ticket", "Hello, your car is about to be towed or ticketed. Please come right away."],
-    ar: ["سحب / مخالفة", "مرحبًا، سيارتك على وشك أن تُسحب أو تُحرر لها مخالفة. يرجى الحضور فورًا."]}],
+    ar: ["سحب / مخالفة", "مرحبًا، سيارتك على وشك أن تُسحب أو تُحرر لها مخالفة. يرجى الحضور فورًا."],
+    ru: ["Эвакуатор / штраф", "Здравствуйте, вашу машину вот-вот эвакуируют или выпишут штраф. Пожалуйста, подойдите сейчас."]}],
   ["⚠️", {tr: ["Araçta çocuk / hayvan var", "ACİL: Aracınızın içinde çocuk ya da hayvan kalmış görünüyor. Lütfen hemen gelin!"],
     en: ["Child / pet in the car", "URGENT: A child or pet seems to be left inside your car. Please come right away!"],
-    ar: ["طفل / حيوان في السيارة", "عاجل: يبدو أن طفلًا أو حيوانًا تُرك داخل سيارتك. يرجى الحضور فورًا!"]}],
+    ar: ["طفل / حيوان في السيارة", "عاجل: يبدو أن طفلًا أو حيوانًا تُرك داخل سيارتك. يرجى الحضور فورًا!"],
+    ru: ["В машине ребёнок / животное", "СРОЧНО: похоже, в вашей машине остался ребёнок или животное. Пожалуйста, подойдите немедленно!"]}],
 ];
 
 function quickMessagesHtml(phone, quietTitle = false) {

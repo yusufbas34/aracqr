@@ -200,6 +200,14 @@ Hesap açmanız gerekmez. Reklam yok. Verilerinizi istediğiniz an uygulamadan s
 
 **İlk sürüm notu:** `İlk sürüm: QR oluşturma, 20+ tasarım, sessiz saatler, hazır mesajlar, baskılı sticker siparişi.`
 
+**Diğer diller** (Play Console › Mağaza girişi › Çeviri ekle; uygulama bu dilleri destekliyor):
+
+| Dil | Uygulama adı (≤30) | Kısa açıklama (≤80) |
+|---|---|---|
+| English (en-US) | `Araç QR: Parked Badly? Call Me` | `Parked badly? Let them call you. No number on the glass. Free QR sticker.` |
+| العربية (ar) | `Araç QR: ركنت خطأ؟ اتصل بي` | `ركنت بشكل خاطئ؟ دعهم يتصلون بك دون أن يظهر رقمك على الزجاج. ملصق QR مجاني.` |
+| Русский (ru-RU) | `Araç QR: Мешаю? Позвоните` | `Неудачно припарковались? Вам позвонят, а номер не виден на стекле. QR бесплатно.` |
+
 **Görseller** (`android/store/`):
 
 - `icon-512.png`: uygulama simgesi

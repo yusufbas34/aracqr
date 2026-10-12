@@ -99,7 +99,7 @@ const APK_URL = "https://github.com/yusufbas34/aracqr/releases/download/apk-son/
 const PLAY = (() => { try { return !!bridge && typeof bridge.distribution === "function" && bridge.distribution() === "play"; } catch (e) { return false; } })();
 const PRIVACY_URL = SITE + "gizlilik.html";
 const myVersion = () => { try { return bridge ? Number(bridge.versionCode()) || 0 : 0; } catch (e) { return 0; } };
-const myVersionName = () => { try { return bridge ? bridge.versionName() : "tarayıcı"; } catch (e) { return ""; } };
+const myVersionName = () => { try { return bridge ? bridge.versionName() : L("tarayıcı"); } catch (e) { return ""; } };
 let latestCheck;
 // GitHub'daki son APK'nın derleme numarası (sürüm notunda "Derleme N")
 function latestVersion() {
@@ -111,7 +111,7 @@ async function updateBanner(slotId) {
   const latest = await latestVersion(), mine = myVersion();
   const slot = document.getElementById(slotId);
   if (slot && mine && latest > mine) {
-    slot.innerHTML = `<a class="update" href="${APK_URL}?v=${latest}">🔔 <span><b>Yeni sürüm var (1.0.${latest})</b>Güncellemek için dokunun, inen dosyayı açın.</span></a>`;
+    slot.innerHTML = `<a class="update" href="${APK_URL}?v=${latest}">🔔 <span><b>${L("Yeni sürüm var ({v})", {v: "1.0." + latest})}</b>${L("Güncellemek için dokunun, inen dosyayı açın.")}</span></a>`;
   }
 }
 
@@ -126,34 +126,34 @@ function profile() {
 function showHome() {
   const list = tags();
   if (!list.length) {
-    return show("Araç QR", `
+    return show(L("Araç QR"), `
       <div class="empty">
-        ${stickerAt("ÖRNEK", "klasik", SITE, "50x75")}
-        <h1>Kendi araç QR'ınızı oluşturun</h1>
-        <p>Hatalı park ettiğinizde, yolunu kapattığınız kişi QR'ı okutup sizi tek dokunuşla arasın; ceza, çekici ya da kızgın not yerine bir telefon. Numaranız camda yazmaz.</p>
+        ${stickerAt(L("ÖRNEK"), "klasik", SITE, "50x75")}
+        <h1>${L("Kendi araç QR'ınızı oluşturun")}</h1>
+        <p>${L("Hatalı park ettiğinizde, yolunu kapattığınız kişi QR'ı okutup sizi tek dokunuşla arasın; ceza, çekici ya da kızgın not yerine bir telefon. Numaranız camda yazmaz.")}</p>
       </div>
       <ol class="msg info" style="padding-left:30px;margin:0">
-        <li>Bir tasarım seçin</li>
-        <li>Telefon numaranızı girin</li>
-        <li>İstediğiniz ölçüde yazdırın, camınıza yapıştırın</li>
+        <li>${L("Bir tasarım seçin")}</li>
+        <li>${L("Telefon numaranızı girin")}</li>
+        <li>${L("İstediğiniz ölçüde yazdırın, camınıza yapıştırın")}</li>
       </ol>
-      <a class="btn" href="#/yeni">Başlayalım</a>
-      <button class="btn ghost" type="button" id="howto">Nasıl çalışır?</button>
-      <a class="btn ghost" href="#/yedek">Eski telefonumdaki QR'ları getir</a>`, false, "", "qr"), bindHowto();
+      <a class="btn" href="#/yeni">${L("Başlayalım")}</a>
+      <button class="btn ghost" type="button" id="howto">${L("Nasıl çalışır?")}</button>
+      <a class="btn ghost" href="#/yedek">${L("Eski telefonumdaki QR'ları getir")}</a>`, false, "", "qr"), bindHowto();
   }
-  show("QR'larım", `
+  show(L("QR'larım"), `
     <div id="update-slot"></div>
     <div id="promo-slot"></div>
     <div class="cards">
       ${list.map(t => `
         <a class="card" href="#/etiket/${encodeURIComponent(t.code)}">
           ${stickerAt(t.code, t.design, qrLink(t.code), "40x60", t.phrase)}
-          <div><b>${esc(t.name || t.code)}</b>${t.disabled ? `<span class="off-chip">⏸ QR kapalı</span>` : ""}<span>${t.name ? `${esc(t.code)} · ` : ""}${esc(prettyPhone(t.phone))}<br>${esc(DESIGNS[t.design]?.name || "")} · ${esc(SIZES[t.size] || "")}</span>
+          <div><b>${esc(t.name || t.code)}</b>${t.disabled ? `<span class="off-chip">${L("⏸ QR kapalı")}</span>` : ""}<span>${t.name ? `${esc(t.code)} · ` : ""}${esc(prettyPhone(t.phone))}<br>${esc(dName(t.design))} · ${esc(L(SIZES[t.size] || ""))}</span>
             <span class="scan" data-scan="${esc(t.code)}">${scanChip(store.get("stats", {})[t.code])}</span></div>
         </a>`).join("")}
     </div>
-    <a class="btn" href="#/yeni">+ Yeni QR oluştur</a>
-    <button class="btn ghost share-app" type="button">👋 Arkadaşına öner</button>`, false, "", "qr");
+    <a class="btn" href="#/yeni">${L("+ Yeni QR oluştur")}</a>
+    <button class="btn ghost share-app" type="button">${L("👋 Arkadaşına öner")}</button>`, false, "", "qr");
   bindShareApp();
   updateBanner("update-slot");
   loadShop().then(shop => {
@@ -165,77 +165,81 @@ function showHome() {
 
 function showOrders() {
   const list = orders();
-  show("Siparişlerim", list.length ? `
+  show(L("Siparişlerim"), list.length ? `
     <div class="cards">${list.map(orderCardHtml).join("")}</div>
-    <p class="hint" style="margin-top:14px">Durumlar otomatik güncellenir. Sorunuz olursa sipariş numaranızla bize ulaşın.</p>` : `
+    <p class="hint" style="margin-top:14px">${L("Durumlar otomatik güncellenir. Sorunuz olursa sipariş numaranızla bize ulaşın.")}</p>` : `
     <div class="empty">
       <div style="font-size:56px" aria-hidden="true">📦</div>
-      <h1>Henüz siparişiniz yok</h1>
-      <p>Yazıcıyla uğraşmayın: su geçirmez sticker setinizi biz basıp kapınıza gönderelim.</p>
+      <h1>${L("Henüz siparişiniz yok")}</h1>
+      <p>${L("Yazıcıyla uğraşmayın: su geçirmez sticker setinizi biz basıp kapınıza gönderelim.")}</p>
     </div>
-    ${tags().length ? `<a class="btn order-go" href="#/etiket/${encodeURIComponent(tags()[0].code)}/siparis">Sticker seti sipariş et</a>` : `<a class="btn" href="#/yeni">Önce QR'ınızı oluşturun</a>`}`,
+    ${tags().length ? `<a class="btn order-go" href="#/etiket/${encodeURIComponent(tags()[0].code)}/siparis">${L("Sticker seti sipariş et")}</a>` : `<a class="btn" href="#/yeni">${L("Önce QR'ınızı oluşturun")}</a>`}`,
     false, "", "orders");
   refreshOrders();
 }
 
 function showProfile(saved = false) {
   const p = profile(), val = k => `value="${esc(p[k] || "")}"`;
-  show("Profilim", `
-    ${saved ? `<div class="msg ok" role="status">Kaydedildi. Sipariş formu bu bilgilerle otomatik dolar.</div>` : ""}
-    <h2 style="margin-top:4px">Kayıtlı bilgilerim</h2>
+  show(L("Profilim"), `
+    ${saved ? `<div class="msg ok" role="status">${L("Kaydedildi. Sipariş formu bu bilgilerle otomatik dolar.")}</div>` : ""}
+    <h2 style="margin-top:4px">🌐 Dil · Language · اللغة · Язык</h2>
+    <div class="opts" style="padding-top:14px">${langSelectHtml("p-lang")}</div>
+
+    <h2>${L("Kayıtlı bilgilerim")}</h2>
     <form id="pf" class="opts" style="padding-top:2px" novalidate>
       <div id="pf-msg"></div>
-      <label for="p-name">Ad soyad</label><input id="p-name" autocomplete="name" ${val("name")}>
-      <label for="p-phone">Telefon</label><input id="p-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="05xx xxx xx xx" ${val("phone")}>
-      <label for="p-email">E-posta</label><input id="p-email" type="email" inputmode="email" autocomplete="email" ${val("email")}>
+      <label for="p-name">${L("Ad soyad")}</label><input id="p-name" autocomplete="name" ${val("name")}>
+      <label for="p-phone">${L("Telefon")}</label><input id="p-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="${L("05xx xxx xx xx")}" ${val("phone")}>
+      <label for="p-email">${L("E-posta")}</label><input id="p-email" type="email" inputmode="email" autocomplete="email" ${val("email")}>
       <div class="row">
-        <div><label for="p-city">İl</label><input id="p-city" autocomplete="address-level1" ${val("city")}></div>
-        <div><label for="p-district">İlçe</label><input id="p-district" autocomplete="address-level2" ${val("district")}></div>
+        <div><label for="p-city">${L("İl")}</label><input id="p-city" autocomplete="address-level1" ${val("city")}></div>
+        <div><label for="p-district">${L("İlçe")}</label><input id="p-district" autocomplete="address-level2" ${val("district")}></div>
       </div>
-      <label for="p-address">Açık adres</label>
-      <textarea id="p-address" rows="3" autocomplete="street-address" placeholder="Mahalle, cadde/sokak, bina no, daire">${esc(p.address || "")}</textarea>
-      <div class="hint">Bu bilgiler yalnızca bu telefonda saklanır; sipariş verdiğinizde gönderilir.</div>
-      <button class="btn" type="submit">Kaydet</button>
+      <label for="p-address">${L("Açık adres")}</label>
+      <textarea id="p-address" rows="3" autocomplete="street-address" placeholder="${L("Mahalle, cadde/sokak, bina no, daire")}">${esc(p.address || "")}</textarea>
+      <div class="hint">${L("Bu bilgiler yalnızca bu telefonda saklanır; sipariş verdiğinizde gönderilir.")}</div>
+      <button class="btn" type="submit">${L("Kaydet")}</button>
     </form>
 
-    <h2>Yedekle / taşı</h2>
+    <h2>${L("Yedekle / taşı")}</h2>
     <div class="opts" style="padding-top:14px">
-      <div class="hint" style="margin-top:0">Telefon değiştirirken ya da uygulamayı silip yeniden kurarken QR'larınız ve PIN'leriniz kaybolmasın.</div>
-      <a class="btn ghost" href="#/yedek">💾 Yedekle / geri yükle</a>
-      <button class="btn ghost share-app" type="button">👋 Arkadaşına öner</button>
+      <div class="hint" style="margin-top:0">${L("Telefon değiştirirken ya da uygulamayı silip yeniden kurarken QR'larınız ve PIN'leriniz kaybolmasın.")}</div>
+      <a class="btn ghost" href="#/yedek">${L("💾 Yedekle / geri yükle")}</a>
+      <button class="btn ghost share-app" type="button">${L("👋 Arkadaşına öner")}</button>
     </div>
 
-    <h2>Uygulama</h2>
+    <h2>${L("Uygulama")}</h2>
     <div class="opts" style="padding-top:14px">
-      <dl class="kv"><dt>Sürüm</dt><dd id="ver">${esc(myVersionName() || "-")}</dd></dl>
+      <dl class="kv"><dt>${L("Sürüm")}</dt><dd id="ver">${esc(myVersionName() || "-")}</dd></dl>
       <div id="update-slot"></div>
-      <button class="btn ghost" type="button" id="howto">Nasıl çalışır?</button>
-      <a class="btn ghost" href="${SITE}">Web sitesi</a>
+      <button class="btn ghost" type="button" id="howto">${L("Nasıl çalışır?")}</button>
+      <a class="btn ghost" href="${SITE}">${L("Web sitesi")}</a>
     </div>
 
-    <h2>Gizlilik ve verilerim</h2>
+    <h2>${L("Gizlilik ve verilerim")}</h2>
     <div class="opts" style="padding-top:14px">
-      <div class="hint" style="margin-top:0">Hesap yok. Numaranız yalnızca QR okutulunca arama/mesaj için kullanılır; QR'ın üstünde yazmaz.</div>
-      <a class="btn ghost" href="${PRIVACY_URL}">Gizlilik politikası</a>
-      <button class="btn danger" type="button" id="wipe">Tüm verilerimi sil</button>
+      <div class="hint" style="margin-top:0">${L("Hesap yok. Numaranız yalnızca QR okutulunca arama/mesaj için kullanılır; QR'ın üstünde yazmaz.")}</div>
+      <a class="btn ghost" href="${PRIVACY_URL}">${L("Gizlilik politikası")}</a>
+      <button class="btn danger" type="button" id="wipe">${L("Tüm verilerimi sil")}</button>
       <div id="wipe-msg"></div>
     </div>`, false, "", "profile");
   document.getElementById("wipe").onclick = wipeAll;
+  document.getElementById("p-lang").onchange = ev => setLang(ev.target.value);
   bindHowto();
   bindShareApp();
   latestVersion().then(latest => {
     const mine = myVersion(), el = document.getElementById("update-slot");
     if (!el) return;
     if (mine && latest > mine) updateBanner("update-slot");
-    else if (mine && latest) el.innerHTML = `<div class="hint" style="margin:6px 0 0">✓ En güncel sürümü kullanıyorsunuz.</div>`;
+    else if (mine && latest) el.innerHTML = `<div class="hint" style="margin:6px 0 0">${L("✓ En güncel sürümü kullanıyorsunuz.")}</div>`;
   });
   document.getElementById("pf").addEventListener("submit", ev => {
     ev.preventDefault();
     const g = id => document.getElementById(id).value.trim();
     const v = {name: g("p-name"), phone: g("p-phone"), email: g("p-email"), city: g("p-city"), district: g("p-district"), address: g("p-address")};
     const fail = t => { document.getElementById("pf-msg").innerHTML = `<div class="msg err" role="alert">${esc(t)}</div>`; };
-    if (v.phone && !normalizePhone(v.phone)) return fail("Telefon numarası geçersiz. Örnek: 0532 123 45 67");
-    if (v.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.email)) return fail("E-posta adresi geçersiz.");
+    if (v.phone && !normalizePhone(v.phone)) return fail(L("Telefon numarası geçersiz. Örnek: 0532 123 45 67"));
+    if (v.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.email)) return fail(L("E-posta adresi geçersiz."));
     store.set("profile", v);
     showProfile(true);
   });
@@ -246,16 +250,16 @@ async function deleteTagOnServer(t) {
   try {
     const r = await rpc("self_tag_delete", {p_code: t.code, p_pin: t.pin});
     if (r?.ok) return null;
-    return r?.error === "bad_pin" ? `${t.code}: PIN tutmuyor, silinemedi.` : r?.error === "locked" ? "Çok fazla yanlış deneme; 15 dakika sonra tekrar deneyin." : "Silinemedi, tekrar deneyin.";
+    return r?.error === "bad_pin" ? L("{code}: PIN tutmuyor, silinemedi.", {code: t.code}) : r?.error === "locked" ? L("Çok fazla yanlış deneme; 15 dakika sonra tekrar deneyin.") : L("Silinemedi, tekrar deneyin.");
   } catch (e) {
-    return e.status === 404 ? "Silme özelliği sunucuda henüz kurulu değil. Lütfen daha sonra tekrar deneyin." : "Bağlantı yok; internete bağlanıp tekrar deneyin.";
+    return e.status === 404 ? L("Silme özelliği sunucuda henüz kurulu değil. Lütfen daha sonra tekrar deneyin.") : L("Bağlantı yok; internete bağlanıp tekrar deneyin.");
   }
 }
 
 // Gizlilik: bu telefondaki her QR'ı sunucudan siler, sonra telefondaki tüm kayıtları (profil, adres, siparişler) temizler
 async function wipeAll(ev) {
   const list = tags(), msg = document.getElementById("wipe-msg");
-  if (!confirm(`Tüm verileriniz silinsin mi?\n\n• ${list.length} QR ve okutma kayıtları sunucudan silinir; bu QR'lar artık sizi aramaz.\n• Bu telefondaki profil, adres ve sipariş listesi silinir.\n\nGeri alınamaz.`)) return;
+  if (!confirm(L("Tüm verileriniz silinsin mi?\n\n• {n} QR ve okutma kayıtları sunucudan silinir; bu QR'lar artık sizi aramaz.\n• Bu telefondaki profil, adres ve sipariş listesi silinir.\n\nGeri alınamaz.", {n: list.length}))) return;
   ev.target.disabled = true;
   const errors = [];
   for (const t of list) {
@@ -268,14 +272,14 @@ async function wipeAll(ev) {
   try { Object.keys(localStorage).filter(k => k.startsWith("aracqr-") && k !== "aracqr-onboarded").forEach(k => localStorage.removeItem(k)); } catch (e) {}
   syncOrdersToAndroid();
   showProfile();
-  toast(sent ? "Silindi. Verilmiş sipariş kayıtlarının silinmesi için gizlilik sayfasındaki adrese yazın." : "Tüm verileriniz silindi.");
+  toast(sent ? L("Silindi. Verilmiş sipariş kayıtlarının silinmesi için gizlilik sayfasındaki adrese yazın.") : L("Tüm verileriniz silindi."));
 }
 
 // ---------------------------------------------------------------- arkadaşına öner
 const PLAY_URL = "https://play.google.com/store/apps/details?id=io.github.yusufbas34.aracqr";
 function bindShareApp() {
   document.querySelectorAll(".share-app").forEach(b => b.onclick = async () => {
-    const text = `Arabana QR sticker yap: hatalı park ettiğinde seni tek dokunuşla arasınlar ya da mesaj atsınlar, numaran camda yazmaz. Ücretsiz 👉 ${PLAY ? PLAY_URL : SITE}`;
+    const text = L("Arabana QR sticker yap: hatalı park ettiğinde seni tek dokunuşla arasınlar ya da mesaj atsınlar, numaran camda yazmaz. Ücretsiz 👉 {url}", {url: PLAY ? PLAY_URL : SITE});
     if (!bridge && navigator.share) { try { await navigator.share({text}); return; } catch (e) { if (e.name === "AbortError") return; } }
     location.href = `https://wa.me/?text=${encodeURIComponent(text)}`;
   });
@@ -303,51 +307,51 @@ function parseBackup(text) {
 
 function showBackup(msg = "") {
   const list = tags(), code = list.length ? backupCode() : "";
-  show("Yedekle / taşı", `
+  show(L("Yedekle / taşı"), `
     ${msg}
     ${list.length ? `
-    <h2 style="margin-top:4px">1. Yedek kodunuz</h2>
+    <h2 style="margin-top:4px">${L("1. Yedek kodunuz")}</h2>
     <div class="opts" style="padding-top:14px">
-      <div class="hint" style="margin-top:0">${list.length} QR ve PIN'leri, ${orders().length} sipariş bu kodun içinde. Kodu kendinize WhatsApp'tan ya da e-postayla gönderin, yeni telefonda “Geri yükle”ye yapıştırın.</div>
+      <div class="hint" style="margin-top:0">${L("{n} QR ve PIN'leri, {o} sipariş bu kodun içinde. Kodu kendinize WhatsApp'tan ya da e-postayla gönderin, yeni telefonda “Geri yükle”ye yapıştırın.", {n: list.length, o: orders().length})}</div>
       <textarea id="bk-code" rows="4" readonly style="font-family:monospace;font-size:12px;word-break:break-all">${esc(code)}</textarea>
-      <button class="btn" type="button" id="bk-copy">Kopyala</button>
-      <a class="btn ghost" href="https://wa.me/?text=${encodeURIComponent("Araç QR yedek kodum (kimseyle paylaşmayın):\n\n" + code)}">WhatsApp'ta kendime gönder</a>
-      <div class="msg err" style="margin-top:12px">🔒 Bu kodu kimseyle paylaşmayın: kodu bilen QR'larınızın numarasını değiştirebilir.</div>
+      <button class="btn" type="button" id="bk-copy">${L("Kopyala")}</button>
+      <a class="btn ghost" href="https://wa.me/?text=${encodeURIComponent(L("Araç QR yedek kodum (kimseyle paylaşmayın):") + "\n\n" + code)}">${L("WhatsApp'ta kendime gönder")}</a>
+      <div class="msg err" style="margin-top:12px">${L("🔒 Bu kodu kimseyle paylaşmayın: kodu bilen QR'larınızın numarasını değiştirebilir.")}</div>
     </div>` : ""}
-    <h2>${list.length ? "2. " : ""}Geri yükle</h2>
+    <h2>${list.length ? "2. " : ""}${L("Geri yükle")}</h2>
     <form class="opts" id="bk-form" style="padding-top:14px" novalidate>
-      <label for="bk-in" style="margin-top:0">Yedek kodunu yapıştırın</label>
-      <textarea id="bk-in" rows="4" placeholder="ARACQR1.…" style="font-family:monospace;font-size:12px"></textarea>
-      <button class="btn" type="submit">Geri yükle</button>
-      <div class="hint">Bu telefondaki QR'lar silinmez; yedekteki QR'lar listeye eklenir.</div>
+      <label for="bk-in" style="margin-top:0">${L("Yedek kodunu yapıştırın")}</label>
+      <textarea id="bk-in" rows="4" placeholder="${L("ARACQR1.…")}" style="font-family:monospace;font-size:12px"></textarea>
+      <button class="btn" type="submit">${L("Geri yükle")}</button>
+      <div class="hint">${L("Bu telefondaki QR'lar silinmez; yedekteki QR'lar listeye eklenir.")}</div>
     </form>`, true, "", "profile");
   const copy = document.getElementById("bk-copy");
   if (copy) copy.onclick = async () => {
     const ta = document.getElementById("bk-code");
     try { await navigator.clipboard.writeText(ta.value); } catch (e) { ta.select(); document.execCommand("copy"); }
-    toast("Yedek kodu kopyalandı");
+    toast(L("Yedek kodu kopyalandı"));
   };
   document.getElementById("bk-form").addEventListener("submit", async ev => {
     ev.preventDefault();
     const fail = t => showBackup(`<div class="msg err" role="alert">${esc(t)}</div>`);
     const data = parseBackup(document.getElementById("bk-in").value);
-    if (!data || !data.t.length) return fail("Yedek kodu okunamadı. Kodun tamamını (ARACQR1. ile başlayan) yapıştırdığınızdan emin olun.");
+    if (!data || !data.t.length) return fail(L("Yedek kodu okunamadı. Kodun tamamını (ARACQR1. ile başlayan) yapıştırdığınızdan emin olun."));
     ev.submitter && (ev.submitter.disabled = true);
     // PIN'i hâlâ geçerli olan (silinmemiş) QR'lar
     let valid;
     try { valid = new Set((await rpc("self_tag_stats", {p_codes: data.t.map(t => t.code), p_pins: data.t.map(t => t.pin)})).map(x => x.code)); }
-    catch (e) { return fail("Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edip tekrar deneyin."); }
+    catch (e) { return fail(L("Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.")); }
     const ok = data.t.filter(t => valid.has(t.code)), have = new Set(tags().map(t => t.code));
     ok.filter(t => !have.has(t.code)).reverse().forEach(t => saveTag(t));
     const known = new Set(orders().map(o => o.code));
     data.o.filter(o => !known.has(o.code)).forEach(o => saveOrder(o));
     const skipped = data.t.length - ok.length;
-    showBackup(`<div class="msg ok" role="status">${ok.length} QR geri yüklendi${data.o.length ? `, ${data.o.length} sipariş` : ""}.${skipped ? ` ${skipped} QR silinmiş ya da PIN'i değişmiş olduğu için eklenmedi.` : ""}</div>`);
+    showBackup(`<div class="msg ok" role="status">${L("{n} QR geri yüklendi", {n: ok.length})}${data.o.length ? L(", {n} sipariş", {n: data.o.length}) : ""}.${skipped ? " " + L("{n} QR silinmiş ya da PIN'i değişmiş olduğu için eklenmedi.", {n: skipped}) : ""}</div>`);
     if (ok.length) confetti();
   });
 }
 
-const scanChip = st => st ? `👀 ${st.last30} okutma / 30 gün` : "";
+const scanChip = st => st ? L("👀 {n} okutma / 30 gün", {n: st.last30}) : "";
 
 function bindHowto() {
   const b = document.getElementById("howto");
@@ -361,22 +365,22 @@ function showDesigns(tagCode) {
   const t = tagCode ? findTag(tagCode) : null;
   if (tagCode && !t) { location.replace("#/"); return; }
   const keys = Object.keys(DESIGNS), current = t ? t.design : draft.design;
-  const code = t ? t.code : "ÖRNEK", link = t ? qrLink(t.code) : SITE;
-  show(t ? "Tasarımı değiştir" : "1. Tasarım seçin", `
+  const code = t ? t.code : L("ÖRNEK"), link = t ? qrLink(t.code) : SITE;
+  show(t ? L("Tasarımı değiştir") : L("1. Tasarım seçin"), `
     <div class="carousel">
       <div class="car-track" id="reels" tabindex="0">
         ${keys.map((k, i) => `
-          <section class="reel" data-d="${k}" data-i="${i}" aria-label="${esc(DESIGNS[k].name)}">
-            <div class="reel-top">${DESIGNS[k].isNew ? `<span class="new">🆕 Yeni</span> ` : ""}${i + 1} / ${keys.length} · ${DESIGNS[k].group || "Klasik"}</div>
+          <section class="reel" data-d="${k}" data-i="${i}" aria-label="${esc(dName(k))}">
+            <div class="reel-top">${DESIGNS[k].isNew ? `<span class="new">${L("🆕 Yeni")}</span> ` : ""}${i + 1} / ${keys.length} · ${L(DESIGNS[k].group || "Klasik")}</div>
             <div class="reel-sticker">${stickerAt(code, k, link, "60x90", t?.phrase)}</div>
-            <b class="reel-name">${esc(DESIGNS[k].name)}</b>
+            <b class="reel-name">${esc(dName(k))}</b>
           </section>`).join("")}
       </div>
-      <div class="car-hint" aria-hidden="true">👆 Diğer tasarımlar için yana kaydırın</div>
+      <div class="car-hint" aria-hidden="true">${L("👆 Diğer tasarımlar için yana kaydırın")}</div>
       <div class="car-nav">
-        <button class="car-arrow" type="button" id="car-prev" aria-label="Önceki tasarım">‹</button>
-        <button class="btn car-pick" type="button" id="car-pick">Bu tasarımı seç</button>
-        <button class="car-arrow" type="button" id="car-next" aria-label="Sonraki tasarım">›</button>
+        <button class="car-arrow" type="button" id="car-prev" aria-label="${L("Önceki tasarım")}">‹</button>
+        <button class="btn car-pick" type="button" id="car-pick">${L("Bu tasarımı seç")}</button>
+        <button class="car-arrow" type="button" id="car-next" aria-label="${L("Sonraki tasarım")}">›</button>
       </div>
     </div>`, true, "full");
   const track = document.getElementById("reels"), slides = [...track.querySelectorAll(".reel")];
@@ -385,7 +389,7 @@ function showDesigns(tagCode) {
   // Sticker'ı slayta sığacak kadar büyüt
   const room = Math.min((track.clientHeight - 90) / 340, (track.clientWidth - 48) / 227, 1.7);
   track.querySelectorAll(".reel-sticker").forEach(el => el.style.zoom = Math.max(.6, room).toFixed(3));
-  const label = i => t ? (keys[i] === t.design ? "Şu anki tasarım ✓" : "Bu tasarımı kullan") : "Bu tasarımı seç →";
+  const label = i => t ? (keys[i] === t.design ? L("Şu anki tasarım ✓") : L("Bu tasarımı kullan")) : L("Bu tasarımı seç →");
   const setIndex = i => {
     index = i;
     pickBtn.textContent = label(i);
@@ -393,7 +397,7 @@ function showDesigns(tagCode) {
     document.getElementById("car-next").disabled = i === keys.length - 1;
   };
   const go = i => slides[Math.max(0, Math.min(keys.length - 1, i))].scrollIntoView({behavior: "smooth", inline: "start", block: "nearest"});
-  track.scrollLeft = index * track.clientWidth;
+  track.scrollLeft = (document.documentElement.dir === "rtl" ? -1 : 1) * index * track.clientWidth;  // sağdan sola dillerde kaydırma ters
   setIndex(index);
   const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) setIndex(Number(e.target.dataset.i)); }), {root: track, threshold: .6});
   slides.forEach(sl => io.observe(sl));
@@ -403,7 +407,7 @@ function showDesigns(tagCode) {
   pickBtn.onclick = () => {
     const pick = keys[index];
     io.disconnect();
-    if (t) { saveTag({...t, design: pick}); toast(`Tasarım: ${DESIGNS[pick].name}`, 1500); history.back(); return; }
+    if (t) { saveTag({...t, design: pick}); toast(L("Tasarım: {name}", {name: dName(pick)}), 1500); history.back(); return; }
     draft.design = pick;
     store.set("lastDesign", pick);
     location.hash = "#/yeni/telefon";
@@ -411,29 +415,29 @@ function showDesigns(tagCode) {
 }
 
 function showPhone(error = "", value = "") {
-  show("2. Telefon numaranız", `
+  show(L("2. Telefon numaranız"), `
     <div class="steps"><span class="on"></span><span class="on"></span><span></span></div>
     <div class="preview">${stickerAt("······", draft.design, SITE, "50x75")}</div>
     ${error ? `<div class="msg err" role="alert" style="margin-top:14px">${esc(error)}</div>` : ""}
     <form id="f" novalidate>
-      <label for="phone">QR okutulunca aranacak numara</label>
-      <input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="05xx xxx xx xx" value="${esc(value || store.get("lastPhone", ""))}">
-      <div class="hint">Numaranız QR'da ve camda yazmaz. QR'ı okutan kişi sizi arayabilsin diye arama ekranında görür. Numarayı sonradan değiştirebilirsiniz.</div>
-      <button class="btn" type="submit">QR'ımı oluştur</button>
+      <label for="phone">${L("QR okutulunca aranacak numara")}</label>
+      <input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="${L("05xx xxx xx xx")}" value="${esc(value || store.get("lastPhone", ""))}">
+      <div class="hint">${L("Numaranız QR'da ve camda yazmaz. QR'ı okutan kişi sizi arayabilsin diye arama ekranında görür. Numarayı sonradan değiştirebilirsiniz.")}</div>
+      <button class="btn" type="submit">${L("QR'ımı oluştur")}</button>
     </form>`, true);
   document.getElementById("f").addEventListener("submit", async ev => {
     ev.preventDefault();
     const raw = document.getElementById("phone").value;
     const phone = normalizePhone(raw);
-    if (!phone) return showPhone("Numara geçersiz. Örnek: 0532 123 45 67", raw);
-    ev.submitter && (ev.submitter.disabled = true, ev.submitter.textContent = "Oluşturuluyor…");
+    if (!phone) return showPhone(L("Numara geçersiz. Örnek: 0532 123 45 67"), raw);
+    ev.submitter && (ev.submitter.disabled = true, ev.submitter.textContent = L("Oluşturuluyor…"));
     let res;
     try { res = await rpc("self_tag_create", {p_phone: phone, p_device: deviceId()}); }
-    catch (e) { return showPhone(navigator.onLine === false ? "İnternet bağlantısı yok. Bağlanıp tekrar deneyin." : "Sunucuya ulaşılamadı, biraz sonra tekrar deneyin.", raw); }
+    catch (e) { return showPhone(navigator.onLine === false ? L("İnternet bağlantısı yok. Bağlanıp tekrar deneyin.") : L("Sunucuya ulaşılamadı, biraz sonra tekrar deneyin."), raw); }
     if (!res?.ok) {
-      return showPhone({bad_phone: "Numara geçersiz. Örnek: 0532 123 45 67",
-        too_many: "Bugün çok fazla QR oluşturdunuz. Yarın tekrar deneyin ya da QR'larım'daki QR'ı kullanın.",
-        busy: "Şu an çok yoğun, birkaç dakika sonra tekrar deneyin."}[res?.error] || "QR oluşturulamadı, tekrar deneyin.", raw);
+      return showPhone({bad_phone: L("Numara geçersiz. Örnek: 0532 123 45 67"),
+        too_many: L("Bugün çok fazla QR oluşturdunuz. Yarın tekrar deneyin ya da QR'larım'daki QR'ı kullanın."),
+        busy: L("Şu an çok yoğun, birkaç dakika sonra tekrar deneyin.")}[res?.error] || L("QR oluşturulamadı, tekrar deneyin."), raw);
     }
     store.set("lastPhone", raw);
     saveTag({code: res.code, pin: res.pin, phone, design: draft.design, size: "60x90", paper: "a4", copies: 1, created: Date.now()});
@@ -458,9 +462,9 @@ async function loadStats(list) {
 
 function statText(st) {
   if (!st) return "";
-  if (!st.total) return "👀 Henüz okutulmadı";
-  const last = new Date(st.last).toLocaleString("tr-TR", {day: "numeric", month: "long", hour: "2-digit", minute: "2-digit"});
-  return `👀 Son 30 günde <b>${esc(st.last30)}</b> kez okutuldu · toplam ${esc(st.total)} · son: ${esc(last)}`;
+  if (!st.total) return L("👀 Henüz okutulmadı");
+  const last = new Date(st.last).toLocaleString(LOCALE, {day: "numeric", month: "long", hour: "2-digit", minute: "2-digit"});
+  return L("👀 Son 30 günde <b>{n}</b> kez okutuldu · toplam {total} · son: {last}", {n: esc(st.last30), total: esc(st.total), last: esc(last)});
 }
 
 let celebrated = "";
@@ -472,78 +476,78 @@ function showTag(code, isNew) {
   const maxCopies = t.paper === "a4" ? perA4({w, h}) * 4 : 30;
   // Önizleme ekrana sığsın: geniş stickerlarda küçült
   const fit = Math.min(1, (Math.min(innerWidth, 560) - 64) / (w * 96 / 25.4));
-  show(isNew ? "3. Yazdırın" : (t.name || t.code), `
+  show(isNew ? L("3. Yazdırın") : (t.name || t.code), `
     ${isNew ? `<div class="steps"><span class="on"></span><span class="on"></span><span class="on"></span></div>
-      <div class="msg ok"><b>QR'ınız hazır!</b> Okutan kişi ${esc(prettyPhone(t.phone))} numarasına ulaşır.</div>` : ""}
+      <div class="msg ok"><b>${L("QR'ınız hazır!")}</b> ${L("Okutan kişi {phone} numarasına ulaşır.", {phone: esc(prettyPhone(t.phone))})}</div>` : ""}
     <div class="preview"><div style="zoom:${fit.toFixed(3)}">${stickerAt(t.code, t.design, qrLink(t.code), t.size, t.phrase)}</div></div>
     <div id="promo-slot"></div>
 
-    <h2>Kendiniz yazdırın</h2>
+    <h2>${L("Kendiniz yazdırın")}</h2>
     <div class="opts">
-      <label>Tasarım</label>
-      <a class="btn ghost" style="margin-top:0" href="#/etiket/${encodeURIComponent(t.code)}/tasarim">🎨 ${esc(DESIGNS[t.design]?.name || "")} · kaydırarak değiştir</a>
-      <label for="phrase">💬 Söz <span class="opt">(internetten tanıdık kalıplar)</span></label>
+      <label>${L("Tasarım")}</label>
+      <a class="btn ghost" style="margin-top:0" href="#/etiket/${encodeURIComponent(t.code)}/tasarim">🎨 ${esc(dName(t.design))} · ${L("kaydırarak değiştir")}</a>
+      <label for="phrase">${L("💬 Söz")} <span class="opt">${L("(internetten tanıdık kalıplar)")}</span></label>
       <div class="row phrase-row">
-        <select id="phrase"><option value="">Tasarımın kendi sözü</option>${Object.entries(PHRASES).map(([k, v]) =>
+        <select id="phrase"><option value="">${L("Tasarımın kendi sözü")}</option>${Object.entries(PHRASES).map(([k, v]) =>
           `<option value="${k}"${k === t.phrase ? " selected" : ""}>${esc(v)}</option>`).join("")}</select>
-        <button type="button" class="btn ghost dice" id="phrase-dice" aria-label="Rastgele söz">🎲</button>
+        <button type="button" class="btn ghost dice" id="phrase-dice" aria-label="${L("Rastgele söz")}">🎲</button>
       </div>
-      <label for="size">Baskı ölçüsü</label>
+      <label for="size">${L("Baskı ölçüsü")}</label>
       <select id="size">${Object.entries(SIZES).map(([k, n]) =>
-        `<option value="${k}"${k === t.size ? " selected" : ""}>${n}</option>`).join("")}</select>
-      <label>Kağıt</label>
+        `<option value="${k}"${k === t.size ? " selected" : ""}>${esc(L(n))}</option>`).join("")}</select>
+      <label>${L("Kağıt")}</label>
       <div class="seg">
-        <label><input type="radio" name="paper" value="a4"${t.paper === "a4" ? " checked" : ""}> A4 kağıda diz</label>
-        <label><input type="radio" name="paper" value="tek"${t.paper === "tek" ? " checked" : ""}> Sayfa = sticker ölçüsü</label>
+        <label><input type="radio" name="paper" value="a4"${t.paper === "a4" ? " checked" : ""}> ${L("A4 kağıda diz")}</label>
+        <label><input type="radio" name="paper" value="tek"${t.paper === "tek" ? " checked" : ""}> ${L("Sayfa = sticker ölçüsü")}</label>
       </div>
-      <div class="hint">${t.paper === "a4" ? `A4'e ${perA4({w, h})} adet sığar. Kesik çizgilerden kesin.` : "Sticker yazıcısı ya da matbaa için: her sticker kendi ölçüsünde ayrı sayfa."}</div>
-      <label for="copies">Adet</label>
+      <div class="hint">${t.paper === "a4" ? L("A4'e {n} adet sığar. Kesik çizgilerden kesin.", {n: perA4({w, h})}) : L("Sticker yazıcısı ya da matbaa için: her sticker kendi ölçüsünde ayrı sayfa.")}</div>
+      <label for="copies">${L("Adet")}</label>
       <input id="copies" type="number" inputmode="numeric" min="1" max="${maxCopies}" value="${Math.min(t.copies || 1, maxCopies)}">
-      <button class="btn" id="print" type="button">Yazdır / PDF olarak kaydet</button>
-      <button class="btn alt" id="share" type="button">PDF paylaş (WhatsApp, matbaa…)</button>
-      <div class="hint">Yazdırırken ölçeği <b>%100 / Gerçek boyut</b> seçin; “Sayfaya sığdır” ölçüleri bozar.</div>
+      <button class="btn" id="print" type="button">${L("Yazdır / PDF olarak kaydet")}</button>
+      <button class="btn alt" id="share" type="button">${L("PDF paylaş (WhatsApp, matbaa…)")}</button>
+      <div class="hint">${L("Yazdırırken ölçeği <b>%100 / Gerçek boyut</b> seçin; “Sayfaya sığdır” ölçüleri bozar.")}</div>
     </div>
 
-    <h2>QR bilgileri</h2>
+    <h2>${L("QR bilgileri")}</h2>
     <div class="opts" style="padding-top:4px">
-      <label for="t-name">Araç adı <span class="opt">(isteğe bağlı, yalnızca sizde görünür)</span></label>
-      <input id="t-name" maxlength="30" placeholder="Örn. Beyaz Clio, Motor" value="${esc(t.name || "")}">
+      <label for="t-name">${L("Araç adı")} <span class="opt">${L("(isteğe bağlı, yalnızca sizde görünür)")}</span></label>
+      <input id="t-name" maxlength="30" placeholder="${L("Örn. Beyaz Clio, Motor")}" value="${esc(t.name || "")}">
       <label class="switch"><input type="checkbox" id="t-active"${t.disabled ? "" : " checked"}>
-        <span><b>QR açık</b>Kapatırsanız okutan kişi “Bu QR şu an kullanılmıyor” görür, numaranız gösterilmez. Araç satıldığında ya da sticker kaybolduğunda işe yarar.</span></label>
+        <span><b>${L("QR açık")}</b>${L("Kapatırsanız okutan kişi “Bu QR şu an kullanılmıyor” görür, numaranız gösterilmez. Araç satıldığında ya da sticker kaybolduğunda işe yarar.")}</span></label>
       <div id="active-msg"></div>
       <div class="stat" id="stat" style="margin-top:12px">${statText(store.get("stats", {})[t.code])}</div>
       <dl class="kv">
-        <dt>QR kodu</dt><dd>${esc(t.code)}</dd>
-        <dt>Aranacak numara</dt><dd>${esc(prettyPhone(t.phone))}</dd>
-        <dt>PIN</dt><dd><span class="secret" id="pin">••••••</span> <button type="button" class="btn ghost" id="showpin" style="display:inline;width:auto;margin:0 0 0 6px;padding:4px 12px;font-size:14px">Göster</button></dd>
+        <dt>${L("QR kodu")}</dt><dd>${esc(t.code)}</dd>
+        <dt>${L("Aranacak numara")}</dt><dd>${esc(prettyPhone(t.phone))}</dd>
+        <dt>PIN</dt><dd><span class="secret" id="pin">••••••</span> <button type="button" class="btn ghost" id="showpin" style="display:inline;width:auto;margin:0 0 0 6px;padding:4px 12px;font-size:14px">${L("Göster")}</button></dd>
       </dl>
-      <div class="hint">PIN numarayı değiştirmek için gerekir ve bu telefonda saklanır. Telefon değiştirecekseniz <a href="#/yedek">Profilim › Yedekle / taşı</a> ile QR'larınızı yeni telefona taşıyın.</div>
-      <a class="btn ghost" href="#/etiket/${encodeURIComponent(t.code)}/numara">Numarayı değiştir</a>
-      <a class="btn ghost" href="${esc(qrLink(t.code))}">QR'ı dene (okutan kişinin göreceği sayfa)</a>
-      <button class="btn danger" id="delete" type="button">QR'ı kalıcı olarak sil</button>
-      <button class="btn ghost" id="remove" type="button">Yalnızca bu telefondaki listeden kaldır</button>
+      <div class="hint">${L("PIN numarayı değiştirmek için gerekir ve bu telefonda saklanır. Telefon değiştirecekseniz <a href='#/yedek'>Profilim › Yedekle / taşı</a> ile QR'larınızı yeni telefona taşıyın.")}</div>
+      <a class="btn ghost" href="#/etiket/${encodeURIComponent(t.code)}/numara">${L("Numarayı değiştir")}</a>
+      <a class="btn ghost" href="${esc(qrLink(t.code))}">${L("QR'ı dene (okutan kişinin göreceği sayfa)")}</a>
+      <button class="btn danger" id="delete" type="button">${L("QR'ı kalıcı olarak sil")}</button>
+      <button class="btn ghost" id="remove" type="button">${L("Yalnızca bu telefondaki listeden kaldır")}</button>
     </div>
 
-    <h2>Arama ayarları</h2>
+    <h2>${L("Arama ayarları")}</h2>
     <form class="opts" id="cs" novalidate style="padding-top:4px">
       <div id="cs-msg"></div>
-      <label class="check"><input type="checkbox" id="q-on"${t.quietStart != null ? " checked" : ""}> <span><b>Sessiz saatler</b>Bu saatlerde QR'ı okutan kişiye arama butonu gösterilmez; size yalnızca SMS ya da WhatsApp mesajı gönderebilir.</span></label>
+      <label class="check"><input type="checkbox" id="q-on"${t.quietStart != null ? " checked" : ""}> <span><b>${L("Sessiz saatler")}</b>${L("Bu saatlerde QR'ı okutan kişiye arama butonu gösterilmez; size yalnızca SMS ya da WhatsApp mesajı gönderebilir.")}</span></label>
       <div class="row" id="q-times"${t.quietStart != null ? "" : " hidden"}>
-        <div><label for="q-start">Başlangıç</label><input id="q-start" type="time" value="${hhmm(t.quietStart ?? 1380)}"></div>
-        <div><label for="q-end">Bitiş</label><input id="q-end" type="time" value="${hhmm(t.quietEnd ?? 420)}"></div>
+        <div><label for="q-start">${L("Başlangıç")}</label><input id="q-start" type="time" value="${hhmm(t.quietStart ?? 1380)}"></div>
+        <div><label for="q-end">${L("Bitiş")}</label><input id="q-end" type="time" value="${hhmm(t.quietEnd ?? 420)}"></div>
       </div>
-      <button class="btn" type="submit">Arama ayarlarını kaydet</button>
+      <button class="btn" type="submit">${L("Arama ayarlarını kaydet")}</button>
     </form>`, true);
 
   const update = patch => { saveTag({...t, ...patch}); showTag(code, isNew); };
   document.getElementById("t-name").onchange = ev => {
     saveTag({...findTag(code), name: ev.target.value.trim()});
     document.getElementById("apptitle").textContent = ev.target.value.trim() || t.code;
-    toast("Araç adı kaydedildi.", 1500);
+    toast(L("Araç adı kaydedildi."), 1500);
   };
   document.getElementById("t-active").onchange = async ev => {
     const active = ev.target.checked, box = document.getElementById("active-msg");
-    if (!active && !confirm("QR kapatılsın mı? Okutan kişiler size ulaşamaz; istediğiniz zaman yeniden açabilirsiniz.")) { ev.target.checked = true; return; }
+    if (!active && !confirm(L("QR kapatılsın mı? Okutan kişiler size ulaşamaz; istediğiniz zaman yeniden açabilirsiniz."))) { ev.target.checked = true; return; }
     ev.target.disabled = true;
     let res;
     try { res = await rpc("self_tag_set_active", {p_code: t.code, p_pin: t.pin, p_active: active}); }
@@ -551,14 +555,14 @@ function showTag(code, isNew) {
     ev.target.disabled = false;
     if (!res?.ok) {
       ev.target.checked = !active;
-      box.innerHTML = `<div class="msg err" role="alert">${esc({update: "Bu özellik için sunucu güncellemesi gerekiyor; kısa süre içinde açılacak.",
-        net: "Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edin.", bad_pin: "PIN eşleşmedi.",
-        locked: "Çok fazla deneme. 15 dakika sonra tekrar deneyin."}[res?.error] || "Değiştirilemedi.")}</div>`;
+      box.innerHTML = `<div class="msg err" role="alert">${esc({update: L("Bu özellik için sunucu güncellemesi gerekiyor; kısa süre içinde açılacak."),
+        net: L("Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edin."), bad_pin: L("PIN eşleşmedi."),
+        locked: L("Çok fazla deneme. 15 dakika sonra tekrar deneyin.")}[res?.error] || L("Değiştirilemedi."))}</div>`;
       return;
     }
     box.innerHTML = "";
     saveTag({...findTag(code), disabled: res.disabled});
-    toast(res.disabled ? "QR kapatıldı. Okutan kişiler size ulaşamaz." : "QR yeniden açıldı.");
+    toast(res.disabled ? L("QR kapatıldı. Okutan kişiler size ulaşamaz.") : L("QR yeniden açıldı."));
   };
   loadStats([t]).then(st => { const el = document.getElementById("stat"); if (el && st[t.code]) el.innerHTML = statText(st[t.code]); });
   document.getElementById("q-on").onchange = ev => { document.getElementById("q-times").hidden = !ev.target.checked; };
@@ -569,21 +573,21 @@ function showTag(code, isNew) {
     const quiet = document.getElementById("q-on").checked;
     const qs = quiet ? toMinutes(document.getElementById("q-start").value) : null;
     const qe = quiet ? toMinutes(document.getElementById("q-end").value) : null;
-    if (quiet && (qs == null || qe == null || qs === qe)) return fail("Sessiz saatlerin başlangıç ve bitişini farklı seçin.");
+    if (quiet && (qs == null || qe == null || qs === qe)) return fail(L("Sessiz saatlerin başlangıç ve bitişini farklı seçin."));
     ev.submitter && (ev.submitter.disabled = true);
     let res;
     try { res = await rpc("self_tag_settings", {p_code: t.code, p_pin: t.pin, p_backup_phone: null, p_backup_name: null, p_quiet_start: qs, p_quiet_end: qe}); }
     catch (e) {
       ev.submitter && (ev.submitter.disabled = false);
-      return fail(e.status === 404 ? "Bu özellik için sunucu güncellemesi gerekiyor; kısa süre içinde açılacak." : "Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edin.");
+      return fail(e.status === 404 ? L("Bu özellik için sunucu güncellemesi gerekiyor; kısa süre içinde açılacak.") : L("Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edin."));
     }
     if (!res?.ok) {
       ev.submitter && (ev.submitter.disabled = false);
-      return fail({bad_hours: "Sessiz saatler geçersiz.", bad_pin: "PIN eşleşmedi.",
-        locked: "Çok fazla deneme. 15 dakika sonra tekrar deneyin.", not_found: "QR sunucuda bulunamadı."}[res?.error] || "Kaydedilemedi.");
+      return fail({bad_hours: L("Sessiz saatler geçersiz."), bad_pin: L("PIN eşleşmedi."),
+        locked: L("Çok fazla deneme. 15 dakika sonra tekrar deneyin."), not_found: L("QR sunucuda bulunamadı.")}[res?.error] || "Kaydedilemedi.");
     }
     saveTag({...findTag(code), backupPhone: null, backupName: "", quietStart: qs, quietEnd: qe});
-    toast("Arama ayarları kaydedildi.");
+    toast(L("Arama ayarları kaydedildi."));
     showTag(code, isNew);
   });
   document.getElementById("size").onchange = ev => update({size: ev.target.value});
@@ -597,29 +601,29 @@ function showTag(code, isNew) {
   document.getElementById("copies").onchange = () => saveTag({...findTag(code), copies: copies()});
   document.getElementById("print").onclick = () => printTag(findTag(code), copies());
   document.getElementById("share").onclick = async ev => {
-    ev.target.disabled = true; ev.target.textContent = "PDF hazırlanıyor…";
+    ev.target.disabled = true; ev.target.textContent = L("PDF hazırlanıyor…");
     try { await sharePdf(findTag(code), copies()); }
-    catch (e) { toast("PDF oluşturulamadı: " + e.message); }
-    ev.target.disabled = false; ev.target.textContent = "PDF paylaş (WhatsApp, matbaa…)";
+    catch (e) { toast(L("PDF oluşturulamadı: ") + e.message); }
+    ev.target.disabled = false; ev.target.textContent = L("PDF paylaş (WhatsApp, matbaa…)");
   };
   document.getElementById("showpin").onclick = ev => {
     const el = document.getElementById("pin"), shown = el.textContent === t.pin;
     el.textContent = shown ? "••••••" : t.pin;
-    ev.target.textContent = shown ? "Göster" : "Gizle";
+    ev.target.textContent = shown ? L("Göster") : L("Gizle");
   };
   document.getElementById("remove").onclick = () => {
-    if (!confirm(`${t.code} bu telefondaki listeden kaldırılsın mı?\n\nQR çalışmaya devam eder; ama PIN'i not etmediyseniz numarasını bir daha değiştiremezsiniz.`)) return;
+    if (!confirm(L("{code} bu telefondaki listeden kaldırılsın mı?\n\nQR çalışmaya devam eder; ama PIN'i not etmediyseniz numarasını bir daha değiştiremezsiniz.", {code: t.code}))) return;
     store.set("tags", tags().filter(x => x.code !== t.code));
     location.replace("#/");
   };
   document.getElementById("delete").onclick = async ev => {
-    if (!confirm(`${t.code} kalıcı olarak silinsin mi?\n\nNumaranız ve okutma kayıtları sunucudan silinir. Bu QR okutulunca artık sizi aramaz; basılı sticker'ı da çöpe atabilirsiniz. Geri alınamaz.`)) return;
+    if (!confirm(L("{code} kalıcı olarak silinsin mi?\n\nNumaranız ve okutma kayıtları sunucudan silinir. Bu QR okutulunca artık sizi aramaz; basılı sticker'ı da çöpe atabilirsiniz. Geri alınamaz.", {code: t.code}))) return;
     ev.target.disabled = true;
     const err = await deleteTagOnServer(t);
     ev.target.disabled = false;
     if (err) return toast(err);
     store.set("tags", tags().filter(x => x.code !== t.code));
-    toast("QR silindi");
+    toast(L("QR silindi"));
     location.replace("#/");
   };
   if (isNew && celebrated !== code) { celebrated = code; confetti(); }
@@ -632,28 +636,28 @@ function showTag(code, isNew) {
 function showChangeNumber(code, error = "", value = "") {
   const t = findTag(code);
   if (!t) { location.replace("#/"); return; }
-  show("Numarayı değiştir", `
-    <p>${esc(t.code)} QR'ını okutanlar artık bu numaraya ulaşacak. Sticker'ı yeniden basmanıza gerek yok.</p>
+  show(L("Numarayı değiştir"), `
+    <p>${L("{code} QR'ını okutanlar artık bu numaraya ulaşacak. Sticker'ı yeniden basmanıza gerek yok.", {code: esc(t.code)})}</p>
     ${error ? `<div class="msg err" role="alert">${esc(error)}</div>` : ""}
     <form id="f" novalidate>
-      <label for="phone">Yeni numara</label>
-      <input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="05xx xxx xx xx" value="${esc(value)}">
-      <button class="btn" type="submit">Kaydet</button>
+      <label for="phone">${L("Yeni numara")}</label>
+      <input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="${L("05xx xxx xx xx")}" value="${esc(value)}">
+      <button class="btn" type="submit">${L("Kaydet")}</button>
     </form>`, true);
   document.getElementById("f").addEventListener("submit", async ev => {
     ev.preventDefault();
     const raw = document.getElementById("phone").value, phone = normalizePhone(raw);
-    if (!phone) return showChangeNumber(code, "Numara geçersiz. Örnek: 0532 123 45 67", raw);
+    if (!phone) return showChangeNumber(code, L("Numara geçersiz. Örnek: 0532 123 45 67"), raw);
     ev.submitter && (ev.submitter.disabled = true);
     let res;
     try { res = await rpc("self_tag_save", {p_code: t.code, p_pin: t.pin, p_phone: phone}); }
-    catch (e) { return showChangeNumber(code, "Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edin.", raw); }
+    catch (e) { return showChangeNumber(code, L("Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edin."), raw); }
     if (!res?.ok) {
-      return showChangeNumber(code, {locked: `Çok fazla deneme. ${res?.minutes || 15} dakika sonra tekrar deneyin.`,
-        bad_phone: "Numara geçersiz.", bad_pin: "PIN eşleşmedi.", not_found: "Bu QR sunucuda bulunamadı."}[res?.error] || "Kaydedilemedi.", raw);
+      return showChangeNumber(code, {locked: L("Çok fazla deneme. {n} dakika sonra tekrar deneyin.", {n: res?.minutes || 15}),
+        bad_phone: L("Numara geçersiz."), bad_pin: L("PIN eşleşmedi."), not_found: L("Bu QR sunucuda bulunamadı.")}[res?.error] || "Kaydedilemedi.", raw);
     }
     saveTag({...t, phone: res.phone});
-    toast(`Kaydedildi. QR artık ${prettyPhone(res.phone)} numarasını arar.`);
+    toast(L("Kaydedildi. QR artık {phone} numarasını arar.", {phone: prettyPhone(res.phone)}));
     history.back();
   });
 }
@@ -681,7 +685,7 @@ async function printTag(t, copies) {
 let pdfLibs;
 function loadPdfLibs() {
   const load = src => new Promise((ok, fail) => document.head.append(Object.assign(document.createElement("script"),
-    {src, onload: ok, onerror: () => fail(new Error("kütüphane yüklenemedi"))})));
+    {src, onload: ok, onerror: () => fail(new Error(L("kütüphane yüklenemedi")))})));
   return pdfLibs ||= Promise.all([load("vendor/html2canvas.min.js"), load("vendor/jspdf.umd.min.js")]);
 }
 
@@ -717,9 +721,9 @@ async function sharePdf(t, copies) {
 // ---------------------------------------------------------------- basılı sticker siparişi
 // Uygulamada ödeme yok: sipariş kaydedilir, yöneticiye Telegram / e-posta gider, müşteriyle iletişime geçilir.
 const STATUS = {
-  yeni: "Sipariş alındı, sizi arayacağız", onaylandi: "Onaylandı, baskıya hazırlanıyor", baskida: "Baskıda",
-  kargolandi: "Kargoya verildi", iptal: "İptal edildi",
-  odeme_bekleniyor: "Sipariş alındı, sizi arayacağız", odeme_bildirildi: "Sipariş alındı, sizi arayacağız",  // eski siparişler
+  yeni: L("Sipariş alındı, sizi arayacağız"), onaylandi: L("Onaylandı, baskıya hazırlanıyor"), baskida: L("Baskıda"),
+  kargolandi: L("Kargoya verildi"), iptal: L("İptal edildi"),
+  odeme_bekleniyor: L("Sipariş alındı, sizi arayacağız"), odeme_bildirildi: L("Sipariş alındı, sizi arayacağız"),  // eski siparişler
 };
 const orders = () => store.get("orders", []);
 const findOrder = code => orders().find(o => o.code === code);
@@ -748,19 +752,19 @@ function promoHtml(t, shop, compact = false) {
   if (compact) {
     return `<a class="promo compact" href="${href}">
       <span class="promo-emoji" aria-hidden="true">📦</span>
-      <span><b>Yazıcıyla uğraşmayın!</b>Su geçirmez sticker setiniz kapınıza gelsin</span>
+      <span><b>${L("Yazıcıyla uğraşmayın!")}</b>${L("Su geçirmez sticker setiniz kapınıza gelsin")}</span>
       <strong>${esc(shop.price)} TL</strong>
     </a>`;
   }
   return `<a class="promo" href="${href}">
-    <span class="promo-tag">Yazıcıyla uğraşmayın</span>
-    <b class="promo-title">Biz basalım, kapınıza gönderelim</b>
+    <span class="promo-tag">${L("Yazıcıyla uğraşmayın")}</span>
+    <b class="promo-title">${L("Biz basalım, kapınıza gönderelim")}</b>
     <ul>
-      <li>💧 Yağmura ve güneşe dayanıklı vinil</li>
-      <li>📐 6 farklı ölçüde 9 sticker</li>
-      <li>✂️ Kesime hazır, kolay yapıştırılır</li>
+      <li>${L("💧 Yağmura ve güneşe dayanıklı vinil")}</li>
+      <li>${L("📐 6 farklı ölçüde 9 sticker")}</li>
+      <li>${L("✂️ Kesime hazır, kolay yapıştırılır")}</li>
     </ul>
-    <span class="promo-foot"><span class="promo-price">${esc(shop.price)} TL</span><span class="promo-cta">Hemen sipariş ver →</span></span>
+    <span class="promo-foot"><span class="promo-price">${esc(shop.price)} TL</span><span class="promo-cta">${L("Hemen sipariş ver →")}</span></span>
     <span class="promo-ship">${esc(shop.shipping_text || "")}</span>
   </a>`;
 }
@@ -768,7 +772,7 @@ function promoHtml(t, shop, compact = false) {
 function orderCardHtml(o) {
   return `<a class="card order st-${esc(o.status)}" href="#/siparis/${encodeURIComponent(o.code)}" data-order="${esc(o.code)}">
     <span class="oc-icon" aria-hidden="true">📦</span>
-    <div><b>${esc(o.code)} · ${esc(o.amount)} TL</b><span class="ostatus">${esc(STATUS[o.status] || o.status)}${o.tracking ? ` · Takip no: ${esc(o.tracking)}` : ""}</span></div>
+    <div><b>${esc(o.code)} · ${esc(o.amount)} TL</b><span class="ostatus">${esc(STATUS[o.status] || o.status)}${o.tracking ? ` · ${L("Takip no:")} ${esc(o.tracking)}` : ""}</span></div>
   </a>`;
 }
 
@@ -788,18 +792,18 @@ async function refreshOrders() {
 }
 
 const PRODUCT_FEATURES = [
-  ["💧", "Yağmura dayanıklı", "Su geçirmez vinil; yağmur, araç yıkama ve nemden etkilenmez."],
-  ["☀️", "Güneşe dayanıklı", "UV dayanımlı baskı: renkler ve QR kod kolay kolay solmaz."],
-  ["📐", "6 farklı ölçü, 9 sticker", "Aynı QR'ınız A4 sayfada: 80×120, 74×105, 60×90, 55×85, 50×75 mm ve 4 adet 40×60 mm. Cam, tampon, kask, bisiklet…"],
-  ["✂️", "Kesime hazır", "Her sticker'ın kesim çizgisi var; makasla kolayca ayırırsınız."],
-  ["🔒", "Numaranız güvende", "Numaranız sticker'da yazmaz; dilediğiniz zaman uygulamadan değiştirirsiniz, yeniden basmanız gerekmez."],
+  ["💧", L("Yağmura dayanıklı"), L("Su geçirmez vinil; yağmur, araç yıkama ve nemden etkilenmez.")],
+  ["☀️", L("Güneşe dayanıklı"), L("UV dayanımlı baskı: renkler ve QR kod kolay kolay solmaz.")],
+  ["📐", L("6 farklı ölçü, 9 sticker"), L("Aynı QR'ınız A4 sayfada: 80×120, 74×105, 60×90, 55×85, 50×75 mm ve 4 adet 40×60 mm. Cam, tampon, kask, bisiklet…")],
+  ["✂️", L("Kesime hazır"), L("Her sticker'ın kesim çizgisi var; makasla kolayca ayırırsınız.")],
+  ["🔒", L("Numaranız güvende"), L("Numaranız sticker'da yazmaz; dilediğiniz zaman uygulamadan değiştirirsiniz, yeniden basmanız gerekmez.")],
 ];
 
 // Örnek baskı sayfası: gerçek QR yerine çalışmayan örnek QR ve "ÖRNEK" filigranı (ekran görüntüsü alınsa da işe yaramaz)
 function sampleSheetHtml(design, zoom, phrase) {
-  return `<div class="sample" style="zoom:${zoom.toFixed(3)}" aria-label="Örnek baskı sayfası">
-    ${orderSheetHtml("ÖRNEK", design, SITE + "#ornek", phrase)}
-    <div class="watermark" aria-hidden="true">${"<span>ÖRNEK</span>".repeat(24)}</div>
+  return `<div class="sample" style="zoom:${zoom.toFixed(3)}" aria-label="${L("Örnek baskı sayfası")}">
+    ${orderSheetHtml(L("ÖRNEK"), design, SITE + "#ornek", phrase)}
+    <div class="watermark" aria-hidden="true">${`<span>${L("ÖRNEK")}</span>`.repeat(24)}</div>
   </div>`;
 }
 
@@ -807,8 +811,8 @@ function openSample(design, phrase) {
   const box = document.createElement("div");
   box.className = "viewer";
   const zoom = (Math.min(innerWidth, 700) - 24) / (190 * 96 / 25.4);
-  box.innerHTML = `<button class="viewer-close" type="button" aria-label="Kapat">✕</button>
-    <div class="viewer-body">${sampleSheetHtml(design, zoom, phrase)}<p>Gerçek baskıda sizin QR'ınız olur. Sayfa A4, stickerlar gerçek ölçüsünde basılır.</p></div>`;
+  box.innerHTML = `<button class="viewer-close" type="button" aria-label="${L("Kapat")}">✕</button>
+    <div class="viewer-body">${sampleSheetHtml(design, zoom, phrase)}<p>${L("Gerçek baskıda sizin QR'ınız olur. Sayfa A4, stickerlar gerçek ölçüsünde basılır.")}</p></div>`;
   box.querySelector(".viewer-close").onclick = () => box.remove();
   document.body.append(box);
 }
@@ -816,44 +820,44 @@ function openSample(design, phrase) {
 async function showOrder(tagCode, error = "", v = null) {
   const t = findTag(tagCode);
   if (!t) { location.replace("#/"); return; }
-  show("Biz basalım, gönderelim", "<p>Yükleniyor…</p>", true);
+  show(L("Biz basalım, gönderelim"), `<p>${L("Yükleniyor…")}</p>`, true);
   const shop = await loadShop();
   if (!shop?.active) {
-    return show("Biz basalım, gönderelim", `
-      <div class="msg info"><b>Basılı sipariş şu an kapalı.</b><br>Kısa süre içinde açılacak. Bu sırada QR'ınızı kendiniz ücretsiz yazdırabilirsiniz.</div>
-      <a class="btn" href="#/etiket/${encodeURIComponent(t.code)}">QR'a dön</a>`, true);
+    return show(L("Biz basalım, gönderelim"), `
+      <div class="msg info"><b>${L("Basılı sipariş şu an kapalı.")}</b><br>${L("Kısa süre içinde açılacak. Bu sırada QR'ınızı kendiniz ücretsiz yazdırabilirsiniz.")}</div>
+      <a class="btn" href="#/etiket/${encodeURIComponent(t.code)}">${L("QR'a dön")}</a>`, true);
   }
   v = v || profile();
   const val = k => `value="${esc(v[k] || "")}"`;
   const zoom = (Math.min(innerWidth, 560) - 64) / (190 * 96 / 25.4);
-  show("Biz basalım, gönderelim", `
+  show(L("Biz basalım, gönderelim"), `
     ${error ? `<div class="msg err" role="alert">${esc(error)}</div>` : ""}
-    <div class="price big"><span>Su geçirmez vinil sticker seti<small>6 ölçüde 9 sticker · A4 sayfa</small></span><strong>${esc(shop.price)} TL</strong></div>
+    <div class="price big"><span>${L("Su geçirmez vinil sticker seti")}<small>${L("6 ölçüde 9 sticker · A4 sayfa")}</small></span><strong>${esc(shop.price)} TL</strong></div>
     <div class="hint" style="text-align:center">${esc(shop.shipping_text)}</div>
-    <button type="button" class="preview sheetprev" id="sample" aria-label="Örnek baskıyı büyüt">${sampleSheetHtml(t.design, zoom, t.phrase)}<span class="zoomhint">🔍 Örneği büyüt</span></button>
+    <button type="button" class="preview sheetprev" id="sample" aria-label="${L("Örnek baskıyı büyüt")}">${sampleSheetHtml(t.design, zoom, t.phrase)}<span class="zoomhint">${L("🔍 Örneği büyüt")}</span></button>
     <ul class="features">${PRODUCT_FEATURES.map(([i, h, d]) => `<li><span aria-hidden="true">${i}</span><div><b>${h}</b>${d}</div></li>`).join("")}</ul>
-    <a class="btn ghost" href="#/etiket/${encodeURIComponent(t.code)}/tasarim">🎨 Tasarım: ${esc(DESIGNS[t.design]?.name || "")} · değiştir</a>
+    <a class="btn ghost" href="#/etiket/${encodeURIComponent(t.code)}/tasarim">🎨 ${L("Tasarım: {name}", {name: esc(dName(t.design))})} · ${L("değiştir")}</a>
 
-    <h2>Sipariş bilgileri</h2>
-    <div class="msg info">Uygulamada ödeme yok. Siparişinizi aldıktan sonra sizi arayıp ödeme ve teslimatı birlikte ayarlıyoruz.</div>
+    <h2>${L("Sipariş bilgileri")}</h2>
+    <div class="msg info">${L("Uygulamada ödeme yok. Siparişinizi aldıktan sonra sizi arayıp ödeme ve teslimatı birlikte ayarlıyoruz.")}</div>
     <form id="of" class="opts" style="padding-top:2px" novalidate>
-      <label for="o-name">Ad soyad</label><input id="o-name" autocomplete="name" ${val("name")}>
-      <label for="o-phone">Telefon</label>
-      <input id="o-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="05xx xxx xx xx" value="${esc(v.phone || prettyPhone(t.phone))}">
-      <label for="o-email">E-posta</label>
-      <input id="o-email" type="email" inputmode="email" autocomplete="email" placeholder="ornek@mail.com" ${val("email")}>
-      <details class="addr"${v.address || v.city ? " open" : ""}><summary>Teslimat adresi <span class="opt">(isteğe bağlı, görüşmede de alabiliriz)</span></summary>
+      <label for="o-name">${L("Ad soyad")}</label><input id="o-name" autocomplete="name" ${val("name")}>
+      <label for="o-phone">${L("Telefon")}</label>
+      <input id="o-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="${L("05xx xxx xx xx")}" value="${esc(v.phone || prettyPhone(t.phone))}">
+      <label for="o-email">${L("E-posta")}</label>
+      <input id="o-email" type="email" inputmode="email" autocomplete="email" placeholder="${L("ornek@mail.com")}" ${val("email")}>
+      <details class="addr"${v.address || v.city ? " open" : ""}><summary>${L("Teslimat adresi")} <span class="opt">${L("(isteğe bağlı, görüşmede de alabiliriz)")}</span></summary>
         <div class="row">
-          <div><label for="o-city">İl</label><input id="o-city" autocomplete="address-level1" ${val("city")}></div>
-          <div><label for="o-district">İlçe</label><input id="o-district" autocomplete="address-level2" ${val("district")}></div>
+          <div><label for="o-city">${L("İl")}</label><input id="o-city" autocomplete="address-level1" ${val("city")}></div>
+          <div><label for="o-district">${L("İlçe")}</label><input id="o-district" autocomplete="address-level2" ${val("district")}></div>
         </div>
-        <label for="o-address">Açık adres</label>
-        <textarea id="o-address" rows="3" autocomplete="street-address" placeholder="Mahalle, cadde/sokak, bina no, daire">${esc(v.address || "")}</textarea>
+        <label for="o-address">${L("Açık adres")}</label>
+        <textarea id="o-address" rows="3" autocomplete="street-address" placeholder="${L("Mahalle, cadde/sokak, bina no, daire")}">${esc(v.address || "")}</textarea>
       </details>
-      <label for="o-note">Not <span class="opt">(isteğe bağlı)</span></label>
-      <input id="o-note" placeholder="Örn. akşam arayın" ${val("note")}>
-      <label class="check"><input type="checkbox" id="o-ok"${v.ok ? " checked" : ""}> Bilgilerimin siparişim için benimle iletişime geçilmesi ve siparişin gönderilmesi amacıyla kullanılmasını kabul ediyorum.</label>
-      <button class="btn order-go" type="submit">Siparişi gönder · ${esc(shop.price)} TL</button>
+      <label for="o-note">${L("Not")} <span class="opt">${L("(isteğe bağlı)")}</span></label>
+      <input id="o-note" placeholder="${L("Örn. akşam arayın")}" ${val("note")}>
+      <label class="check"><input type="checkbox" id="o-ok"${v.ok ? " checked" : ""}> ${L("Bilgilerimin siparişim için benimle iletişime geçilmesi ve siparişin gönderilmesi amacıyla kullanılmasını kabul ediyorum.")}</label>
+      <button class="btn order-go" type="submit">${L("Siparişi gönder")} · ${esc(shop.price)} TL</button>
     </form>`, true);
   document.getElementById("sample").onclick = () => openSample(t.design, t.phrase);
   document.getElementById("of").addEventListener("submit", async ev => {
@@ -862,23 +866,23 @@ async function showOrder(tagCode, error = "", v = null) {
     const v2 = {name: g("o-name"), phone: g("o-phone"), email: g("o-email"), city: g("o-city"), district: g("o-district"),
       address: g("o-address"), note: g("o-note"), ok: document.getElementById("o-ok").checked};
     const phone = normalizePhone(v2.phone);
-    const err = v2.name.length < 3 ? "Ad soyad yazın." : !phone ? "Telefon numarası geçersiz. Örnek: 0532 123 45 67"
-      : !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v2.email) ? "E-posta adresinizi yazın. Örnek: ornek@mail.com"
-      : !v2.ok ? "Devam etmek için onay kutusunu işaretleyin." : "";
+    const err = v2.name.length < 3 ? L("Ad soyad yazın.") : !phone ? L("Telefon numarası geçersiz. Örnek: 0532 123 45 67")
+      : !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v2.email) ? L("E-posta adresinizi yazın. Örnek: ornek@mail.com")
+      : !v2.ok ? L("Devam etmek için onay kutusunu işaretleyin.") : "";
     if (err) return showOrder(tagCode, err, v2);
     store.set("profile", {...profile(), name: v2.name, phone: v2.phone, email: v2.email,
       city: v2.city || profile().city, district: v2.district || profile().district, address: v2.address || profile().address});
-    ev.submitter && (ev.submitter.disabled = true, ev.submitter.textContent = "Gönderiliyor…");
+    ev.submitter && (ev.submitter.disabled = true, ev.submitter.textContent = L("Gönderiliyor…"));
     let res;
     try {
       res = await rpc("order_create", {p_tag_code: t.code, p_design: t.design, p_phrase: t.phrase || null, p_full_name: v2.name, p_phone: phone, p_email: v2.email,
         p_city: v2.city || null, p_district: v2.district || null, p_address: v2.address || null, p_note: v2.note || null, p_device: deviceId()});
-    } catch (e) { return showOrder(tagCode, "Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.", v2); }
+    } catch (e) { return showOrder(tagCode, L("Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edip tekrar deneyin."), v2); }
     if (!res?.ok) {
-      return showOrder(tagCode, {closed: "Basılı sipariş şu an kapalı.", no_tag: "Bu QR sunucuda bulunamadı.",
-        missing: "Ad soyad yazın.", bad_phone: "Telefon numarası geçersiz.", bad_email: "E-posta adresi geçersiz.",
-        too_many: "Bugün çok fazla sipariş oluşturdunuz. Siparişlerim'den mevcut siparişinizi görebilirsiniz.",
-        busy: "Şu an çok yoğun, birkaç dakika sonra tekrar deneyin."}[res?.error] || "Sipariş gönderilemedi.", v2);
+      return showOrder(tagCode, {closed: L("Basılı sipariş şu an kapalı."), no_tag: L("Bu QR sunucuda bulunamadı."),
+        missing: L("Ad soyad yazın."), bad_phone: L("Telefon numarası geçersiz."), bad_email: L("E-posta adresi geçersiz."),
+        too_many: L("Bugün çok fazla sipariş oluşturdunuz. Siparişlerim'den mevcut siparişinizi görebilirsiniz."),
+        busy: L("Şu an çok yoğun, birkaç dakika sonra tekrar deneyin.")}[res?.error] || L("Sipariş gönderilemedi."), v2);
     }
     saveOrder({code: res.code, token: res.token, amount: res.amount, status: res.status, tagCode: t.code, design: t.design, created: Date.now()});
     sendOrderPdf(res, t);  // arka planda; başarısız olsa da sipariş alınmıştır
@@ -916,47 +920,47 @@ async function showOrderStatus(orderCode, isNew) {
   const o = findOrder(orderCode);
   if (!o) { location.replace("#/"); return; }
   if (isNew) {
-    show("Siparişlerim", `
+    show(L("Siparişlerim"), `
       <div class="empty" style="padding-top:10px">
         <div style="font-size:64px" aria-hidden="true">🎉</div>
-        <h1>Siparişiniz alındı!</h1>
-        <p>En kısa sürede sizi arayıp ödeme ve teslimatı konuşacağız. Sipariş no: <b>${esc(o.code)}</b></p>
-        <p class="hint">Siparişiniz ilerledikçe (onaylandı, baskıda, kargoda) size bildirim gelir. Durumu bu sayfadan da takip edebilirsiniz.</p>
+        <h1>${L("Siparişiniz alındı!")}</h1>
+        <p>${L("En kısa sürede sizi arayıp ödeme ve teslimatı konuşacağız. Sipariş no:")} <b>${esc(o.code)}</b></p>
+        <p class="hint">${L("Siparişiniz ilerledikçe (onaylandı, baskıda, kargoda) size bildirim gelir. Durumu bu sayfadan da takip edebilirsiniz.")}</p>
       </div>
-      <a class="btn" href="#/siparisler">Siparişlerimi gör</a>`, false, "", "orders");
+      <a class="btn" href="#/siparisler">${L("Siparişlerimi gör")}</a>`, false, "", "orders");
     confetti();
     return;
   }
-  show("Siparişlerim", "<p>Yükleniyor…</p>", true, "", "orders");
+  show(L("Siparişlerim"), `<p>${L("Yükleniyor…")}</p>`, true, "", "orders");
   await refreshOrders();
   const cur = findOrder(orderCode);
   const steps = ["yeni", "onaylandi", "baskida", "kargolandi"];
   const cancellable = ["yeni", "odeme_bekleniyor", "odeme_bildirildi"].includes(cur.status);
   const at = steps.indexOf(["odeme_bekleniyor", "odeme_bildirildi"].includes(cur.status) ? "yeni" : cur.status);
-  show("Siparişlerim", `
-    <h2 style="margin-top:0">Sipariş ${esc(cur.code)}</h2>
+  show(L("Siparişlerim"), `
+    <h2 style="margin-top:0">${L("Sipariş {code}", {code: esc(cur.code)})}</h2>
     <div class="msg ${cur.status === "iptal" ? "err" : "ok"}"><b>${esc(STATUS[cur.status] || cur.status)}</b>${
-      cur.status === "iptal" ? `<br>${cur.cancelledBy === "musteri" ? "Siparişinizi siz iptal ettiniz." : "Sipariş tarafımızdan iptal edildi."}` : ""}${
-      cur.tracking ? `<br>Kargo takip no: <b>${esc(cur.tracking)}</b>` : ""}</div>
+      cur.status === "iptal" ? `<br>${cur.cancelledBy === "musteri" ? L("Siparişinizi siz iptal ettiniz.") : L("Sipariş tarafımızdan iptal edildi.")}` : ""}${
+      cur.tracking ? `<br>${L("Kargo takip no:")} <b>${esc(cur.tracking)}</b>` : ""}</div>
     ${cur.status === "iptal" ? "" : `<ol class="timeline">${steps.map((st, i) => `<li class="${at >= i ? "on" : ""}">${esc(STATUS[st])}</li>`).join("")}</ol>`}
-    <p>Tutar: <b>${esc(cur.amount)} TL</b>. Sorunuz olursa sipariş numaranızla bize ulaşın.</p>
-    <a class="btn ghost" href="#/siparisler">Siparişlerim</a>
-    ${cancellable ? `<button class="btn danger" type="button" id="cancel">Siparişi iptal et</button>
-      <div class="hint">Siparişiniz onaylanana kadar iptal edebilirsiniz.</div>`
-      : cur.status !== "iptal" && cur.status !== "kargolandi" ? `<div class="hint">Sipariş onaylandığı için uygulamadan iptal edilemez; iptal için sipariş numaranızla bize ulaşın.</div>` : ""}`, true, "", "orders");
+    <p>${L("Tutar: <b>{amount} TL</b>. Sorunuz olursa sipariş numaranızla bize ulaşın.", {amount: esc(cur.amount)})}</p>
+    <a class="btn ghost" href="#/siparisler">${L("Siparişlerim")}</a>
+    ${cancellable ? `<button class="btn danger" type="button" id="cancel">${L("Siparişi iptal et")}</button>
+      <div class="hint">${L("Siparişiniz onaylanana kadar iptal edebilirsiniz.")}</div>`
+      : cur.status !== "iptal" && cur.status !== "kargolandi" ? `<div class="hint">${L("Sipariş onaylandığı için uygulamadan iptal edilemez; iptal için sipariş numaranızla bize ulaşın.")}</div>` : ""}`, true, "", "orders");
   const cancel = document.getElementById("cancel");
   if (cancel) cancel.onclick = async () => {
-    if (!confirm(`${cur.code} numaralı sipariş iptal edilsin mi?`)) return;
+    if (!confirm(L("{code} numaralı sipariş iptal edilsin mi?", {code: cur.code}))) return;
     cancel.disabled = true;
     let res;
     try { res = await rpc("order_cancel", {p_code: cur.code, p_token: cur.token}); }
     catch (e) {
       cancel.disabled = false;
-      return toast(e.status === 404 ? "İptal şu an yapılamıyor; sipariş numaranızla bize ulaşın." : "Sunucuya ulaşılamadı, tekrar deneyin.");
+      return toast(e.status === 404 ? L("İptal şu an yapılamıyor; sipariş numaranızla bize ulaşın.") : L("Sunucuya ulaşılamadı, tekrar deneyin."));
     }
-    if (res?.ok) { saveOrder({...cur, status: "iptal", cancelledBy: "musteri"}); toast("Siparişiniz iptal edildi."); }
-    else if (res?.error === "too_late") { saveOrder({...cur, status: res.status}); toast("Sipariş onaylandığı için uygulamadan iptal edilemiyor; bize ulaşın.", 5000); }
-    else toast("Sipariş bulunamadı.");
+    if (res?.ok) { saveOrder({...cur, status: "iptal", cancelledBy: "musteri"}); toast(L("Siparişiniz iptal edildi.")); }
+    else if (res?.error === "too_late") { saveOrder({...cur, status: res.status}); toast(L("Sipariş onaylandığı için uygulamadan iptal edilemiyor; bize ulaşın."), 5000); }
+    else toast(L("Sipariş bulunamadı."));
     showOrderStatus(orderCode);
   };
 }
