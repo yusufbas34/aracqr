@@ -178,6 +178,26 @@ public class MainActivity extends Activity {
         else super.onBackPressed();
     }
 
+    private void openSettings(Intent i) {
+        try { startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); }
+        catch (Exception e) {
+            try { startActivity(new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()))); }
+            catch (Exception ignored) { }
+        }
+    }
+
+    /** İzin penceresi kapanınca arayüz bildirim durumunu yenilesin */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (web != null) web.evaluateJavascript("window.onNotifChange && onNotifChange()", null);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (web != null) web.evaluateJavascript("window.onNotifChange && onNotifChange()", null);  // ayarlardan dönünce
+    }
+
     private void toast(String text) {
         runOnUiThread(() -> Toast.makeText(this, text, Toast.LENGTH_LONG).show());
     }
@@ -199,6 +219,43 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public String distribution() {
             return BuildConfig.FLAVOR;
+        }
+
+        /** Web arayüzünün dili: bildirimler aynı dilde gelsin */
+        @JavascriptInterface
+        public void setLanguage(String lang) {
+            Notifier.setLanguage(MainActivity.this, lang);
+        }
+
+        /** Bildirimler açık mı (izin + sistem ayarı) */
+        @JavascriptInterface
+        public boolean notificationsEnabled() {
+            return Notifier.enabled(MainActivity.this);
+        }
+
+        /** Bildirimleri aç: izin daha önce sorulmadıysa sorar, reddedildiyse bildirim ayarlarını açar */
+        @JavascriptInterface
+        public void enableNotifications() {
+            runOnUiThread(() -> {
+                if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission("android.permission.POST_NOTIFICATIONS") != PackageManager.PERMISSION_GRANTED
+                        && !getSharedPreferences("aracqr", MODE_PRIVATE).getBoolean("askedNotif2", false)) {
+                    getSharedPreferences("aracqr", MODE_PRIVATE).edit().putBoolean("askedNotif2", true).apply();
+                    requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 2);
+                    return;
+                }
+                openSettings(new Intent("android.settings.APP_NOTIFICATION_SETTINGS").putExtra("android.provider.extra.APP_PACKAGE", getPackageName()));
+            });
+        }
+
+        /** Uygulama ayarları (pil kısıtlaması, otomatik başlatma için) */
+        @JavascriptInterface
+        public void openAppSettings() {
+            runOnUiThread(() -> openSettings(new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()))));
+        }
+
+        @JavascriptInterface
+        public boolean testNotification() {
+            return Notifier.showTest(MainActivity.this);
         }
 
         /** Siparişler değişince web arayüzü bildirir: arka plan kontrolü bunlara bakar. */

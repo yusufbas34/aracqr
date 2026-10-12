@@ -11,6 +11,9 @@ const LOCALE = {tr: "tr-TR", en: "en-GB", ar: "ar", ru: "ru-RU"}[LANG];
 document.documentElement.lang = LANG;
 document.documentElement.dir = LANG === "ar" ? "rtl" : "ltr";
 
+// Android: bildirimler de aynı dilde gelsin
+try { if (window.AndroidBridge && AndroidBridge.setLanguage) AndroidBridge.setLanguage(LANG); } catch (e) {}
+
 function L(text, vars) {
   const out = LANG === "tr" ? text : (I18N[LANG] && I18N[LANG][text]) || text;
   return vars ? out.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)) : out;

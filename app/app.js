@@ -143,6 +143,7 @@ function showHome() {
   }
   show(L("QR'larım"), `
     <div id="update-slot"></div>
+    ${canNotify() && !notifOn() ? `<button class="notif-off" type="button" id="notif-home">🔕 <span><b>${L("Bildirimler kapalı")}</b>${L("Yeni sürüm ve sipariş haberleri için açın.")}</span></button>` : ""}
     <div id="promo-slot"></div>
     <div class="cards">
       ${list.map(t => `
@@ -155,6 +156,8 @@ function showHome() {
     <a class="btn" href="#/yeni">${L("+ Yeni QR oluştur")}</a>
     <button class="btn ghost share-app" type="button">${L("👋 Arkadaşına öner")}</button>`, false, "", "qr");
   bindShareApp();
+  const nh = document.getElementById("notif-home");
+  if (nh) nh.onclick = () => bridge.enableNotifications();
   updateBanner("update-slot");
   loadShop().then(shop => {
     const slot = document.getElementById("promo-slot");
@@ -212,6 +215,7 @@ function showProfile(saved = false) {
     <div class="opts" style="padding-top:14px">
       <dl class="kv"><dt>${L("Sürüm")}</dt><dd id="ver">${esc(myVersionName() || "-")}</dd></dl>
       <div id="update-slot"></div>
+      <div id="notif-slot">${notifHtml()}</div>
       <button class="btn ghost" type="button" id="howto">${L("Nasıl çalışır?")}</button>
       <a class="btn ghost" href="${SITE}">${L("Web sitesi")}</a>
     </div>
@@ -225,6 +229,7 @@ function showProfile(saved = false) {
     </div>`, false, "", "profile");
   document.getElementById("wipe").onclick = wipeAll;
   document.getElementById("p-lang").onchange = ev => setLang(ev.target.value);
+  bindNotif();
   bindHowto();
   bindShareApp();
   latestVersion().then(latest => {
@@ -274,6 +279,33 @@ async function wipeAll(ev) {
   showProfile();
   toast(sent ? L("Silindi. Verilmiş sipariş kayıtlarının silinmesi için gizlilik sayfasındaki adrese yazın.") : L("Tüm verileriniz silindi."));
 }
+
+// ---------------------------------------------------------------- bildirimler (yalnızca Android uygulamasında)
+const canNotify = () => { try { return !!bridge && typeof bridge.notificationsEnabled === "function"; } catch (e) { return false; } };
+const notifOn = () => { try { return bridge.notificationsEnabled(); } catch (e) { return false; } };
+function notifHtml() {
+  if (!canNotify()) return "";
+  const on = notifOn();
+  return `<div class="msg ${on ? "ok" : "err"}" style="margin-top:12px"><b>${on ? "🔔 " + L("Bildirimler açık") : "🔕 " + L("Bildirimler kapalı")}</b><br>${
+      on ? L("Yeni sürüm çıktığında ve siparişiniz ilerlediğinde bildirim gelir.") : L("Yeni sürüm ve sipariş haberleri gelmez.")}</div>
+    ${on ? `<button class="btn ghost" type="button" id="notif-test">${L("Deneme bildirimi gönder")}</button>`
+         : `<button class="btn" type="button" id="notif-on">${L("Bildirimleri aç")}</button>`}
+    <div class="hint">${L("Bildirim geç geliyorsa telefon pil tasarrufu yüzünden uygulamayı durduruyor olabilir: Ayarlar'da Araç QR için pil kısıtlamasını kaldırın (Xiaomi'de “Otomatik başlatma”yı da açın).")}</div>
+    <button class="btn ghost" type="button" id="notif-settings">${L("Pil ve uygulama ayarlarını aç")}</button>`;
+}
+function bindNotif() {
+  const $ = id => document.getElementById(id);
+  if ($("notif-on")) $("notif-on").onclick = () => bridge.enableNotifications();
+  if ($("notif-test")) $("notif-test").onclick = () => toast(bridge.testNotification() ? L("Deneme bildirimi gönderildi.") : L("Bildirim gönderilemedi; bildirim iznini kontrol edin."));
+  if ($("notif-settings")) $("notif-settings").onclick = () => bridge.openAppSettings();
+}
+// Android izin penceresinden ya da ayarlardan dönünce çağırır
+window.onNotifChange = () => {
+  const slot = document.getElementById("notif-slot");
+  if (slot) { slot.innerHTML = notifHtml(); bindNotif(); }
+  const nh = document.getElementById("notif-home");
+  if (nh && notifOn()) nh.remove();
+};
 
 // ---------------------------------------------------------------- arkadaşına öner
 const PLAY_URL = "https://play.google.com/store/apps/details?id=io.github.yusufbas34.aracqr";
