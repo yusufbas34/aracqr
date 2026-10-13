@@ -76,3 +76,16 @@ jobs:
             --title "Araç QR Android uygulaması (son sürüm)" \
             --notes "Derleme ${{ github.run_number }} · ${{ github.sha }}. Telefona kurmak için arac-qr.apk dosyasını indirip açın; ilk kurulumda 'bilinmeyen kaynaklara izin ver' istenir." \
             --target "${{ github.sha }}"
+
+      # İmzalı Play paketi için sabit indirme bağlantısı (anahtar Secrets'ta varsa):
+      # https://github.com/<sahip>/<repo>/releases/download/play-son/arac-qr-play.aab
+      - name: Play paketi bağlantısını güncelle
+        if: github.ref == 'refs/heads/main' && env.PLAY_KEYSTORE_BASE64 != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete play-son --yes --cleanup-tag || true
+          gh release create play-son arac-qr-play.aab --prerelease \
+            --title "Araç QR Google Play paketi (son sürüm)" \
+            --notes "Derleme ${{ github.run_number }} · ${{ github.sha }}. Play Console > Test > Kapalı test > Yeni sürüm oluştur'a bu .aab dosyasını yükleyin." \
+            --target "${{ github.sha }}"

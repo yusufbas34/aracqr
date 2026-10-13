@@ -55,6 +55,10 @@ Sonra `anahtar.txt` dosyasını silin.
 
 ## 3. AAB dosyasını alın
 
+Anahtar GitHub'a eklendikten sonra her derlemede imzalı paket şu sabit bağlantıya konur (telefondan da indirilir):
+https://github.com/yusufbas34/aracqr/releases/download/play-son/arac-qr-play.aab
+
+
 GitHub › Actions › **Android APK** › Run workflow ile çalıştırın (ya da main'e bir gönderim yapın).
 Bitince çalışmanın sayfasının altında, Artifacts bölümünde **arac-qr-play-aab** belirir. İndirin; içinden
 `arac-qr-play.aab` çıkar. Play Console'a bu dosya yüklenir.
