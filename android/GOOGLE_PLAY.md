@@ -171,7 +171,7 @@ Acele edip hatalı mı park ettiniz? Birinin yolunu kapattıysanız size ulaşam
 Araç QR ile aracınıza size özel bir QR sticker yapıştırırsınız. Yolunu kapattığınız kişi QR'ı telefon kamerasıyla okutur ve tek dokunuşla sizi arar ya da hazır bir mesaj gönderir ("Önümü kapattınız", "Farlarınız açık kaldı" gibi). Numaranız camda ya da QR'ın üstünde yazmaz.
 
 ★ Kendi tasarımınızı yapın
-20'den fazla hazır tasarım ve komik sözler arasından seçin. Tasarımları yana kaydırarak gezin, sözünüzü değiştirin.
+29 hazır tasarım (komik, klasik, takım renkleri) ve esprili sözler arasından seçin. Tasarımları yana kaydırarak gezin, sözünüzü değiştirin.
 
 ★ Ücretsiz yazdırın ya da biz basalım
 Evdeki yazıcıdan istediğiniz ölçüde yazdırın, PDF olarak matbaaya gönderin. İsterseniz yağmura ve güneşe dayanıklı vinil sticker setini biz basıp kargolayalım.
@@ -186,7 +186,7 @@ Numaranız QR'ın içinde değil, güvenli sunucuda durur. Uygulamadan PIN'inizl
 Araç satıldı, sticker kayboldu ya da tatildesiniz: QR'ı tek dokunuşla kapatın, kimse numaranıza ulaşamaz.
 
 ★ Yabancı da okutabilir
-QR'ı okutan kişinin sayfası telefonunun diline göre Türkçe, İngilizce ya da Arapça açılır; mesaj size Türkçe gelir.
+QR'ı okutan kişinin sayfası telefonunun diline göre Türkçe, İngilizce, Arapça ya da Rusça açılır; mesaj size Türkçe gelir. Uygulama da bu 4 dilde kullanılabilir.
 
 ★ Telefon değiştirince kaybolmaz
 Yedek koduyla QR'larınızı yeni telefona tek seferde taşıyın.
