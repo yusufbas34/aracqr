@@ -90,7 +90,7 @@ const DESIGNS = {
   bordomavi: {name: "Bordo-Mavi", group: TEAM, cls: "team", isNew: true, top: `${svgBall}DEPLASMANDAYIM`, post: teamStripe,
              msg: "Deplasmandan dönüyorum! QR'ı okut, sahibi koşsun.", how: "Hakem düdüğü çalmadan<br>gelirim."},
   kirmizibeyaz: {name: "Kırmızı-Beyaz", group: TEAM, cls: "team", isNew: true, top: `${svgBall}MİLLİ MAÇ VAR!`, post: teamStripe,
-             msg: "Maçı izliyorum ama yolunu kapatmam! QR'ı okut, ara.", how: "Penaltılara kalmadan<br>gelirim."},
+             msg: "Maçtayım ama yolunu kapattıysam QR'ı okut, hemen geleyim!", how: "Penaltılara kalmadan<br>gelirim."},
   yesilbeyaz: {name: "Yeşil-Beyaz", group: TEAM, cls: "team", isNew: true, top: `${svgBall}ISINMA TURUNDAYIM`, post: teamStripe,
              msg: "Kenardan oyuna giriyorum! QR'ı okut, hemen geleyim.", how: "Oyuncu değişikliği kadar<br>kısa sürer."},
 };

@@ -363,10 +363,10 @@ async function showWriteReview(msg = "") {
   show(L("Yorum yaz"), `
     <div id="rv-msg">${msg}</div>
     <form id="rvf" class="opts" style="margin-top:0" novalidate>
-      <label>${L("Puanınız")}</label>
-      <div class="star-pick" role="radiogroup" aria-label="${L("Puanınız")}">${[1, 2, 3, 4, 5].map(n => `<button type="button" role="radio" aria-checked="false" data-star="${n}" aria-label="${n}">★</button>`).join("")}</div>
-      <label for="rv-comment">${L("Yorumunuz")}</label>
-      <textarea id="rv-comment" rows="4" maxlength="600" placeholder="${L("Örn. Önümü kapatan aracın sahibine 1 dakikada ulaştım…")}"></textarea>
+      <label>${L("Araç QR'a puanınız")}</label>
+      <div class="star-pick" role="radiogroup" aria-label="${L("Araç QR'a puanınız")}">${[1, 2, 3, 4, 5].map(n => `<button type="button" role="radio" aria-checked="false" data-star="${n}" aria-label="${n}">★</button>`).join("")}</div>
+      <label for="rv-comment">${L("Araç QR deneyiminiz")}</label>
+      <textarea id="rv-comment" rows="4" maxlength="600" placeholder="${L("Örn. Aceleyle hatalı park etmişim; yolunu kapattığım kişi QR'ı okutup beni aradı, 2 dakikada gelip aracımı çektim. Ceza yemedim…")}"></textarea>
       <label for="rv-name">${L("Görünecek adınız")}</label>
       <input id="rv-name" maxlength="40" autocomplete="off" value="${esc(draftName)}" placeholder="${L("Örn. Ayşe K.")}">
       <div class="hint">${L("Herkese görünür. Soyadınızın baş harfi yeterli.")}</div>
