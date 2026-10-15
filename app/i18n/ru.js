@@ -366,4 +366,6 @@ I18N.ru = {
   "Yorumları gör": "Смотреть отзывы",
   "QR'larıma dön": "К моим QR",
   "Ana sayfa": "Главная",
+  "Köpeğiniz için": "Для вашей собаки",
+  "Kaybolursa onu bulan kişi tek dokunuşla sizi arar, yerini gönderir.": "Если собака потеряется, нашедший позвонит вам одним касанием и отправит место.",
 };

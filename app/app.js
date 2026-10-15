@@ -155,7 +155,12 @@ function showHome() {
     </div>
     <a class="btn" href="#/yeni">${L("+ Yeni QR oluştur")}</a>
     <a class="btn ghost" href="#/yorumlar">${L("⭐ Yorumlar · yorum yaz")}</a>
-    <button class="btn ghost share-app" type="button">${L("👋 Arkadaşına öner")}</button>`, false, "", "qr");
+    <button class="btn ghost share-app" type="button">${L("👋 Arkadaşına öner")}</button>
+    <a class="tasma-ad" href="https://yusufbas34.github.io/tasmaqr/" target="_blank" rel="noopener">
+      <img src="tasma-logo.svg" alt="" width="52" height="52">
+      <span><small>${L("Köpeğiniz için")}</small><b>Tasma QR</b>${L("Kaybolursa onu bulan kişi tek dokunuşla sizi arar, yerini gönderir.")}</span>
+      <i aria-hidden="true">›</i>
+    </a>`, false, "", "qr");
   bindShareApp();
   homeBubbles();
   const nh = document.getElementById("notif-home");

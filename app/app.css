@@ -310,3 +310,12 @@ body.has-tabbar main{padding-bottom:96px}
 .rv-photo{display:flex;flex-direction:column;gap:10px}
 .rv-photo img{width:100%;max-height:260px;object-fit:cover;border-radius:10px}
 .appbar .site-home{margin-inline-start:auto;color:#fff;text-decoration:none;font-size:15px;font-weight:700;padding:7px 12px;border:1.5px solid #ffffff66;border-radius:999px;white-space:nowrap}
+
+/* Tasma QR tanıtımı */
+.tasma-ad{display:flex;align-items:center;gap:12px;margin-top:18px;padding:14px;border-radius:14px;text-decoration:none;color:#fff;
+  background:linear-gradient(120deg,#b8501a,#e0742f);box-shadow:0 6px 18px rgba(184,80,26,.28)}
+.tasma-ad img{flex:none;border-radius:12px;box-shadow:0 0 0 2px #ffffff55}
+.tasma-ad span{flex:1;font-size:14px;line-height:1.4}
+.tasma-ad small{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:#ffd400;color:#4a2410;border-radius:5px;padding:1px 6px}
+.tasma-ad b{display:block;font-size:18px;margin:2px 0}
+.tasma-ad i{font-style:normal;font-size:30px;line-height:1;opacity:.85}

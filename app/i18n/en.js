@@ -366,4 +366,6 @@ I18N.en = {
   "Yorumları gör": "See reviews",
   "QR'larıma dön": "Back to my QRs",
   "Ana sayfa": "Home",
+  "Köpeğiniz için": "For your dog",
+  "Kaybolursa onu bulan kişi tek dokunuşla sizi arar, yerini gönderir.": "If it gets lost, whoever finds it calls you with one tap and sends the location.",
 };

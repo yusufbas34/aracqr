@@ -366,4 +366,6 @@ I18N.ar = {
   "Yorumları gör": "عرض التقييمات",
   "QR'larıma dön": "العودة إلى رموزي",
   "Ana sayfa": "الرئيسية",
+  "Köpeğiniz için": "لكلبك",
+  "Kaybolursa onu bulan kişi tek dokunuşla sizi arar, yerini gönderir.": "إذا ضاع، يتصل بك من يجده بلمسة واحدة ويرسل الموقع.",
 };
