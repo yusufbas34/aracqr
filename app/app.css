@@ -319,3 +319,7 @@ body.has-tabbar main{padding-bottom:96px}
 .tasma-ad small{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:#ffd400;color:#4a2410;border-radius:5px;padding:1px 6px}
 .tasma-ad b{display:block;font-size:18px;margin:2px 0}
 .tasma-ad i{font-style:normal;font-size:30px;line-height:1;opacity:.85}
+.cloud-ok{display:flex;gap:12px;align-items:flex-start;background:#e6f4ec;color:#0c5a33;border-radius:10px;padding:12px 14px;font-size:15px;line-height:1.45}
+.cloud-ok > span{font-size:28px;line-height:1}
+.cloud-ok b{display:block;font-size:16px}
+.cloud-ok small{display:block;margin-top:4px;color:#3d6b52;font-size:13px}

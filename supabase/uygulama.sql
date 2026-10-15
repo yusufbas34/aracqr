@@ -33,7 +33,7 @@ revoke all on public.self_tag_scans from anon, authenticated;
 alter table public.self_tags enable row level security;  -- politika yok: doğrudan erişim kapalı
 revoke all on public.self_tags from anon, authenticated;
 
-create or replace function public.aracqr_app_version() returns integer language sql immutable as 'select 4';
+create or replace function public.aracqr_app_version() returns integer language sql immutable as 'select 5';
 
 -- Yeni etiket oluşturur: {ok:true, code, pin} ya da {ok:false, error}
 create or replace function public.self_tag_create(p_phone text, p_device text default null)
@@ -220,3 +220,46 @@ grant execute on function public.self_tag_create(text, text) to anon, authentica
 grant execute on function public.self_tag_lookup(text) to anon, authenticated;
 grant execute on function public.self_tag_save(text, text, text) to anon, authenticated;
 grant execute on function public.admin_self_tags(text) to anon, authenticated;
+
+-- ---------------------------------------------------------------- sürüm 5: otomatik yedek
+-- Android uygulaması QR listesini (kod, PIN, tasarım…) ve sipariş numaralarını, telefona ve uygulamaya özel gizli bir
+-- anahtarla (Android kimliğinden türetilen SHA-256) burada yedekler. Uygulama silinip aynı telefona yeniden kurulunca
+-- anahtar aynı kalır ve QR'lar kendiliğinden geri gelir. Anahtarı yalnızca o telefondaki uygulama bilir.
+create table if not exists public.device_backups (
+  owner_key text primary key check (owner_key ~ '^[0-9a-f]{64}$'),
+  data jsonb not null,
+  updated_at timestamptz not null default now()
+);
+alter table public.device_backups enable row level security;  -- politika yok: doğrudan erişim kapalı
+revoke all on public.device_backups from anon, authenticated;
+
+create or replace function public.backup_save(p_key text, p_data jsonb)
+returns json
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if coalesce(p_key, '') !~ '^[0-9a-f]{64}$' then return json_build_object('ok', false, 'error', 'key'); end if;
+  if p_data is null or jsonb_typeof(p_data) <> 'object' or octet_length(p_data::text) > 200000 then
+    return json_build_object('ok', false, 'error', 'data');
+  end if;
+  insert into device_backups (owner_key, data) values (p_key, p_data)
+    on conflict (owner_key) do update set data = excluded.data, updated_at = now();
+  return json_build_object('ok', true);
+end $$;
+
+create or replace function public.backup_load(p_key text)
+returns jsonb
+language sql stable security definer set search_path = public
+as $$ select data from device_backups where owner_key = p_key $$;
+
+create or replace function public.backup_delete(p_key text)
+returns void
+language sql security definer set search_path = public
+as $$ delete from device_backups where owner_key = p_key $$;
+
+revoke all on function public.backup_save(text, jsonb) from public;
+revoke all on function public.backup_load(text) from public;
+revoke all on function public.backup_delete(text) from public;
+grant execute on function public.backup_save(text, jsonb) to anon, authenticated;
+grant execute on function public.backup_load(text) to anon, authenticated;
+grant execute on function public.backup_delete(text) to anon, authenticated;

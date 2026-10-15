@@ -368,4 +368,12 @@ I18N.ru = {
   "Ana sayfa": "Главная",
   "Köpeğiniz için": "Для вашей собаки",
   "Kaybolursa onu bulan kişi tek dokunuşla sizi arar, yerini gönderir.": "Если собака потеряется, нашедший позвонит вам одним касанием и отправит место.",
+  "☁️ QR'larınız yedekten geri yüklendi": "☁️ Ваши QR восстановлены из резервной копии",
+  "Otomatik yedek açık": "Автоматическое резервное копирование включено",
+  "QR'larınız ve siparişleriniz bu telefona özel bir anahtarla sunucuda yedeklenir. Uygulamayı silip yeniden kurarsanız kendiliğinden geri gelir.": "Ваши QR и заказы сохраняются на сервере с ключом, привязанным к этому телефону. Если удалить и заново установить приложение, они вернутся автоматически.",
+  "Son yedek: {t}": "Последняя копия: {t}",
+  "İnternete bağlanınca yedeklenir.": "Копия будет создана при подключении к интернету.",
+  "📲 Yeni telefona taşı": "📲 Перенести на новый телефон",
+  "Telefon değiştirirken yedek kodunu kullanın; otomatik yedek aynı telefonda geri gelir.": "При смене телефона используйте код резервной копии; автоматическая копия восстанавливается на этом же телефоне.",
+  "Araç QR deneyiminiz": "Ваш опыт с Araç QR",
 };

@@ -5,6 +5,8 @@ const SUPABASE_URL = "https://icedhptvywmqsiarxpio.supabase.co";
 const SUPABASE_KEY = "sb_publishable_IEPlZ5oNcsrQt7_8DK_QKQ_1s9UMT6z";
 const SITE = "https://yusufbas34.github.io/aracqr/";
 const bridge = window.AndroidBridge; // Android dışında (tarayıcıda denerken) yok
+// Otomatik yedek anahtarı: telefona ve uygulamaya özel, yeniden kurulumda değişmez (MainActivity.backupKey). Tarayıcıda yok.
+const BACKUP_KEY = (() => { try { const k = bridge && typeof bridge.backupKey === "function" ? bridge.backupKey() : ""; return /^[0-9a-f]{64}$/.test(k) ? k : ""; } catch (e) { return ""; } })();
 
 const app = document.getElementById("app");
 const qrLink = code => `${SITE}?s=${encodeURIComponent(code)}`;
@@ -12,7 +14,10 @@ const qrLink = code => `${SITE}?s=${encodeURIComponent(code)}`;
 // ---------------------------------------------------------------- kayıt (bu cihaz)
 const store = {
   get(key, fallback) { try { const v = localStorage.getItem("aracqr-" + key); return v === null ? fallback : JSON.parse(v); } catch (e) { return fallback; } },
-  set(key, value) { try { localStorage.setItem("aracqr-" + key, JSON.stringify(value)); } catch (e) {} },
+  set(key, value) {
+    try { localStorage.setItem("aracqr-" + key, JSON.stringify(value)); } catch (e) {}
+    if (key === "tags" || key === "orders") cloudSave();
+  },
 };
 const tags = () => store.get("tags", []);
 const findTag = code => tags().find(t => t.code === code);
@@ -24,6 +29,41 @@ function deviceId() {
   let id = store.get("device", null);
   if (!id) { id = crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now(); store.set("device", id); }
   return id;
+}
+
+// ---------------------------------------------------------------- otomatik yedek (supabase/uygulama.sql sürüm 5)
+// QR listesi (kod, PIN, tasarım…) ve siparişler her değişiklikte sunucuya yedeklenir. Uygulama silinip aynı telefona
+// yeniden kurulunca liste boşsa yedek kendiliğinden geri yüklenir. Yeni telefon için yedek kodu (#/yedek) kullanılır.
+let cloudTimer;
+function cloudSave() {
+  if (!BACKUP_KEY) return;
+  clearTimeout(cloudTimer);
+  cloudTimer = setTimeout(async () => {
+    try {
+      const r = await rpc("backup_save", {p_key: BACKUP_KEY, p_data: {v: 1, tags: tags(), orders: store.get("orders", [])}});
+      if (r?.ok) localStorage.setItem("aracqr-cloudAt", JSON.stringify(Date.now()));
+    } catch (e) { /* internet yoksa bir sonraki değişiklikte ya da açılışta tekrar denenir */ }
+  }, 1500);
+}
+
+async function cloudRestore() {
+  if (!BACKUP_KEY) return;
+  if (tags().length || store.get("orders", []).length) {
+    if (!store.get("cloudAt", 0)) cloudSave();  // güncellemeden sonra ilk yedek
+    return;
+  }
+  let data;
+  try { data = await rpc("backup_load", {p_key: BACKUP_KEY}); } catch (e) { return; }
+  const t = Array.isArray(data?.tags) ? data.tags.filter(x => x && x.code && x.pin) : [];
+  const o = Array.isArray(data?.orders) ? data.orders.filter(x => x && x.code) : [];
+  if ((!t.length && !o.length) || tags().length) return;  // bu sırada yeni QR oluşturulduysa dokunma
+  store.set("tags", t);
+  store.set("orders", o);
+  store.set("onboarded", true);
+  document.querySelector(".onb .onb-skip")?.click();  // tanıtım açıksa kapat
+  syncOrdersToAndroid();
+  route();
+  toast(L("☁️ QR'larınız yedekten geri yüklendi"), 4500);
 }
 
 // ---------------------------------------------------------------- yardımcılar
@@ -213,9 +253,13 @@ function showProfile(saved = false) {
 
     <h2>${L("Yedekle / taşı")}</h2>
     <div class="opts" style="padding-top:14px">
-      <div class="hint" style="margin-top:0">${L("Telefon değiştirirken ya da uygulamayı silip yeniden kurarken QR'larınız ve PIN'leriniz kaybolmasın.")}</div>
-      <a class="btn ghost" href="#/yedek">${L("💾 Yedekle / geri yükle")}</a>
-      <button class="btn ghost share-app" type="button">${L("👋 Arkadaşına öner")}</button>
+      ${BACKUP_KEY ? `<div class="cloud-ok"><span aria-hidden="true">☁️</span><div><b>${L("Otomatik yedek açık")}</b>
+          ${L("QR'larınız ve siparişleriniz bu telefona özel bir anahtarla sunucuda yedeklenir. Uygulamayı silip yeniden kurarsanız kendiliğinden geri gelir.")}
+          <small>${store.get("cloudAt", 0) ? L("Son yedek: {t}", {t: new Date(store.get("cloudAt", 0)).toLocaleString(LOCALE, {dateStyle: "short", timeStyle: "short"})}) : L("İnternete bağlanınca yedeklenir.")}</small></div></div>
+        <a class="btn ghost" href="#/yedek">${L("📲 Yeni telefona taşı")}</a>
+        <div class="hint">${L("Telefon değiştirirken yedek kodunu kullanın; otomatik yedek aynı telefonda geri gelir.")}</div>`
+      : `<div class="hint" style="margin-top:0">${L("Telefon değiştirirken ya da uygulamayı silip yeniden kurarken QR'larınız ve PIN'leriniz kaybolmasın.")}</div>
+        <a class="btn ghost" href="#/yedek">${L("💾 Yedekle / geri yükle")}</a>`}
     </div>
 
     <h2>${L("Uygulama")}</h2>
@@ -224,6 +268,7 @@ function showProfile(saved = false) {
       <div id="update-slot"></div>
       <div id="notif-slot">${notifHtml()}</div>
       <button class="btn ghost" type="button" id="howto">${L("Nasıl çalışır?")}</button>
+      <button class="btn ghost share-app" type="button">${L("👋 Arkadaşına öner")}</button>
       <a class="btn ghost" href="#/yorumlar">${L("⭐ Yorumlar · yorum yaz")}</a>
       <a class="btn ghost" href="${SITE}">${L("Web sitesi")}</a>
     </div>
@@ -282,6 +327,8 @@ async function wipeAll(ev) {
   ev.target.disabled = false;
   if (errors.length) { msg.innerHTML = `<div class="msg err" role="alert">${esc(errors[0])}</div>`; return; }
   const sent = orders().length;
+  clearTimeout(cloudTimer);
+  if (BACKUP_KEY) await rpc("backup_delete", {p_key: BACKUP_KEY}).catch(() => {});
   try { Object.keys(localStorage).filter(k => k.startsWith("aracqr-") && k !== "aracqr-onboarded").forEach(k => localStorage.removeItem(k)); } catch (e) {}
   syncOrdersToAndroid();
   showProfile();
@@ -1171,4 +1218,5 @@ document.getElementById("back").onclick = () => history.length > 1 ? history.bac
 addEventListener("hashchange", route);
 route();
 syncOrdersToAndroid();
+cloudRestore();
 if (!store.get("onboarded", false)) showOnboarding();

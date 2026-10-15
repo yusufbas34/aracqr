@@ -368,4 +368,12 @@ I18N.en = {
   "Ana sayfa": "Home",
   "Köpeğiniz için": "For your dog",
   "Kaybolursa onu bulan kişi tek dokunuşla sizi arar, yerini gönderir.": "If it gets lost, whoever finds it calls you with one tap and sends the location.",
+  "☁️ QR'larınız yedekten geri yüklendi": "☁️ Your QRs were restored from backup",
+  "Otomatik yedek açık": "Automatic backup is on",
+  "QR'larınız ve siparişleriniz bu telefona özel bir anahtarla sunucuda yedeklenir. Uygulamayı silip yeniden kurarsanız kendiliğinden geri gelir.": "Your QRs and orders are backed up on our server with a key unique to this phone. If you uninstall and reinstall the app, they come back automatically.",
+  "Son yedek: {t}": "Last backup: {t}",
+  "İnternete bağlanınca yedeklenir.": "Will be backed up when you are online.",
+  "📲 Yeni telefona taşı": "📲 Move to a new phone",
+  "Telefon değiştirirken yedek kodunu kullanın; otomatik yedek aynı telefonda geri gelir.": "Use the backup code when changing phones; the automatic backup restores on the same phone.",
+  "Araç QR deneyiminiz": "Your experience with Araç QR",
 };

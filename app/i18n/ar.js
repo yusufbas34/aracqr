@@ -368,4 +368,12 @@ I18N.ar = {
   "Ana sayfa": "الرئيسية",
   "Köpeğiniz için": "لكلبك",
   "Kaybolursa onu bulan kişi tek dokunuşla sizi arar, yerini gönderir.": "إذا ضاع، يتصل بك من يجده بلمسة واحدة ويرسل الموقع.",
+  "☁️ QR'larınız yedekten geri yüklendi": "☁️ تمت استعادة رموزك من النسخة الاحتياطية",
+  "Otomatik yedek açık": "النسخ الاحتياطي التلقائي مفعّل",
+  "QR'larınız ve siparişleriniz bu telefona özel bir anahtarla sunucuda yedeklenir. Uygulamayı silip yeniden kurarsanız kendiliğinden geri gelir.": "تُحفظ رموزك وطلباتك على الخادم بمفتاح خاص بهذا الهاتف. إذا حذفت التطبيق وأعدت تثبيته فستعود تلقائيًا.",
+  "Son yedek: {t}": "آخر نسخة احتياطية: {t}",
+  "İnternete bağlanınca yedeklenir.": "سيتم النسخ عند الاتصال بالإنترنت.",
+  "📲 Yeni telefona taşı": "📲 النقل إلى هاتف جديد",
+  "Telefon değiştirirken yedek kodunu kullanın; otomatik yedek aynı telefonda geri gelir.": "استخدم رمز النسخ الاحتياطي عند تغيير الهاتف؛ النسخة التلقائية تُستعاد على الهاتف نفسه.",
+  "Araç QR deneyiminiz": "تجربتك مع Araç QR",
 };

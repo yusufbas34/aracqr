@@ -243,6 +243,26 @@ public class MainActivity extends Activity {
             catch (Exception e) { return 0; }
         }
 
+        /**
+         * Otomatik yedek anahtarı: Android kimliğinden (ANDROID_ID) türetilen SHA-256. Bu kimlik telefona, kullanıcıya ve
+         * uygulamanın imzasına özeldir; uygulama silinip yeniden kurulunca değişmez, başka uygulamalar göremez.
+         * Böylece sunucudaki yedek yalnızca aynı telefondaki bu uygulamaya geri verilir. Kimlik yoksa boş döner.
+         */
+        @JavascriptInterface
+        public String backupKey() {
+            try {
+                String id = android.provider.Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+                if (id == null || id.isEmpty() || "9774d56d682e549c".equals(id)) return "";  // bilinen hatalı ortak kimlik
+                byte[] h = java.security.MessageDigest.getInstance("SHA-256")
+                        .digest(("aracqr-yedek:" + getPackageName() + ":" + id).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                StringBuilder sb = new StringBuilder();
+                for (byte b : h) sb.append(String.format(Locale.ROOT, "%02x", b));
+                return sb.toString();
+            } catch (Exception e) {
+                return "";
+            }
+        }
+
         /** "github" (elden APK) ya da "play": Play sürümünde güncelleme duyurusu gösterilmez. */
         @JavascriptInterface
         public String distribution() {
