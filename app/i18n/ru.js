@@ -365,4 +365,5 @@ I18N.ru = {
   "⭐ Google Play'de de puanlar mısınız?": "⭐ Оцените нас и в Google Play?",
   "Yorumları gör": "Смотреть отзывы",
   "QR'larıma dön": "К моим QR",
+  "Ana sayfa": "Главная",
 };

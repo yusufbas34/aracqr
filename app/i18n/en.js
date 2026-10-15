@@ -365,4 +365,5 @@ I18N.en = {
   "⭐ Google Play'de de puanlar mısınız?": "⭐ Would you rate us on Google Play too?",
   "Yorumları gör": "See reviews",
   "QR'larıma dön": "Back to my QRs",
+  "Ana sayfa": "Home",
 };

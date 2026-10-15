@@ -365,4 +365,5 @@ I18N.ar = {
   "⭐ Google Play'de de puanlar mısınız?": "⭐ هل تقيّمنا على Google Play أيضًا؟",
   "Yorumları gör": "عرض التقييمات",
   "QR'larıma dön": "العودة إلى رموزي",
+  "Ana sayfa": "الرئيسية",
 };

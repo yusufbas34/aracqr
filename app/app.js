@@ -1146,6 +1146,9 @@ function route() {
   showHome();
 }
 
+// Tarayıcıda (web uygulaması) sitenin ana sayfasına dönüş; Android uygulamasında site ayrı açılır, gerekmez
+if (!bridge) document.querySelector(".appbar").insertAdjacentHTML("beforeend", `<a class="site-home" href="../">🏠 ${L("Ana sayfa")}</a>`);
+
 document.getElementById("back").onclick = () => history.length > 1 ? history.back() : (location.hash = "#/");
 addEventListener("hashchange", route);
 route();
