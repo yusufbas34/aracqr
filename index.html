@@ -11,6 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <link rel="stylesheet" href="app/sticker.css">
 <script src="app/sticker.js"></script>
+<script src="app/bubbles.js"></script>
 <script>
   // ==================== AYARLAR (Supabase > Project Settings > API) ====================
   const SUPABASE_URL = "https://icedhptvywmqsiarxpio.supabase.co";
@@ -60,16 +61,27 @@ section > h2{font-size:24px;margin:0 0 14px}
 .perks{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
 .perks div{background:#fff;border-radius:10px;padding:14px;font-size:15px;line-height:1.45;color:var(--muted)}
 .perks b{display:block;color:var(--ink);margin-bottom:2px}
-.rv-sum{display:flex;align-items:center;gap:12px;margin:-4px 0 14px;font-size:15px;color:var(--muted)}
+.rv-sum{display:flex;align-items:center;gap:12px;margin:-4px 0 18px;font-size:15px;color:var(--muted)}
 .rv-sum b{font-size:34px;color:var(--ink);line-height:1}
 .stars{color:#f5a400;letter-spacing:1px;white-space:nowrap}.stars i{color:#d3d7de;font-style:normal}
-.rv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
-.rv{background:#fff;border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
-.rv img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#e9ecf1;cursor:zoom-in}
-.rv div{padding:12px 14px;font-size:15px;line-height:1.45;color:var(--ink)}
-.rv p{margin:6px 0 8px;color:var(--ink);font-size:15px;overflow-wrap:anywhere}
-.rv small{display:block;color:var(--muted);font-size:13px}
-.rv-more{font:inherit;font-weight:700;color:var(--band);background:#fff;border:2px solid var(--line);border-radius:8px;padding:10px 16px;margin-top:12px;cursor:pointer}
+.rv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:26px 18px;align-items:start}
+.rv{position:relative;background:#fff;border-radius:22px;box-shadow:0 8px 24px rgba(10,30,80,.12),0 0 0 2px #f5a40055;
+  animation:rv-float 4s ease-in-out infinite;animation-delay:calc(var(--i) * -.7s)}
+.rv::after{content:"";position:absolute;left:30px;bottom:-13px;border:14px solid transparent;border-top-color:#fff;border-bottom:0}
+.rv:nth-child(even)::after{left:auto;right:30px}
+.rv:hover{animation-play-state:paused;box-shadow:0 12px 30px rgba(10,30,80,.2),0 0 0 2px #f5a400}
+.rv img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#e9ecf1;cursor:zoom-in;border-radius:22px 22px 0 0}
+.rv div{padding:14px 16px 16px;font-size:15px;line-height:1.45;color:var(--ink)}
+.rv p{margin:6px 0 10px;color:var(--ink);font-size:16px;overflow-wrap:anywhere}
+.rv p::before{content:"“";font:700 34px/0 Georgia,serif;color:#f5a400;vertical-align:-12px;margin-right:2px}
+.rv small{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}
+.rv .av{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--band);color:#fff;font-weight:700;font-size:14px}
+@keyframes rv-float{50%{transform:translateY(-6px)}}
+@media (prefers-reduced-motion:reduce){.rv{animation:none}}
+.rv-more{font:inherit;font-weight:700;color:var(--band);background:#fff;border:2px solid var(--line);border-radius:8px;padding:10px 16px;margin-top:22px;cursor:pointer}
+.rv-empty{background:#fff;border-radius:22px;padding:18px;display:flex;gap:14px;align-items:center;box-shadow:0 0 0 2px #f5a40055}
+.rv-empty span{font-size:40px}
+.rv-empty p{margin:0;color:var(--ink)}
 .req.rvw.st-bekliyor{border-left-color:#f5a400}.req.rvw.st-yayinda{border-left-color:var(--ok)}
 .req.rvw img{width:160px;max-width:100%;border-radius:8px;display:block;margin-top:8px}
 details{background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:8px}
@@ -838,6 +850,8 @@ function showHome() {
 
     <div class="note">Bir aracın üzerindeki QR'ı okuttuysanız arama ekranı doğrudan açılır. Bu sayfa, kendi QR'ını edinmek isteyenler içindir.</div>
 
+    <section id="reviews" hidden></section>
+
     <section>
       <h2>Nasıl çalışır?</h2>
       <ol class="steps">
@@ -860,8 +874,6 @@ function showHome() {
         <div><b>QR'ı kapatabilirsiniz</b>Araç satılınca ya da sticker kaybolunca QR'ı tek dokunuşla kapatırsınız.</div>
       </div>
     </section>
-
-    <section id="reviews" hidden></section>
 
     <section>
       <h2>Sık sorulanlar</h2>
@@ -886,21 +898,29 @@ const reviewDate = at => new Date(at).toLocaleDateString("tr-TR", {month: "long"
 
 async function loadReviews() {
   let data;
-  try { data = await rpc("reviews_public", {p_limit: 24}); } catch (e) { return; }
+  try { data = await rpc("reviews_public", {p_limit: 24}); } catch (e) { return; }  // yorum.sql kurulu değil
   const box = document.getElementById("reviews");
-  if (!box || !data?.items?.length) return;
-  const card = r => `<div class="rv">${r.photo_url ? `<img src="${esc(r.photo_url)}" alt="${esc(r.name)} kullanıcısının aracındaki Araç QR" loading="lazy">` : ""}
-    <div>${starsHtml(r.rating)}<p>${esc(r.comment)}</p><small><b>${esc(r.name)}</b>${r.city ? ` · ${esc(r.city)}` : ""} · ${esc(reviewDate(r.at))}</small></div></div>`;
+  if (!box || !data) return;
+  box.hidden = false;
+  if (!data.items?.length) {
+    box.innerHTML = `<h2>Kullanıcılar ne diyor?</h2>
+      <div class="rv-empty"><span aria-hidden="true">💬</span><p><b>İlk yorumlar yolda!</b><br>Aracınızda Araç QR kullanıyorsanız uygulamadaki <b>⭐ Yorum yaz</b> ile deneyiminizi paylaşın.</p></div>`;
+    return;
+  }
+  const card = (r, i) => `<div class="rv" style="--i:${i}">${r.photo_url ? `<img src="${esc(r.photo_url)}" alt="${esc(r.name)} kullanıcısının aracındaki Araç QR" loading="lazy">` : ""}
+    <div>${starsHtml(r.rating)}<p>${esc(r.comment)}</p>
+      <small><span class="av" aria-hidden="true">${esc((r.name || "?").trim()[0].toLocaleUpperCase("tr-TR"))}</span><span><b>${esc(r.name)}</b>${r.city ? ` · ${esc(r.city)}` : ""}<br>${esc(reviewDate(r.at))}</span></small></div></div>`;
   const FIRST = 6;
   box.innerHTML = `<h2>Kullanıcılar ne diyor?</h2>
     <div class="rv-sum"><b>${String(data.avg).replace(".", ",")}</b><span>${starsHtml(Math.round(data.avg))}<br>${data.count} değerlendirme</span></div>
     <div class="rv-grid">${data.items.slice(0, FIRST).map(card).join("")}</div>
     ${data.items.length > FIRST ? `<button class="rv-more" type="button">Tüm yorumları göster</button>` : ""}
-    <p style="font-size:14px;margin:12px 0 0">Yorumlar uygulamada QR'ı olan kullanıcılar tarafından yazılır; yayınlanmadan önce kontrol edilir.</p>`;
-  box.hidden = false;
+    <p style="font-size:14px;margin:18px 0 0">Yorumlar, aracında Araç QR kullananlar tarafından uygulamadan yazılır; yayınlanmadan önce kontrol edilir.</p>`;
   const more = box.querySelector(".rv-more");
   if (more) more.onclick = () => { box.querySelector(".rv-grid").innerHTML = data.items.map(card).join(""); more.remove(); };
   box.addEventListener("click", ev => { const img = ev.target.closest(".rv img"); if (img) open(img.src, "_blank", "noopener"); });
+  // Telefonda: yorumlar ekranın altında konuşma balonu olarak tek tek gelir, okununca patlayıp gider
+  if (matchMedia("(max-width:720px)").matches && window.reviewBubbles) reviewBubbles(data.items, {max: 4});
 }
 
 // ---------------------------------------------------------------- kurulum yardımı

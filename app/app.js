@@ -139,7 +139,7 @@ function showHome() {
       </ol>
       <a class="btn" href="#/yeni">${L("Başlayalım")}</a>
       <button class="btn ghost" type="button" id="howto">${L("Nasıl çalışır?")}</button>
-      <a class="btn ghost" href="#/yedek">${L("Eski telefonumdaki QR'ları getir")}</a>`, false, "", "qr"), bindHowto();
+      <a class="btn ghost" href="#/yedek">${L("Eski telefonumdaki QR'ları getir")}</a>`, false, "", "qr"), bindHowto(), homeBubbles();
   }
   show(L("QR'larım"), `
     <div id="update-slot"></div>
@@ -157,6 +157,7 @@ function showHome() {
     <a class="btn ghost" href="#/yorumlar">${L("⭐ Yorumlar · yorum yaz")}</a>
     <button class="btn ghost share-app" type="button">${L("👋 Arkadaşına öner")}</button>`, false, "", "qr");
   bindShareApp();
+  homeBubbles();
   const nh = document.getElementById("notif-home");
   if (nh) nh.onclick = () => bridge.enableNotifications();
   updateBanner("update-slot");
@@ -324,6 +325,18 @@ function bindShareApp() {
 const starsHtml = n => `<span class="stars" aria-label="${esc(L("5 üzerinden {n}", {n}))}">${"★".repeat(n)}<i>${"★".repeat(5 - n)}</i></span>`;
 const reviewCard = r => `<div class="rv">${r.photo_url ? `<img src="${esc(r.photo_url)}" alt="" loading="lazy">` : ""}
   <div>${starsHtml(r.rating)}<p>${esc(r.comment)}</p><small><b>${esc(r.name)}</b>${r.city ? ` · ${esc(r.city)}` : ""} · ${esc(new Date(r.at).toLocaleDateString(LOCALE, {month: "long", year: "numeric"}))}</small></div></div>`;
+
+// Ana ekranda yorumlar konuşma balonu olarak tek tek gelir, okununca patlayıp gider (uygulama açılışı başına bir tur)
+let stopBubbles, bubblesShown = false;
+async function homeBubbles() {
+  if (bubblesShown || !window.reviewBubbles) return;
+  bubblesShown = true;
+  let data;
+  try { data = await rpc("reviews_public", {p_limit: 20}); } catch (e) { return; }
+  if (!data?.items?.length || !/^#?\/?$/.test(location.hash)) return;
+  stopBubbles = reviewBubbles(data.items, {bottom: document.body.classList.contains("has-tabbar") ? 92 : 16, max: 3, delay: 1500, label: {close: L("Kapat")}});
+}
+addEventListener("hashchange", () => { if (stopBubbles) { stopBubbles(); stopBubbles = null; } });
 
 async function showReviews() {
   show(L("Yorumlar"), `
