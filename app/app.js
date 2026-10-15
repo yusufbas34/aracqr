@@ -154,6 +154,7 @@ function showHome() {
         </a>`).join("")}
     </div>
     <a class="btn" href="#/yeni">${L("+ Yeni QR oluştur")}</a>
+    <a class="btn ghost" href="#/yorumlar">${L("⭐ Yorumlar · yorum yaz")}</a>
     <button class="btn ghost share-app" type="button">${L("👋 Arkadaşına öner")}</button>`, false, "", "qr");
   bindShareApp();
   const nh = document.getElementById("notif-home");
@@ -217,6 +218,7 @@ function showProfile(saved = false) {
       <div id="update-slot"></div>
       <div id="notif-slot">${notifHtml()}</div>
       <button class="btn ghost" type="button" id="howto">${L("Nasıl çalışır?")}</button>
+      <a class="btn ghost" href="#/yorumlar">${L("⭐ Yorumlar · yorum yaz")}</a>
       <a class="btn ghost" href="${SITE}">${L("Web sitesi")}</a>
     </div>
 
@@ -314,6 +316,134 @@ function bindShareApp() {
     const text = L("Arabana QR sticker yap: hatalı park ettiğinde seni tek dokunuşla arasınlar ya da mesaj atsınlar, numaran camda yazmaz. Ücretsiz 👉 {url}", {url: PLAY ? PLAY_URL : SITE});
     if (!bridge && navigator.share) { try { await navigator.share({text}); return; } catch (e) { if (e.name === "AbortError") return; } }
     location.href = `https://wa.me/?text=${encodeURIComponent(text)}`;
+  });
+}
+
+// ---------------------------------------------------------------- yorumlar (supabase/yorum.sql)
+// Yorumu QR sahibi yazar (QR kodu + PIN ile); panelden onaylanınca uygulamada ve sitede görünür. Her QR için tek yorum.
+const starsHtml = n => `<span class="stars" aria-label="${esc(L("5 üzerinden {n}", {n}))}">${"★".repeat(n)}<i>${"★".repeat(5 - n)}</i></span>`;
+const reviewCard = r => `<div class="rv">${r.photo_url ? `<img src="${esc(r.photo_url)}" alt="" loading="lazy">` : ""}
+  <div>${starsHtml(r.rating)}<p>${esc(r.comment)}</p><small><b>${esc(r.name)}</b>${r.city ? ` · ${esc(r.city)}` : ""} · ${esc(new Date(r.at).toLocaleDateString(LOCALE, {month: "long", year: "numeric"}))}</small></div></div>`;
+
+async function showReviews() {
+  show(L("Yorumlar"), `
+    ${tags().length ? `<a class="btn" style="margin-top:0" href="#/yorum-yaz">${L("⭐ Yorum yaz")}</a>` : `<div class="msg info">${L("Yorum yazmak için önce kendi QR'ınızı oluşturun.")}</div>`}
+    <div id="rv-list"><p class="hint">${L("Yükleniyor…")}</p></div>`, true);
+  let data;
+  try { data = await rpc("reviews_public", {p_limit: 50}); } catch (e) { data = null; }
+  const box = document.getElementById("rv-list");
+  if (!box) return;
+  if (!data) { box.innerHTML = `<div class="msg err">${L("Yorumlar yüklenemedi. İnternete bağlanıp tekrar deneyin.")}</div>`; return; }
+  if (!data.items?.length) { box.innerHTML = `<div class="empty"><div style="font-size:48px" aria-hidden="true">⭐</div><h1>${L("Henüz yorum yok")}</h1><p>${L("İlk yorumu siz yazın!")}</p></div>`; return; }
+  box.innerHTML = `<div class="rv-sum"><b>${esc(Number(data.avg).toLocaleString(LOCALE))}</b><span>${starsHtml(Math.round(data.avg))}<br>${L("{n} değerlendirme", {n: data.count})}</span></div>
+    <div class="rv-grid">${data.items.map(reviewCard).join("")}</div>`;
+}
+
+// Fotoğrafı en fazla 1280 px JPEG'e küçültür (yükleme hızlı olsun, konum vb. bilgiler silinsin)
+async function shrinkPhoto(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((ok, fail) => { const i = new Image(); i.onload = () => ok(i); i.onerror = fail; i.src = url; });
+    const k = Math.min(1, 1280 / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = Object.assign(document.createElement("canvas"), {width: Math.round(img.naturalWidth * k), height: Math.round(img.naturalHeight * k)});
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    return await new Promise(ok => c.toBlob(ok, "image/jpeg", .82));
+  } finally { URL.revokeObjectURL(url); }
+}
+
+let reviewPhoto = null, reviewRating = 0;
+async function showWriteReview(msg = "") {
+  const list = tags();
+  if (!list.length) { location.replace("#/yorumlar"); return; }
+  const t = list.find(x => x.code === store.get("reviewTag", "")) || list[0];
+  const p = profile();
+  const nameGuess = (p.name || "").trim().split(/\s+/).filter(Boolean);
+  const draftName = nameGuess.length > 1 ? `${nameGuess[0]} ${nameGuess.at(-1)[0]}.` : nameGuess[0] || "";
+  reviewPhoto = null; reviewRating = 0;
+  show(L("Yorum yaz"), `
+    <div id="rv-msg">${msg}</div>
+    <form id="rvf" class="opts" style="margin-top:0" novalidate>
+      <label>${L("Puanınız")}</label>
+      <div class="star-pick" role="radiogroup" aria-label="${L("Puanınız")}">${[1, 2, 3, 4, 5].map(n => `<button type="button" role="radio" aria-checked="false" data-star="${n}" aria-label="${n}">★</button>`).join("")}</div>
+      <label for="rv-comment">${L("Yorumunuz")}</label>
+      <textarea id="rv-comment" rows="4" maxlength="600" placeholder="${L("Örn. Önümü kapatan aracın sahibine 1 dakikada ulaştım…")}"></textarea>
+      <label for="rv-name">${L("Görünecek adınız")}</label>
+      <input id="rv-name" maxlength="40" autocomplete="off" value="${esc(draftName)}" placeholder="${L("Örn. Ayşe K.")}">
+      <div class="hint">${L("Herkese görünür. Soyadınızın baş harfi yeterli.")}</div>
+      <label for="rv-city">${L("Şehir (isteğe bağlı)")}</label>
+      <input id="rv-city" maxlength="30" value="${esc(p.city || "")}">
+      <label>${L("Aracınızdaki sticker'ın fotoğrafı (isteğe bağlı)")}</label>
+      <div class="rv-photo">
+        <img id="rv-prev" alt="" hidden>
+        <label class="btn ghost" style="margin:0;font-weight:700">📷 <span id="rv-ph-t">${L("Fotoğraf ekle")}</span>
+          <input id="rv-file" type="file" accept="image/*" hidden></label>
+      </div>
+      <div class="hint">${L("Plakanız ya da yüzler görünmesin. Fotoğraf onaydan sonra yayınlanır.")}</div>
+      <button class="btn" type="submit" id="rv-send">${L("Gönder")}</button>
+      <div class="hint">${L("Yorumunuz kontrol edildikten sonra uygulamada ve web sitesinde yayınlanır. Yeniden yazarsanız önceki yorumunuzun yerine geçer.")}</div>
+    </form>`, true);
+  const setStars = n => { reviewRating = n; document.querySelectorAll("[data-star]").forEach(b => { const on = Number(b.dataset.star) <= n; b.classList.toggle("on", on); b.setAttribute("aria-checked", String(Number(b.dataset.star) === n)); }); };
+  document.querySelectorAll("[data-star]").forEach(b => b.onclick = () => setStars(Number(b.dataset.star)));
+  document.getElementById("rv-file").onchange = async ev => {
+    const f = ev.target.files?.[0];
+    if (!f) return;
+    try {
+      reviewPhoto = await shrinkPhoto(f);
+      const prev = document.getElementById("rv-prev");
+      prev.src = URL.createObjectURL(reviewPhoto); prev.hidden = false;
+      document.getElementById("rv-ph-t").textContent = L("Fotoğrafı değiştir");
+    } catch (e) { reviewPhoto = null; toast(L("Fotoğraf açılamadı, başka bir fotoğraf deneyin.")); }
+  };
+  // Daha önce yazdıysa formu doldur
+  rpc("review_mine", {p_code: t.code, p_pin: t.pin}).then(r => {
+    const v = r?.review;
+    if (!v || !document.getElementById("rvf")) return;
+    setStars(v.rating);
+    document.getElementById("rv-comment").value = v.comment;
+    document.getElementById("rv-name").value = v.name;
+    document.getElementById("rv-city").value = v.city || "";
+    if (!msg) document.getElementById("rv-msg").innerHTML = `<div class="msg info">${v.status === "yayinda" ? L("Yorumunuz yayında. Değiştirirseniz yeniden kontrol edilir.") : v.status === "gizli" ? L("Yorumunuz yayınlanmadı. Düzenleyip tekrar gönderebilirsiniz.") : L("Yorumunuz kontrol ediliyor.")}</div>`;
+  }).catch(() => {});
+  document.getElementById("rvf").addEventListener("submit", async ev => {
+    ev.preventDefault();
+    const g = id => document.getElementById(id).value.trim();
+    const fail = text => { document.getElementById("rv-msg").innerHTML = `<div class="msg err" role="alert">${esc(text)}</div>`; scrollTo(0, 0); };
+    if (!reviewRating) return fail(L("Lütfen 1–5 arası puan verin."));
+    if (g("rv-comment").length < 5) return fail(L("Lütfen birkaç kelimelik bir yorum yazın."));
+    if (g("rv-name").length < 2) return fail(L("Lütfen görünecek adınızı yazın."));
+    const btn = document.getElementById("rv-send");
+    btn.disabled = true; btn.textContent = L("Gönderiliyor…");
+    let res;
+    try {
+      res = await rpc("review_submit", {p_code: t.code, p_pin: t.pin, p_name: g("rv-name"), p_city: g("rv-city"),
+        p_rating: reviewRating, p_comment: g("rv-comment"), p_photo: !!reviewPhoto, p_lang: LANG});
+    } catch (e) {
+      btn.disabled = false; btn.textContent = L("Gönder");
+      return fail(e.status === 404 ? L("Yorumlar henüz açılmadı. Lütfen daha sonra tekrar deneyin.") : L("Bağlantı yok; internete bağlanıp tekrar deneyin."));
+    }
+    if (!res?.ok) {
+      btn.disabled = false; btn.textContent = L("Gönder");
+      return fail(res?.error === "bad_pin" || res?.error === "not_found" ? L("Bu QR sunucuda bulunamadı; başka bir QR'ınızla deneyin.") : res?.error === "locked" ? L("Çok fazla yanlış deneme; 15 dakika sonra tekrar deneyin.") : L("Gönderilemedi, tekrar deneyin."));
+    }
+    store.set("reviewTag", t.code);
+    let photoOk = true;
+    if (reviewPhoto && res.photo_name) {
+      try {
+        const headers = {"Content-Type": "image/jpeg", apikey: SUPABASE_KEY, "x-upsert": "false"};
+        if (SUPABASE_KEY.startsWith("eyJ")) headers.Authorization = "Bearer " + SUPABASE_KEY;
+        const up = await fetch(`${SUPABASE_URL}/storage/v1/object/aracqr-yorum/${res.photo_name}`, {method: "POST", headers, body: reviewPhoto});
+        photoOk = up.ok && (await rpc("review_photo_ready", {p_code: t.code, p_pin: t.pin}))?.ok;
+      } catch (e) { photoOk = false; }
+    }
+    confetti();
+    show(L("Teşekkürler!"), `
+      <div class="empty"><div style="font-size:56px" aria-hidden="true">💙</div>
+        <h1>${L("Yorumunuz için teşekkürler!")}</h1>
+        <p>${L("Kontrol edildikten sonra uygulamada ve web sitesinde yayınlanacak.")}</p></div>
+      ${photoOk ? "" : `<div class="msg err">${L("Fotoğraf yüklenemedi; yorumunuz fotoğrafsız gönderildi. İsterseniz tekrar deneyin.")}</div>`}
+      ${PLAY && reviewRating >= 4 ? `<a class="btn" href="${PLAY_URL}">${L("⭐ Google Play'de de puanlar mısınız?")}</a>` : ""}
+      <a class="btn ghost" href="#/yorumlar">${L("Yorumları gör")}</a>
+      <a class="btn ghost" href="#/">${L("QR'larıma dön")}</a>`, false);
   });
 }
 
@@ -1008,6 +1138,8 @@ function route() {
   if (parts[0] === "siparisler") return showOrders();
   if (parts[0] === "profil") return showProfile();
   if (parts[0] === "yedek") return showBackup();
+  if (parts[0] === "yorumlar") return showReviews();
+  if (parts[0] === "yorum-yaz") return showWriteReview();
   if (parts[0] === "siparis") return showOrderStatus(parts[1], parts[2] === "yeni");
   if (parts[0] === "odeme") return showOrderStatus(parts[1]);  // eski bağlantılar
   if (parts[0] === "etiket") return showTag(parts[1], parts[2] === "yeni");

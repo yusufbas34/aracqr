@@ -293,3 +293,19 @@ body.has-tabbar main{padding-bottom:96px}
 .notif-off{display:flex;align-items:center;gap:12px;width:100%;text-align:start;font:inherit;font-size:22px;background:#fff4e5;border:2px solid #f0b46a;border-radius:14px;padding:12px 14px;margin:0 0 14px;cursor:pointer;color:var(--ink)}
 .notif-off span{font-size:14px;color:var(--muted)}
 .notif-off b{display:block;font-size:16px;color:var(--ink)}
+
+/* yorumlar */
+.rv-sum{display:flex;align-items:center;gap:12px;margin:18px 0 12px;font-size:15px;color:var(--muted)}
+.rv-sum b{font-size:34px;color:var(--ink);line-height:1}
+.stars{color:#f5a400;letter-spacing:1px;white-space:nowrap}.stars i{color:#d3d7de;font-style:normal}
+.rv-grid{display:grid;gap:12px}
+.rv{background:#fff;border-radius:12px;overflow:hidden}
+.rv img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#e9ecf1}
+.rv div{padding:12px 14px}
+.rv p{margin:6px 0 8px;font-size:16px;line-height:1.45;overflow-wrap:anywhere}
+.rv small{display:block;color:var(--muted);font-size:13px}
+.star-pick{display:flex;gap:6px}
+.star-pick button{font-size:38px;line-height:1;padding:2px 4px;border:0;background:none;color:#d3d7de;cursor:pointer}
+.star-pick button.on{color:#f5a400}
+.rv-photo{display:flex;flex-direction:column;gap:10px}
+.rv-photo img{width:100%;max-height:260px;object-fit:cover;border-radius:10px}

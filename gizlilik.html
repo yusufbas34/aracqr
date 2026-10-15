@@ -40,8 +40,9 @@ a{color:var(--band)}
 <tr><td>Okutma zamanı (yalnızca QR kodu ve saat)</td><td>QR her okutulduğunda</td><td>Size "kaç kez okutuldu" bilgisini göstermek. Okutan kişinin IP'si, konumu ya da cihazı kaydedilmez.</td></tr>
 <tr><td>Rastgele uygulama kimliği</td><td>QR oluştururken ve sipariş verirken</td><td>Kötüye kullanımı sınırlamak (ör. bir cihazdan günde en fazla 10 QR). Cihazınızın gerçek kimliğiyle ilgisi yoktur.</td></tr>
 <tr><td>Ad soyad, telefon, e-posta, adres, sipariş notu, seçilen tasarım</td><td>Yalnızca "Biz basıp gönderelim" siparişi verirseniz</td><td>Sticker'ı basmak, size ulaşmak ve kargolamak</td></tr>
+<tr><td>Yorum: görünecek ad, şehir, puan, yorum metni ve isteğe bağlı fotoğraf</td><td>Yalnızca "Yorum yaz" ile yorum gönderirseniz</td><td>Onaylandıktan sonra uygulamada ve web sitesinde herkese açık olarak yayınlamak</td></tr>
 </table>
-<p>Uygulama konum, rehber, fotoğraf, kamera ya da mikrofon izni istemez. Araç adı yalnızca telefonunuzda saklanır. Profil bilgileriniz (ad, adres) siz sipariş verene kadar yalnızca telefonunuzda saklanır. QR kodlarınızın PIN'i telefonunuzda saklanır ve numarayı yalnızca PIN'i bilen değiştirebilir.</p>
+<p>Uygulama konum, rehber, fotoğraf, kamera ya da mikrofon izni istemez. Yorumunuza fotoğraf eklerseniz yalnızca sistemin fotoğraf seçicisinde seçtiğiniz tek fotoğraf uygulamaya verilir; gönderilmeden önce küçültülür ve içindeki konum gibi ek bilgiler silinir. Araç adı yalnızca telefonunuzda saklanır. Profil bilgileriniz (ad, adres) siz sipariş verene kadar yalnızca telefonunuzda saklanır. QR kodlarınızın PIN'i telefonunuzda saklanır ve numarayı yalnızca PIN'i bilen değiştirebilir.</p>
 
 <h2>2. QR'ı okutan kişi ne görür?</h2>
 <p>Okutan kişi numaranızı yazılı olarak görmez; "Ara" ya da hazır mesaj butonlarına basınca telefonunun arama/SMS/WhatsApp uygulaması açılır, bu sırada numara o uygulamaya aktarılır. Sessiz saatlerde arama butonu hiç gösterilmez, yalnızca mesaj seçenekleri çıkar. QR'ı kapattığınızda numara hiç kimseye iletilmez.</p>
@@ -49,7 +50,7 @@ a{color:var(--band)}
 <h2>3. Verileri kimlerle paylaşıyoruz?</h2>
 <p>Verileri satmıyor, reklam için kullanmıyoruz. Hizmetin çalışması için şu altyapılar kullanılır:</p>
 <ul>
-<li><b>Supabase</b>: veritabanı (QR kayıtları ve siparişler) ve sipariş edilen sticker sayfasının baskı dosyası (PDF; içinde yalnızca sticker'lar var, kişisel bilgi yok). Bağlantılar şifrelidir (HTTPS).</li>
+<li><b>Supabase</b>: veritabanı (QR kayıtları, siparişler ve yorumlar), yorum fotoğrafları ve sipariş edilen sticker sayfasının baskı dosyası (PDF; içinde yalnızca sticker'lar var, kişisel bilgi yok). Bağlantılar şifrelidir (HTTPS).</li>
 <li><b>Telegram ve e-posta (Resend)</b>: yeni bir sipariş geldiğinde sipariş bilgileri ve baskı dosyası yalnızca işletmeciye bildirim olarak gönderilir.</li>
 <li><b>Baskı firması</b>: sipariş onaylanınca basılacak sticker dosyası ve gönderim için gereken bilgiler iletilebilir.</li>
 <li><b>Kargo firması</b>: gönderim için ad, telefon ve adres.</li>
@@ -60,12 +61,14 @@ a{color:var(--band)}
 <h2>4. Ne kadar süre saklıyoruz?</h2>
 <ul>
 <li>QR kayıtları ve okutma zamanları: siz silene kadar.</li>
+<li>Yorumlar: siz silene kadar. QR'ınızı sildiğinizde ona bağlı yorumunuz da silinir.</li>
 <li>Sipariş kayıtları: sipariş tamamlandıktan ya da iptal edildikten sonra en fazla 2 yıl (iade/şikâyet için); daha önce silinmesini isteyebilirsiniz.</li>
 </ul>
 
 <h2 id="silme">5. Verilerimi nasıl silerim?</h2>
 <ul>
-<li><b>Tek bir QR:</b> Uygulamada QR'larım › QR'ı seçin › <b>QR'ı kalıcı olarak sil</b>. Numaranız ve okutma kayıtları sunucudan hemen silinir.</li>
+<li><b>Tek bir QR:</b> Uygulamada QR'larım › QR'ı seçin › <b>QR'ı kalıcı olarak sil</b>. Numaranız, okutma kayıtları ve bu QR ile yazdığınız yorum sunucudan hemen silinir.</li>
+<li><b>Yorum fotoğrafı:</b> Yorum silinince fotoğraf hiçbir yerde gösterilmez. Dosyanın sunucudan da silinmesini isterseniz aşağıdaki e-posta yoluyla yazın.</li>
 <li><b>Her şey:</b> Uygulamada Profilim › <b>Tüm verilerimi sil</b>. Bu telefondaki bütün QR'lar sunucudan silinir; profil, adres ve sipariş listesi telefondan temizlenir.</li>
 <li><b>Uygulama artık yoksa ya da sipariş kayıtlarınızın silinmesini istiyorsanız:</b> QR kodunuzu (ör. SAB12CD3) ya da sipariş numaranızı ve siparişte kullandığınız telefon/e-postayı yazarak Google Play'deki uygulama sayfasında yer alan geliştirici e-posta adresine yazın. Talebiniz en geç 30 gün içinde yerine getirilir.</li>
 </ul>

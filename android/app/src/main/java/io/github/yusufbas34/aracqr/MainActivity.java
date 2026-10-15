@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowInsets;
 import android.webkit.JavascriptInterface;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
@@ -41,6 +42,8 @@ public class MainActivity extends Activity {
     private WebView web;
     private OnBackInvokedCallback backCallback;
     private boolean backRegistered;
+    private static final int PICK_FILE = 7;
+    private ValueCallback<Uri[]> fileCallback;  // yorum fotoğrafı seçimi (<input type=file>)
 
     @Override
     protected void onCreate(Bundle state) {
@@ -56,7 +59,23 @@ public class MainActivity extends Activity {
         s.setTextZoom(100);                      // sistem yazı boyutu sticker ölçülerini bozmasın
 
         web.addJavascriptInterface(new Bridge(), "AndroidBridge");
-        web.setWebChromeClient(new WebChromeClient());
+        web.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
+                if (fileCallback != null) fileCallback.onReceiveValue(null);
+                fileCallback = callback;
+                // Sistem fotoğraf seçici: izin gerektirmez, yalnızca seçilen fotoğraf uygulamaya verilir
+                Intent pick = new Intent(Intent.ACTION_GET_CONTENT).addCategory(Intent.CATEGORY_OPENABLE).setType("image/*");
+                try {
+                    startActivityForResult(Intent.createChooser(pick, null), PICK_FILE);
+                } catch (Exception e) {
+                    fileCallback = null;
+                    toast("Fotoğraf seçici açılamadı");
+                    return false;
+                }
+                return true;
+            }
+        });
         web.setWebViewClient(new WebViewClient() {
             @Override
             public void doUpdateVisitedHistory(WebView view, String url, boolean isReload) {
@@ -190,6 +209,15 @@ public class MainActivity extends Activity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (web != null) web.evaluateJavascript("window.onNotifChange && onNotifChange()", null);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode != PICK_FILE || fileCallback == null) return;
+        Uri uri = resultCode == RESULT_OK && data != null ? data.getData() : null;
+        fileCallback.onReceiveValue(uri != null ? new Uri[]{uri} : null);
+        fileCallback = null;
     }
 
     @Override

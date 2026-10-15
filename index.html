@@ -60,6 +60,18 @@ section > h2{font-size:24px;margin:0 0 14px}
 .perks{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
 .perks div{background:#fff;border-radius:10px;padding:14px;font-size:15px;line-height:1.45;color:var(--muted)}
 .perks b{display:block;color:var(--ink);margin-bottom:2px}
+.rv-sum{display:flex;align-items:center;gap:12px;margin:-4px 0 14px;font-size:15px;color:var(--muted)}
+.rv-sum b{font-size:34px;color:var(--ink);line-height:1}
+.stars{color:#f5a400;letter-spacing:1px;white-space:nowrap}.stars i{color:#d3d7de;font-style:normal}
+.rv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.rv{background:#fff;border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.rv img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#e9ecf1;cursor:zoom-in}
+.rv div{padding:12px 14px;font-size:15px;line-height:1.45;color:var(--ink)}
+.rv p{margin:6px 0 8px;color:var(--ink);font-size:15px;overflow-wrap:anywhere}
+.rv small{display:block;color:var(--muted);font-size:13px}
+.rv-more{font:inherit;font-weight:700;color:var(--band);background:#fff;border:2px solid var(--line);border-radius:8px;padding:10px 16px;margin-top:12px;cursor:pointer}
+.req.rvw.st-bekliyor{border-left-color:#f5a400}.req.rvw.st-yayinda{border-left-color:var(--ok)}
+.req.rvw img{width:160px;max-width:100%;border-radius:8px;display:block;margin-top:8px}
 details{background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:8px}
 summary{font-weight:700;cursor:pointer}
 details p{margin:8px 0 0}
@@ -652,13 +664,15 @@ async function showAdmin() {
   catch (e) { return showAdminLogin(e.status ? "Şifre hatalı." : "Bağlantı hatası, tekrar deneyin."); }
   if (!Array.isArray(rows)) return showAdminLogin("Beklenmeyen yanıt, tekrar deneyin.");
   if (typeof qrcode !== "function") return showMessage("QR kütüphanesi yüklenemedi", "Sayfayı yenileyip tekrar deneyin.");
-  const [given, requests, appReady, orderRows] = await Promise.all([loadGiven(), loadRequests(),
-    rpc("aracqr_app_version", {}).then(v => v >= 4, () => false), loadOrders()]);
+  const [given, requests, appReady, orderRows, reviewRows] = await Promise.all([loadGiven(), loadRequests(),
+    rpc("aracqr_app_version", {}).then(v => v >= 4, () => false), loadOrders(), loadAdminReviews()]);
   orderBadge = orderRows ? orderRows.filter(o => NEW_ORDER.includes(o.status)).length : 0;
+  reviewBadge = reviewRows ? reviewRows.filter(r => r.status === "bekliyor").length : 0;
   if (adminTab === "requests") return showRequests(rows, given, requests);
   if (adminTab === "orders") return showOrders(orderRows, requests);
   if (adminTab === "settings") return showSettings(requests);
   if (adminTab === "stats") return showStats(rows, given, requests);
+  if (adminTab === "reviews") return showAdminReviews(reviewRows, requests);
   lastAdminRows = rows;
   const state = r => r.phone ? "used" : given?.has(String(r.code).toUpperCase()) ? "given" : "ready";
   const count = {ready: 0, given: 0, used: 0};
@@ -847,6 +861,8 @@ function showHome() {
       </div>
     </section>
 
+    <section id="reviews" hidden></section>
+
     <section>
       <h2>Sık sorulanlar</h2>
       <details><summary>Ücretli mi?</summary><p>QR oluşturmak ve kendiniz yazdırmak ücretsizdir. İsterseniz su geçirmez vinil sticker setini <span class="price-tag">150 TL</span>'ye biz basıp gönderiyoruz.</p></details>
@@ -858,8 +874,33 @@ function showHome() {
     </section>
     <p style="text-align:center;font-size:14px;margin-top:22px"><a href="gizlilik.html">Gizlilik politikası</a></p>`, "home");
   document.getElementById("another").onclick = () => { document.getElementById("sample").innerHTML = showcaseHtml(); };
+  loadReviews();
   // Fiyat panelden değişebilir
   rpc("shop_info", {}).then(sh => { if (sh?.price) document.querySelectorAll(".price-tag").forEach(el => { el.textContent = `${sh.price} TL`; }); }).catch(() => {});
+}
+
+// ---------------------------------------------------------------- kullanıcı yorumları (supabase/yorum.sql)
+// Yorumu yalnızca uygulamada QR'ı olan kişi yazabilir; panelden onaylanan yorumlar burada görünür. Hiç yoksa bölüm gizli kalır.
+const starsHtml = n => `<span class="stars" aria-label="5 üzerinden ${n}">${"★".repeat(n)}<i>${"★".repeat(5 - n)}</i></span>`;
+const reviewDate = at => new Date(at).toLocaleDateString("tr-TR", {month: "long", year: "numeric"});
+
+async function loadReviews() {
+  let data;
+  try { data = await rpc("reviews_public", {p_limit: 24}); } catch (e) { return; }
+  const box = document.getElementById("reviews");
+  if (!box || !data?.items?.length) return;
+  const card = r => `<div class="rv">${r.photo_url ? `<img src="${esc(r.photo_url)}" alt="${esc(r.name)} kullanıcısının aracındaki Araç QR" loading="lazy">` : ""}
+    <div>${starsHtml(r.rating)}<p>${esc(r.comment)}</p><small><b>${esc(r.name)}</b>${r.city ? ` · ${esc(r.city)}` : ""} · ${esc(reviewDate(r.at))}</small></div></div>`;
+  const FIRST = 6;
+  box.innerHTML = `<h2>Kullanıcılar ne diyor?</h2>
+    <div class="rv-sum"><b>${String(data.avg).replace(".", ",")}</b><span>${starsHtml(Math.round(data.avg))}<br>${data.count} değerlendirme</span></div>
+    <div class="rv-grid">${data.items.slice(0, FIRST).map(card).join("")}</div>
+    ${data.items.length > FIRST ? `<button class="rv-more" type="button">Tüm yorumları göster</button>` : ""}
+    <p style="font-size:14px;margin:12px 0 0">Yorumlar uygulamada QR'ı olan kullanıcılar tarafından yazılır; yayınlanmadan önce kontrol edilir.</p>`;
+  box.hidden = false;
+  const more = box.querySelector(".rv-more");
+  if (more) more.onclick = () => { box.querySelector(".rv-grid").innerHTML = data.items.map(card).join(""); more.remove(); };
+  box.addEventListener("click", ev => { const img = ev.target.closest(".rv img"); if (img) open(img.src, "_blank", "noopener"); });
 }
 
 // ---------------------------------------------------------------- kurulum yardımı
@@ -905,12 +946,12 @@ document.addEventListener("click", async ev => {
 // ---------------------------------------------------------------- yönetim: talepler
 let adminTab = "tags", reqFilter = "yeni";
 
-let orderBadge = 0;
+let orderBadge = 0, reviewBadge = 0;
 
 function tabsHtml(newCount) {
   const tab = (id, name, n) => `<button data-tab="${id}" class="${adminTab === id ? "on" : ""}">${name}${n ? `<span class="badge">${n}</span>` : ""}</button>`;
   return `<div class="tabs noprint">
-    ${tab("tags", "Etiketler")}${tab("requests", "QR talepleri", newCount)}${tab("orders", "Siparişler", orderBadge)}${tab("stats", "İstatistik")}${tab("settings", "Ayarlar")}
+    ${tab("tags", "Etiketler")}${tab("requests", "QR talepleri", newCount)}${tab("orders", "Siparişler", orderBadge)}${tab("reviews", "Yorumlar", reviewBadge)}${tab("stats", "İstatistik")}${tab("settings", "Ayarlar")}
   </div>`;
 }
 
@@ -1269,6 +1310,50 @@ async function showOrders(orders, requests) {
 }
 
 // İstatistik sekmesi: rakamlar ve son 14 günün okutma grafiği (supabase/siparis.sql sürüm 7: admin_stats)
+// ---------------------------------------------------------------- yönetim: yorumlar
+async function loadAdminReviews() {
+  try { const r = await rpc("admin_reviews", {p_key: adminKey}); return Array.isArray(r) ? r : null; }
+  catch (e) { return null; }
+}
+
+const REVIEW_STATUS = {bekliyor: "Onay bekliyor", yayinda: "Yayında", gizli: "Gizli"};
+function showAdminReviews(list, requests) {
+  const when = r => new Date(r.updated_at || r.created_at).toLocaleString("tr-TR", {dateStyle: "short", timeStyle: "short"});
+  show(`
+    ${tabsHtml(requests ? requests.filter(r => r.status === "yeni").length : 0)}
+    ${list ? "" : setupHtml("Kullanıcı yorumları kurulu değil. Kurunca uygulamada “Yorum yaz” çalışır, onayladığınız yorumlar sitede ve uygulamada görünür.", "yorum.sql")}
+    <p class="noprint">Yorumları yalnızca uygulamada QR'ı olan kişiler yazabilir. <b>Yayınla</b> dediğiniz yorum sitenin ana sayfasında ve uygulamada görünür.
+      Fotoğrafta plaka, yüz ya da telefon numarası okunuyorsa <b>Fotoğrafı kaldır</b>'a basın; yorum kalır.</p>
+    ${list && !list.length ? "<p>Henüz yorum yok. Uygulamadaki “⭐ Yorum yaz” butonuyla kullanıcılar yorum gönderebilir.</p>" : ""}
+    <div class="reqs">${(list || []).map(r => `
+      <div class="req rvw st-${esc(r.status)}" data-id="${r.id}">
+        <div class="meta">
+          <b style="color:var(--ink);font-size:16px">${esc(r.name)}</b>${r.city ? ` · ${esc(r.city)}` : ""} · ${starsHtml(r.rating)}<br>
+          <span style="color:var(--ink)">${esc(r.comment)}</span><br>
+          ${esc(REVIEW_STATUS[r.status] || r.status)} · ${esc(when(r))} · QR ${esc(r.tag_code)}${r.lang && r.lang !== "tr" ? ` · dil: ${esc(r.lang)}` : ""}
+          ${r.photo_url ? `<a href="${esc(r.photo_url)}" target="_blank" rel="noopener"><img src="${esc(r.photo_url)}" alt="Yorum fotoğrafı" loading="lazy"></a>` : ""}
+        </div>
+        <div class="act">
+          ${r.status !== "yayinda" ? `<button data-rv="yayinda">Yayınla</button>` : ""}
+          ${r.status !== "gizli" ? `<button data-rv="gizli" style="background:var(--muted)">Gizle</button>` : ""}
+          ${r.photo_url ? `<button data-rv="foto" style="background:var(--muted)">Fotoğrafı kaldır</button>` : ""}
+          <button data-rv="sil" style="background:var(--err)">Sil</button>
+        </div>
+      </div>`).join("")}</div>`, "wide");
+  bindTabs();
+  document.querySelectorAll("[data-rv]").forEach(b => b.onclick = async () => {
+    const id = Number(b.closest("[data-id]").dataset.id), act = b.dataset.rv;
+    const r = list.find(x => x.id === id);
+    if (act === "sil" && !confirm("Yorum kalıcı olarak silinsin mi?")) return;
+    b.disabled = true;
+    try {
+      await rpc("admin_review_set", {p_key: adminKey, p_id: id, p_status: act === "foto" ? r.status : act, p_remove_photo: act === "foto"});
+      toast({yayinda: "Yayınlandı.", gizli: "Gizlendi.", foto: "Fotoğraf kaldırıldı.", sil: "Silindi."}[act]);
+      showAdmin();
+    } catch (e) { b.disabled = false; toast("Kaydedilemedi: " + e.message); }
+  });
+}
+
 async function showStats(rows, given, requests) {
   show(`${tabsHtml(requests ? requests.filter(r => r.status === "yeni").length : 0)}<p>Yükleniyor…</p>`, "wide");
   bindTabs();
