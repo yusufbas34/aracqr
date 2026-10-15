@@ -69,8 +69,8 @@ ul.try li{margin:4px 0}
 </div>
 <script>
 // Grup ve Play katılım bağlantıları belli olunca buraya yazılır
-const GROUP_URL = "";
-const OPTIN_URL = "";
+const GROUP_URL = "https://groups.google.com/g/ara-qr-test";
+const OPTIN_URL = "https://play.google.com/apps/testing/io.github.yusufbas34.aracqr";
 for (const [id, url] of [["group", GROUP_URL], ["optin", OPTIN_URL]]) {
   const a = document.getElementById(id);
   if (url) a.href = url; else { a.classList.add("wait"); a.textContent = "Bağlantı birkaç gün içinde burada olacak"; }
