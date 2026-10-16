@@ -394,4 +394,7 @@ I18N.en = {
   "Su geçirmez vinil sticker": "Waterproof vinyl sticker",
   "Yazıcıyla uğraşmayın: su geçirmez sticker'ınızı istediğiniz ölçüde biz basıp kapınıza gönderelim.": "Skip the printer: we print your waterproof sticker in the size you want and deliver it.",
   "Evde ya da kırtasiyede kendiniz ücretsiz yazdırın. İsterseniz su geçirmez vinil sticker'ınızı istediğiniz ölçüde {price} TL'ye biz basıp kapınıza gönderelim.": "Print it yourself for free at home or a print shop. Or we print your waterproof vinyl sticker in the size you want for {price} TL and deliver it.",
+  "A4 kağıt": "A4 paper",
+  "A4 sayfaya 1 adet, gerçek ölçüsünde basılır. Kesik çizgiden kesin.": "Prints 1 sticker on an A4 page at real size. Cut along the dashed line.",
+  "Sticker yazıcısı ya da matbaa için: sayfa, sticker'ın kendi ölçüsünde.": "For a sticker printer or print shop: the page is the sticker's own size.",
 };

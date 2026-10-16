@@ -394,4 +394,7 @@ I18N.ru = {
   "Su geçirmez vinil sticker": "Водостойкая виниловая наклейка",
   "Yazıcıyla uğraşmayın: su geçirmez sticker'ınızı istediğiniz ölçüde biz basıp kapınıza gönderelim.": "Без принтера: напечатаем водостойкую наклейку нужного размера и доставим.",
   "Evde ya da kırtasiyede kendiniz ücretsiz yazdırın. İsterseniz su geçirmez vinil sticker'ınızı istediğiniz ölçüde {price} TL'ye biz basıp kapınıza gönderelim.": "Распечатайте бесплатно дома или в копицентре. Или мы напечатаем водостойкую виниловую наклейку нужного размера за {price} TL и доставим.",
+  "A4 kağıt": "Бумага A4",
+  "A4 sayfaya 1 adet, gerçek ölçüsünde basılır. Kesik çizgiden kesin.": "На листе A4 печатается 1 наклейка в реальном размере. Вырежьте по пунктиру.",
+  "Sticker yazıcısı ya da matbaa için: sayfa, sticker'ın kendi ölçüsünde.": "Для принтера наклеек или типографии: страница размером с наклейку.",
 };

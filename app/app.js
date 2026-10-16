@@ -705,7 +705,6 @@ function showTag(code, isNew) {
   const t = findTag(code);
   if (!t) { location.replace("#/"); return; }
   const {w, h} = dims(t.size);
-  const maxCopies = t.paper === "a4" ? perA4({w, h}) * 4 : 30;
   // Önizleme ekrana sığsın: geniş stickerlarda küçült
   const fit = Math.min(1, (Math.min(innerWidth, 560) - 64) / (w * 96 / 25.4));
   show(isNew ? L("3. Yazdırın") : (t.name || t.code), `
@@ -729,12 +728,10 @@ function showTag(code, isNew) {
         `<option value="${k}"${k === t.size ? " selected" : ""}>${esc(L(n))}</option>`).join("")}</select>
       <label>${L("Kağıt")}</label>
       <div class="seg">
-        <label><input type="radio" name="paper" value="a4"${t.paper === "a4" ? " checked" : ""}> ${L("A4 kağıda diz")}</label>
+        <label><input type="radio" name="paper" value="a4"${t.paper === "a4" ? " checked" : ""}> ${L("A4 kağıt")}</label>
         <label><input type="radio" name="paper" value="tek"${t.paper === "tek" ? " checked" : ""}> ${L("Sayfa = sticker ölçüsü")}</label>
       </div>
-      <div class="hint">${t.paper === "a4" ? L("A4'e {n} adet sığar. Kesik çizgilerden kesin.", {n: perA4({w, h})}) : L("Sticker yazıcısı ya da matbaa için: her sticker kendi ölçüsünde ayrı sayfa.")}</div>
-      <label for="copies">${L("Adet")}</label>
-      <input id="copies" type="number" inputmode="numeric" min="1" max="${maxCopies}" value="${Math.min(t.copies || 1, maxCopies)}">
+      <div class="hint">${t.paper === "a4" ? L("A4 sayfaya 1 adet, gerçek ölçüsünde basılır. Kesik çizgiden kesin.") : L("Sticker yazıcısı ya da matbaa için: sayfa, sticker'ın kendi ölçüsünde.")}</div>
       <button class="btn" id="print" type="button">${L("Yazdır / PDF olarak kaydet")}</button>
       <button class="btn alt" id="share" type="button">${L("PDF paylaş (WhatsApp, matbaa…)")}</button>
       <div class="hint">${L("Yazdırırken ölçeği <b>%100 / Gerçek boyut</b> seçin; “Sayfaya sığdır” ölçüleri bozar.")}</div>
@@ -829,8 +826,7 @@ function showTag(code, isNew) {
     update({phrase: k});
   };
   app.querySelectorAll('input[name="paper"]').forEach(r => r.onchange = () => update({paper: r.value}));
-  const copies = () => Math.max(1, Math.min(maxCopies, parseInt(document.getElementById("copies").value, 10) || 1));
-  document.getElementById("copies").onchange = () => saveTag({...findTag(code), copies: copies()});
+  const copies = () => 1;  // her zaman 1 adet (siparişteki gibi)
   document.getElementById("print").onclick = () => printTag(findTag(code), copies());
   document.getElementById("share").onclick = async ev => {
     ev.target.disabled = true; ev.target.textContent = L("PDF hazırlanıyor…");

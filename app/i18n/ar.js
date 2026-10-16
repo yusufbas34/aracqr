@@ -394,4 +394,7 @@ I18N.ar = {
   "Su geçirmez vinil sticker": "ملصق فينيل مقاوم للماء",
   "Yazıcıyla uğraşmayın: su geçirmez sticker'ınızı istediğiniz ölçüde biz basıp kapınıza gönderelim.": "لا داعي للطابعة: نطبع ملصقك المقاوم للماء بالمقاس الذي تريده ونرسله إليك.",
   "Evde ya da kırtasiyede kendiniz ücretsiz yazdırın. İsterseniz su geçirmez vinil sticker'ınızı istediğiniz ölçüde {price} TL'ye biz basıp kapınıza gönderelim.": "اطبعه مجانًا بنفسك في المنزل أو في مكتبة. أو نطبع ملصق الفينيل المقاوم للماء بالمقاس الذي تريده مقابل {price} ليرة ونرسله إليك.",
+  "A4 kağıt": "ورق A4",
+  "A4 sayfaya 1 adet, gerçek ölçüsünde basılır. Kesik çizgiden kesin.": "يُطبع ملصق واحد على ورقة A4 بمقاسه الحقيقي. قصّه على الخط المتقطع.",
+  "Sticker yazıcısı ya da matbaa için: sayfa, sticker'ın kendi ölçüsünde.": "لطابعة الملصقات أو المطبعة: الصفحة بمقاس الملصق نفسه.",
 };
