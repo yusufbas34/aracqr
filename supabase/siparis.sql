@@ -14,7 +14,7 @@ end $$;
 create table if not exists public.shop_settings (
   id integer primary key default 1 check (id = 1),
   active boolean not null default false,          -- IBAN girilip açılana kadar sipariş alınmaz
-  price integer not null default 150,             -- TL
+  price integer not null default 250,             -- TL
   iban text,
   account_name text,
   bank_name text,
@@ -55,8 +55,13 @@ create table if not exists public.orders (
   updated_at timestamptz
 );
 create index if not exists orders_created_idx on public.orders (created_at);
--- sürüm 8: sipariş tek A4 sayfa, müşterinin seçtiği ölçüde dolu (ör. '60x90'). Boşsa eski set (6 ölçü, 9 sticker).
+-- sürüm 8: sipariş müşterinin seçtiği ölçüde 1 sticker (ör. '40x60' = 4×6 cm). Boşsa eski set (6 ölçü, 9 sticker).
 alter table public.orders add column if not exists size text;
+-- '40x60' → '4×6 cm', '55x85' → '5,5×8,5 cm'
+create or replace function public.aracqr_cm(p_size text) returns text language sql immutable as $q$
+  select replace(trim_scale(split_part(p_size, 'x', 1)::numeric / 10)::text, '.', ',') || '×' ||
+         replace(trim_scale(split_part(p_size, 'x', 2)::numeric / 10)::text, '.', ',') || ' cm'
+$q$;
 alter table public.orders enable row level security;
 revoke all on public.orders from anon, authenticated;
 -- sürüm 3: adres isteğe bağlı, yeni durum 'yeni' (iletişime geçilecek). Eski durumlar eski siparişler için geçerli kalır.
@@ -138,7 +143,7 @@ begin
       '📍 ' || concat_ws(', ', nullif(new.address, ''), nullif(concat_ws(' / ', nullif(new.district, ''), nullif(new.city, '')), '')) || E'\n'
     else '' end ||
     '🎨 Tasarım: ' || new.design || coalesce(' · söz: ' || new.phrase, '') || ' · QR: ' || new.tag_code || E'\n' ||
-    '📐 ' || coalesce('A4 sayfa, ' || replace(new.size, 'x', '×') || ' mm sticker''larla dolu', 'A4 set (6 ölçü, 9 sticker)') || E'\n' ||
+    '📐 ' || coalesce('1 adet sticker, ' || public.aracqr_cm(new.size), 'A4 set (6 ölçü, 9 sticker)') || E'\n' ||
     case when new.note is not null then '📝 ' || new.note || E'\n' else '' end ||
     E'\nPanel: https://yusufbas34.github.io/aracqr/?admin');
   return new;
@@ -209,7 +214,7 @@ begin
   if to_regprocedure('net.http_post(text,jsonb,jsonb,jsonb,integer)') is null then return json_build_object('ok', false, 'error', 'no_pg_net'); end if;
   v_url := public.aracqr_project_url() || '/storage/v1/object/public/aracqr-pdf/' || v_name;
   v_caption := '🖨 Baskı PDF''i · ' || o.code || ' · ' || o.full_name || E'\nTasarım: ' || o.design || coalesce(' · söz: ' || o.phrase, '') || ' · QR: ' || o.tag_code ||
-    E'\nÖlçü: ' || coalesce('A4 sayfa, ' || replace(o.size, 'x', '×') || ' mm', '6 ölçü set');
+    E'\nÖlçü: ' || coalesce('1 adet, ' || public.aracqr_cm(o.size), '6 ölçü set');
   select * into s from shop_settings where id = 1;
   if coalesce(s.telegram_bot_token, '') <> '' and coalesce(s.telegram_chat_id, '') <> '' then
     execute 'select net.http_post(url := $1, body := $2, headers := $3)'

@@ -148,12 +148,13 @@ const dims = size => { const [w, h] = size.split("x").map(Number); return {w, h,
 const perA4 = ({w, h}) => Math.floor((A4.W - 2 * A4.M + A4.G) / (w + A4.G)) * Math.floor((A4.H - 2 * A4.M + A4.G) / (h + A4.G));
 
 // ---------------------------------------------------------------- basılı sipariş sayfası
-// Sipariş: tek A4 vinil sayfa, müşterinin seçtiği ölçüdeki sticker'larla doldurulur (190×277 mm baskı alanı, 3 mm ara).
+// Sipariş: müşterinin seçtiği ölçüde 1 adet vinil sticker. Baskı dosyası A4 sayfanın sol üstünde gerçek ölçüsünde tek sticker.
 // Ölçüsü olmayan eski siparişler için eski set düzeni: aynı QR 6 farklı ölçüde, toplam 9 sticker.
 const ORDER_SHEET = [["80x120", "74x105"], ["60x90", "55x85", "50x75"], ["40x60", "40x60", "40x60", "40x60"]];
 const ORDER_SIZES = Object.keys(SIZES).filter(k => perA4(dims(k)) > 1);  // sipariş verilebilen ölçüler
 const ORDER_DEFAULT = "60x90";
 const orderSize = size => ORDER_SIZES.includes(size) ? size : ORDER_DEFAULT;
+const cmText = size => { const {w, h} = dims(size), f = v => String(v / 10).replace(".", ","); return `${f(w)}×${f(h)} cm`; };
 
 function orderSheetHtml(code, design, link, phrase, size) {
   const cell = sz => {
@@ -162,5 +163,5 @@ function orderSheetHtml(code, design, link, phrase, size) {
   };
   if (!size) return `<div class="sheet">${ORDER_SHEET.map(row => `<div class="sheet-row">${row.map(cell).join("")}</div>`).join("")}</div>`;
   const sz = orderSize(size);
-  return `<div class="sheet sheet-fill">${Array.from({length: perA4(dims(sz))}, () => cell(sz)).join("")}</div>`;
+  return `<div class="sheet sheet-fill">${cell(sz)}</div>`;
 }

@@ -323,3 +323,7 @@ body.has-tabbar main{padding-bottom:96px}
 .cloud-ok > span{font-size:28px;line-height:1}
 .cloud-ok b{display:block;font-size:16px}
 .cloud-ok small{display:block;margin-top:4px;color:#3d6b52;font-size:13px}
+.sample.sample-one{display:inline-block;vertical-align:top}
+.sample-one .grid{display:block}
+.sample-one .watermark{gap:10mm 6mm}
+.sample-one .watermark span{font-size:8mm}

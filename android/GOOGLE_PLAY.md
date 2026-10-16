@@ -174,7 +174,7 @@ Araç QR ile aracınıza size özel bir QR sticker yapıştırırsınız. Yolunu
 29 hazır tasarım (komik, klasik, takım renkleri) ve esprili sözler arasından seçin. Tasarımları yana kaydırarak gezin, sözünüzü değiştirin.
 
 ★ Ücretsiz yazdırın ya da biz basalım
-Evdeki yazıcıdan istediğiniz ölçüde yazdırın, PDF olarak matbaaya gönderin. İsterseniz yağmura ve güneşe dayanıklı vinil sticker setini biz basıp kargolayalım.
+Evdeki yazıcıdan istediğiniz ölçüde yazdırın, PDF olarak matbaaya gönderin. İsterseniz yağmura ve güneşe dayanıklı vinil sticker'ınızı istediğiniz ölçüde biz basıp kargolayalım.
 
 ★ Gece rahat uyuyun: sessiz saatler
 Belirlediğiniz saatlerde arama butonu gösterilmez. QR'ı okutan kişi size yalnızca SMS ya da WhatsApp mesajı gönderebilir.

@@ -163,6 +163,14 @@ function profile() {
   return {name: old.name || "", phone: old.phone || "", email: old.email || "", city: old.city || "", district: old.district || "", address: old.address || ""};
 }
 
+// Kardeş uygulama Tasma QR'ın tanıtımı (şimdilik web sitesi; Play'e çıkınca bağlantı değişecek)
+const TASMA_URL = "https://yusufbas34.github.io/tasmaqr/";
+const tasmaAdHtml = () => `<a class="tasma-ad" href="${TASMA_URL}" target="_blank" rel="noopener">
+      <img src="tasma-logo.svg" alt="" width="52" height="52">
+      <span><small>${L("Köpeğiniz için")}</small><b>Tasma QR</b>${L("Kaybolursa onu bulan kişi tek dokunuşla sizi arar, yerini gönderir.")}</span>
+      <i aria-hidden="true">›</i>
+    </a>`;
+
 function showHome() {
   const list = tags();
   if (!list.length) {
@@ -179,7 +187,8 @@ function showHome() {
       </ol>
       <a class="btn" href="#/yeni">${L("Başlayalım")}</a>
       <button class="btn ghost" type="button" id="howto">${L("Nasıl çalışır?")}</button>
-      <a class="btn ghost" href="#/yedek">${L("Eski telefonumdaki QR'ları getir")}</a>`, false, "", "qr"), bindHowto(), homeBubbles();
+      <a class="btn ghost" href="#/yedek">${L("Eski telefonumdaki QR'ları getir")}</a>
+      ${tasmaAdHtml()}`, false, "", "qr"), bindHowto(), homeBubbles();
   }
   show(L("QR'larım"), `
     <div id="update-slot"></div>
@@ -196,11 +205,7 @@ function showHome() {
     <a class="btn" href="#/yeni">${L("+ Yeni QR oluştur")}</a>
     <a class="btn ghost" href="#/yorumlar">${L("⭐ Yorumlar · yorum yaz")}</a>
     <button class="btn ghost share-app" type="button">${L("👋 Arkadaşına öner")}</button>
-    <a class="tasma-ad" href="https://yusufbas34.github.io/tasmaqr/" target="_blank" rel="noopener">
-      <img src="tasma-logo.svg" alt="" width="52" height="52">
-      <span><small>${L("Köpeğiniz için")}</small><b>Tasma QR</b>${L("Kaybolursa onu bulan kişi tek dokunuşla sizi arar, yerini gönderir.")}</span>
-      <i aria-hidden="true">›</i>
-    </a>`, false, "", "qr");
+    ${tasmaAdHtml()}`, false, "", "qr");
   bindShareApp();
   homeBubbles();
   const nh = document.getElementById("notif-home");
@@ -221,7 +226,7 @@ function showOrders() {
     <div class="empty">
       <div style="font-size:56px" aria-hidden="true">📦</div>
       <h1>${L("Henüz siparişiniz yok")}</h1>
-      <p>${L("Yazıcıyla uğraşmayın: su geçirmez sticker setinizi biz basıp kapınıza gönderelim.")}</p>
+      <p>${L("Yazıcıyla uğraşmayın: su geçirmez sticker'ınızı istediğiniz ölçüde biz basıp kapınıza gönderelim.")}</p>
     </div>
     ${tags().length ? `<a class="btn order-go" href="#/etiket/${encodeURIComponent(tags()[0].code)}/siparis">${L("Sticker seti sipariş et")}</a>` : `<a class="btn" href="#/yeni">${L("Önce QR'ınızı oluşturun")}</a>`}`,
     false, "", "orders");
@@ -979,7 +984,7 @@ function promoHtml(t, shop, compact = false) {
   if (compact) {
     return `<a class="promo compact" href="${href}">
       <span class="promo-emoji" aria-hidden="true">📦</span>
-      <span><b>${L("Yazıcıyla uğraşmayın!")}</b>${L("Su geçirmez A4 sticker sayfanız kapınıza gelsin")}</span>
+      <span><b>${L("Yazıcıyla uğraşmayın!")}</b>${L("Su geçirmez sticker'ınız kapınıza gelsin")}</span>
       <strong>${esc(shop.price)} TL</strong>
     </a>`;
   }
@@ -988,7 +993,7 @@ function promoHtml(t, shop, compact = false) {
     <b class="promo-title">${L("Biz basalım, kapınıza gönderelim")}</b>
     <ul>
       <li>${L("💧 Yağmura ve güneşe dayanıklı vinil")}</li>
-      <li>${L("📐 Seçtiğiniz ölçüde dolu A4 sayfa")}</li>
+      <li>${L("📐 İstediğiniz ölçüde: 4×6 cm'den 8×12 cm'ye")}</li>
       <li>${L("✂️ Kesime hazır, kolay yapıştırılır")}</li>
     </ul>
     <span class="promo-foot"><span class="promo-price">${esc(shop.price)} TL</span><span class="promo-cta">${L("Hemen sipariş ver →")}</span></span>
@@ -1021,15 +1026,16 @@ async function refreshOrders() {
 const PRODUCT_FEATURES = [
   ["💧", L("Yağmura dayanıklı"), L("Su geçirmez vinil; yağmur, araç yıkama ve nemden etkilenmez.")],
   ["☀️", L("Güneşe dayanıklı"), L("UV dayanımlı baskı: renkler ve QR kod kolay kolay solmaz.")],
-  ["📐", L("Tek A4 sayfa, seçtiğiniz ölçüde"), L("A4 sayfa, seçtiğiniz ölçüdeki sticker'larla dolu gelir: 60×90 mm'de 9, 40×60 mm'de 16 adet. Cam, tampon, kask, bisiklet…")],
+  ["📐", L("İstediğiniz ölçüde"), L("Sticker'ınız seçtiğiniz ölçüde basılır: 4×6 cm'den 8×12 cm'ye kadar. Cam, tampon, kask, bisiklet…")],
   ["✂️", L("Kesime hazır"), L("Her sticker'ın kesim çizgisi var; makasla kolayca ayırırsınız.")],
   ["🔒", L("Numaranız güvende"), L("Numaranız sticker'da yazmaz; dilediğiniz zaman uygulamadan değiştirirsiniz, yeniden basmanız gerekmez.")],
 ];
 
-// Örnek baskı sayfası: gerçek QR yerine çalışmayan örnek QR ve "ÖRNEK" filigranı (ekran görüntüsü alınsa da işe yaramaz)
+// Örnek sticker: gerçek QR yerine çalışmayan örnek QR ve "ÖRNEK" filigranı (ekran görüntüsü alınsa da işe yaramaz).
+// Ölçüler birbirine göre doğru oranda görünür (en büyük 8×12 cm ekrana sığar).
 function sampleSheetHtml(design, zoom, phrase, size) {
-  return `<div class="sample" style="zoom:${zoom.toFixed(3)}" aria-label="${L("Örnek baskı sayfası")}">
-    ${orderSheetHtml(L("ÖRNEK"), design, SITE + "#ornek", phrase, orderSize(size))}
+  return `<div class="sample sample-one" style="zoom:${zoom.toFixed(3)}" aria-label="${L("Örnek sticker")}">
+    ${stickerAt(L("ÖRNEK"), design, SITE + "#ornek", orderSize(size), phrase)}
     <div class="watermark" aria-hidden="true">${`<span>${L("ÖRNEK")}</span>`.repeat(24)}</div>
   </div>`;
 }
@@ -1037,9 +1043,9 @@ function sampleSheetHtml(design, zoom, phrase, size) {
 function openSample(design, phrase, size) {
   const box = document.createElement("div");
   box.className = "viewer";
-  const zoom = (Math.min(innerWidth, 700) - 24) / (190 * 96 / 25.4);
+  const zoom = Math.min(2.2, (Math.min(innerWidth, 700) - 48) / (dims(orderSize(size)).w * 96 / 25.4));
   box.innerHTML = `<button class="viewer-close" type="button" aria-label="${L("Kapat")}">✕</button>
-    <div class="viewer-body">${sampleSheetHtml(design, zoom, phrase, size)}<p>${L("Gerçek baskıda sizin QR'ınız olur. Sayfa A4, stickerlar gerçek ölçüsünde basılır.")}</p></div>`;
+    <div class="viewer-body">${sampleSheetHtml(design, zoom, phrase, size)}<p>${L("Gerçek baskıda sizin QR'ınız olur. Sticker {size} ölçüsünde basılır.", {size: cmText(orderSize(size))})}</p></div>`;
   box.querySelector(".viewer-close").onclick = () => box.remove();
   document.body.append(box);
 }
@@ -1056,16 +1062,16 @@ async function showOrder(tagCode, error = "", v = null) {
   }
   v = v || profile();
   const val = k => `value="${esc(v[k] || "")}"`;
-  const zoom = (Math.min(innerWidth, 560) - 64) / (190 * 96 / 25.4);
-  // Sipariş: tek A4 sayfa, QR'ın yazdırma ölçüsündeki sticker'larla dolu (sipariş sayfasında değiştirilebilir)
+  const zoom = Math.min(1, (Math.min(innerWidth, 560) - 80) / (80 * 96 / 25.4));  // en büyük ölçü (8 cm) sığsın
+  // Sipariş: QR'ın yazdırma ölçüsünde 1 adet sticker (sipariş sayfasında değiştirilebilir)
   let size = orderSize(v.size || t.size);
-  const sheetInfo = sz => L("A4 vinil sayfa · {n} adet · {size}", {n: perA4(dims(sz)), size: L(SIZES[sz])});
+  const sheetInfo = sz => L("1 adet · {size}", {size: cmText(sz)});
   show(L("Biz basalım, gönderelim"), `
     ${error ? `<div class="msg err" role="alert">${esc(error)}</div>` : ""}
-    <div class="price big"><span>${L("Su geçirmez vinil sticker sayfası")}<small id="o-info">${esc(sheetInfo(size))}</small></span><strong>${esc(shop.price)} TL</strong></div>
+    <div class="price big"><span>${L("Su geçirmez vinil sticker")}<small id="o-info">${esc(sheetInfo(size))}</small></span><strong>${esc(shop.price)} TL</strong></div>
     <div class="hint" style="text-align:center">${esc(shop.shipping_text)}</div>
     <label for="o-size">📐 ${L("Sticker ölçüsü")}</label>
-    <select id="o-size" class="size-pick">${ORDER_SIZES.map(k => `<option value="${k}"${k === size ? " selected" : ""}>${esc(L(SIZES[k]))} · ${L("A4'e {n} adet", {n: perA4(dims(k))})}</option>`).join("")}</select>
+    <select id="o-size" class="size-pick">${ORDER_SIZES.map(k => `<option value="${k}"${k === size ? " selected" : ""}>${esc(cmText(k))}</option>`).join("")}</select>
     <button type="button" class="preview sheetprev" id="sample" aria-label="${L("Örnek baskıyı büyüt")}"><span id="o-sheet">${sampleSheetHtml(t.design, zoom, t.phrase, size)}</span><span class="zoomhint">${L("🔍 Örneği büyüt")}</span></button>
     <ul class="features">${PRODUCT_FEATURES.map(([i, h, d]) => `<li><span aria-hidden="true">${i}</span><div><b>${h}</b>${d}</div></li>`).join("")}</ul>
     <a class="btn ghost" href="#/etiket/${encodeURIComponent(t.code)}/tasarim">🎨 ${L("Tasarım: {name}", {name: esc(dName(t.design))})} · ${L("değiştir")}</a>
@@ -1127,7 +1133,7 @@ async function showOrder(tagCode, error = "", v = null) {
   });
 }
 
-// Siparişin A4 baskı PDF'ini (seçilen ölçüde dolu sayfa) hazırlayıp sunucuya yükler; sunucu bunu Telegram'a belge,
+// Siparişin baskı PDF'ini (A4 sayfada seçilen ölçüde 1 sticker) hazırlayıp sunucuya yükler; sunucu bunu Telegram'a belge,
 // e-postaya ek olarak gönderir (siparis.sql sürüm 6). Kurulu değilse ya da bağlantı yoksa sessizce vazgeçer.
 async function sendOrderPdf(res, t) {
   try {

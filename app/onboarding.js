@@ -41,7 +41,7 @@ function miniQr(x, y, s, fg = "#111418", bg = "#fff") {
 }
 
 // Fiyat panelden değişebilir; son bilinen fiyatı göster
-const onbPrice = () => (typeof store !== "undefined" && store.get("shop", null)?.price) || 150;
+const onbPrice = () => (typeof store !== "undefined" && store.get("shop", null)?.price) || 250;
 
 const ONB_SLIDES = [
   {
@@ -76,7 +76,7 @@ const ONB_SLIDES = [
   {
     bg: "linear-gradient(160deg,#a8461a,#3a1606)",
     title: L("Ücretsiz yazdırın ya da biz basalım"),
-    text: () => L("Evde ya da kırtasiyede kendiniz ücretsiz yazdırın. İsterseniz su geçirmez vinil sticker setinizi {price} TL'ye biz basıp kapınıza gönderelim.", {price: onbPrice()}),
+    text: () => L("Evde ya da kırtasiyede kendiniz ücretsiz yazdırın. İsterseniz su geçirmez vinil sticker'ınızı istediğiniz ölçüde {price} TL'ye biz basıp kapınıza gönderelim.", {price: onbPrice()}),
     art: () => `<svg viewBox="0 0 360 300" class="onb-art" role="img" aria-label="${L("Solda yazıcı, sağda kargo kutusu")}">
       <rect width="360" height="300" rx="22" fill="#fff4ea"/>
       <g transform="translate(14 58)">
