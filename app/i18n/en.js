@@ -376,4 +376,12 @@ I18N.en = {
   "📲 Yeni telefona taşı": "📲 Move to a new phone",
   "Telefon değiştirirken yedek kodunu kullanın; otomatik yedek aynı telefonda geri gelir.": "Use the backup code when changing phones; the automatic backup restores on the same phone.",
   "Araç QR deneyiminiz": "Your experience with Araç QR",
+  "Su geçirmez A4 sticker sayfanız kapınıza gelsin": "Get your waterproof A4 sticker sheet delivered",
+  "📐 Seçtiğiniz ölçüde dolu A4 sayfa": "📐 A full A4 sheet in the size you choose",
+  "Tek A4 sayfa, seçtiğiniz ölçüde": "One A4 sheet, in your size",
+  "A4 sayfa, seçtiğiniz ölçüdeki sticker'larla dolu gelir: 60×90 mm'de 9, 40×60 mm'de 16 adet. Cam, tampon, kask, bisiklet…": "The A4 sheet comes full of stickers in the size you choose: 9 at 60×90 mm, 16 at 40×60 mm. Window, bumper, helmet, bike…",
+  "A4 vinil sayfa · {n} adet · {size}": "A4 vinyl sheet · {n} pcs · {size}",
+  "Su geçirmez vinil sticker sayfası": "Waterproof vinyl sticker sheet",
+  "Sticker ölçüsü": "Sticker size",
+  "A4'e {n} adet": "{n} per A4",
 };

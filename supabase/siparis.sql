@@ -55,6 +55,8 @@ create table if not exists public.orders (
   updated_at timestamptz
 );
 create index if not exists orders_created_idx on public.orders (created_at);
+-- sürüm 8: sipariş tek A4 sayfa, müşterinin seçtiği ölçüde dolu (ör. '60x90'). Boşsa eski set (6 ölçü, 9 sticker).
+alter table public.orders add column if not exists size text;
 alter table public.orders enable row level security;
 revoke all on public.orders from anon, authenticated;
 -- sürüm 3: adres isteğe bağlı, yeni durum 'yeni' (iletişime geçilecek). Eski durumlar eski siparişler için geçerli kalır.
@@ -71,7 +73,7 @@ alter table public.orders add column if not exists pdf_sent_at timestamptz;  -- 
 alter table public.orders add constraint orders_status_check
   check (status in ('yeni', 'odeme_bekleniyor', 'odeme_bildirildi', 'onaylandi', 'baskida', 'kargolandi', 'iptal'));
 
-create or replace function public.aracqr_shop_version() returns integer language sql immutable as 'select 7';
+create or replace function public.aracqr_shop_version() returns integer language sql immutable as 'select 8';
 
 -- ---------------------------------------------------------------- bildirim
 -- Telegram ve/veya e-posta (Resend) gönderir. Hata olursa siparişi bozmaz, yalnızca uyarı yazar.
@@ -136,6 +138,7 @@ begin
       '📍 ' || concat_ws(', ', nullif(new.address, ''), nullif(concat_ws(' / ', nullif(new.district, ''), nullif(new.city, '')), '')) || E'\n'
     else '' end ||
     '🎨 Tasarım: ' || new.design || coalesce(' · söz: ' || new.phrase, '') || ' · QR: ' || new.tag_code || E'\n' ||
+    '📐 ' || coalesce('A4 sayfa, ' || replace(new.size, 'x', '×') || ' mm sticker''larla dolu', 'A4 set (6 ölçü, 9 sticker)') || E'\n' ||
     case when new.note is not null then '📝 ' || new.note || E'\n' else '' end ||
     E'\nPanel: https://yusufbas34.github.io/aracqr/?admin');
   return new;
@@ -205,7 +208,8 @@ begin
   end if;
   if to_regprocedure('net.http_post(text,jsonb,jsonb,jsonb,integer)') is null then return json_build_object('ok', false, 'error', 'no_pg_net'); end if;
   v_url := public.aracqr_project_url() || '/storage/v1/object/public/aracqr-pdf/' || v_name;
-  v_caption := '🖨 Baskı PDF''i · ' || o.code || ' · ' || o.full_name || E'\nTasarım: ' || o.design || coalesce(' · söz: ' || o.phrase, '') || ' · QR: ' || o.tag_code;
+  v_caption := '🖨 Baskı PDF''i · ' || o.code || ' · ' || o.full_name || E'\nTasarım: ' || o.design || coalesce(' · söz: ' || o.phrase, '') || ' · QR: ' || o.tag_code ||
+    E'\nÖlçü: ' || coalesce('A4 sayfa, ' || replace(o.size, 'x', '×') || ' mm', '6 ölçü set');
   select * into s from shop_settings where id = 1;
   if coalesce(s.telegram_bot_token, '') <> '' and coalesce(s.telegram_chat_id, '') <> '' then
     execute 'select net.http_post(url := $1, body := $2, headers := $3)'
@@ -278,9 +282,11 @@ as $$
 $$;
 
 drop function if exists public.order_create(text, text, text, text, text, text, text, text, text, text);  -- sürüm 4 imzası
+drop function if exists public.order_create(text, text, text, text, text, text, text, text, text, text, text);  -- sürüm 7 imzası
 create or replace function public.order_create(
   p_tag_code text, p_design text, p_full_name text, p_phone text, p_email text,
-  p_city text, p_district text, p_address text, p_note text default null, p_device text default null, p_phrase text default null)
+  p_city text, p_district text, p_address text, p_note text default null, p_device text default null, p_phrase text default null,
+  p_size text default null)
 returns json
 language plpgsql security definer set search_path = public
 as $$
@@ -297,6 +303,7 @@ declare
   v_note text := nullif(left(trim(coalesce(p_note, '')), 300), '');
   v_device text := nullif(left(trim(coalesce(p_device, '')), 64), '');
   v_phrase text := nullif(lower(trim(coalesce(p_phrase, ''))), '');
+  v_size text := case when p_size in ('40x60', '50x75', '55x85', '60x90', '74x105', '80x120') then p_size else '60x90' end;
   v_code text;
   o orders;
 begin
@@ -318,8 +325,8 @@ begin
     v_code := 'AQ-' || translate(upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 6)), '01', 'XY');
     exit when not exists (select 1 from orders where code = v_code);
   end loop;
-  insert into orders (code, tag_code, design, phrase, full_name, phone, email, city, district, address, note, amount, device)
-    values (v_code, v_tag, v_design, v_phrase, v_name, v_phone, v_email, v_city, v_district, v_address, v_note, s.price, v_device)
+  insert into orders (code, tag_code, design, phrase, size, full_name, phone, email, city, district, address, note, amount, device)
+    values (v_code, v_tag, v_design, v_phrase, v_size, v_name, v_phone, v_email, v_city, v_district, v_address, v_note, s.price, v_device)
     returning * into o;
   return json_build_object('ok', true, 'code', o.code, 'token', o.token, 'amount', o.amount, 'status', o.status);
 end $$;
@@ -441,7 +448,7 @@ begin
 end $$;
 
 revoke all on function public.shop_info() from public;
-revoke all on function public.order_create(text, text, text, text, text, text, text, text, text, text, text) from public;
+revoke all on function public.order_create(text, text, text, text, text, text, text, text, text, text, text, text) from public;
 revoke all on function public.order_paid(text, uuid) from public;
 revoke all on function public.order_status(text[], uuid[]) from public;
 revoke all on function public.order_cancel(text, uuid) from public;
@@ -452,7 +459,7 @@ revoke all on function public.admin_orders(text) from public;
 revoke all on function public.admin_order_update(text, bigint, text, text, text) from public;
 grant execute on function public.aracqr_shop_version() to anon, authenticated;
 grant execute on function public.shop_info() to anon, authenticated;
-grant execute on function public.order_create(text, text, text, text, text, text, text, text, text, text, text) to anon, authenticated;
+grant execute on function public.order_create(text, text, text, text, text, text, text, text, text, text, text, text) to anon, authenticated;
 grant execute on function public.order_paid(text, uuid) to anon, authenticated;
 grant execute on function public.order_status(text[], uuid[]) to anon, authenticated;
 grant execute on function public.order_cancel(text, uuid) to anon, authenticated;

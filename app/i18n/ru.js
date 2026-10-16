@@ -376,4 +376,12 @@ I18N.ru = {
   "📲 Yeni telefona taşı": "📲 Перенести на новый телефон",
   "Telefon değiştirirken yedek kodunu kullanın; otomatik yedek aynı telefonda geri gelir.": "При смене телефона используйте код резервной копии; автоматическая копия восстанавливается на этом же телефоне.",
   "Araç QR deneyiminiz": "Ваш опыт с Araç QR",
+  "Su geçirmez A4 sticker sayfanız kapınıza gelsin": "Водостойкий лист наклеек A4 с доставкой до двери",
+  "📐 Seçtiğiniz ölçüde dolu A4 sayfa": "📐 Целый лист A4 в выбранном размере",
+  "Tek A4 sayfa, seçtiğiniz ölçüde": "Один лист A4 в вашем размере",
+  "A4 sayfa, seçtiğiniz ölçüdeki sticker'larla dolu gelir: 60×90 mm'de 9, 40×60 mm'de 16 adet. Cam, tampon, kask, bisiklet…": "Лист A4 полностью заполнен наклейками выбранного размера: 9 шт. 60×90 мм, 16 шт. 40×60 мм. Стекло, бампер, шлем, велосипед…",
+  "A4 vinil sayfa · {n} adet · {size}": "Виниловый лист A4 · {n} шт. · {size}",
+  "Su geçirmez vinil sticker sayfası": "Водостойкий виниловый лист наклеек",
+  "Sticker ölçüsü": "Размер наклейки",
+  "A4'e {n} adet": "{n} шт. на A4",
 };

@@ -165,3 +165,4 @@
 .sheet{width:190mm;height:277mm;display:flex;flex-direction:column;gap:3mm;background:#fff}
 .sheet-row{display:flex;gap:3mm;align-items:flex-start}
 .sheet .grid{display:block}
+.sheet.sheet-fill{flex-direction:row;flex-wrap:wrap;align-content:flex-start}

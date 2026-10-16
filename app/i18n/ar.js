@@ -376,4 +376,12 @@ I18N.ar = {
   "📲 Yeni telefona taşı": "📲 النقل إلى هاتف جديد",
   "Telefon değiştirirken yedek kodunu kullanın; otomatik yedek aynı telefonda geri gelir.": "استخدم رمز النسخ الاحتياطي عند تغيير الهاتف؛ النسخة التلقائية تُستعاد على الهاتف نفسه.",
   "Araç QR deneyiminiz": "تجربتك مع Araç QR",
+  "Su geçirmez A4 sticker sayfanız kapınıza gelsin": "احصل على ورقة ملصقات A4 مقاومة للماء حتى باب منزلك",
+  "📐 Seçtiğiniz ölçüde dolu A4 sayfa": "📐 ورقة A4 كاملة بالمقاس الذي تختاره",
+  "Tek A4 sayfa, seçtiğiniz ölçüde": "ورقة A4 واحدة بمقاسك",
+  "A4 sayfa, seçtiğiniz ölçüdeki sticker'larla dolu gelir: 60×90 mm'de 9, 40×60 mm'de 16 adet. Cam, tampon, kask, bisiklet…": "تصلك ورقة A4 مليئة بالملصقات بالمقاس الذي تختاره: 9 بمقاس 60×90 مم، و16 بمقاس 40×60 مم. للزجاج والمصد والخوذة والدراجة…",
+  "A4 vinil sayfa · {n} adet · {size}": "ورقة فينيل A4 · {n} قطعة · {size}",
+  "Su geçirmez vinil sticker sayfası": "ورقة ملصقات فينيل مقاومة للماء",
+  "Sticker ölçüsü": "مقاس الملصق",
+  "A4'e {n} adet": "{n} في ورقة A4",
 };
