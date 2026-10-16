@@ -1154,9 +1154,19 @@ async function sendOrderPdf(res, t) {
     if (SUPABASE_KEY.startsWith("eyJ")) headers.Authorization = "Bearer " + SUPABASE_KEY;
     const name = `siparis/${res.code}-${res.token}.pdf`;
     const up = await fetch(`${SUPABASE_URL}/storage/v1/object/aracqr-pdf/${name}`, {method: "POST", headers, body: blob});
-    if (!up.ok) return;
-    await rpc("order_pdf_ready", {p_code: res.code, p_token: res.token});
-  } catch (e) { /* PDF'siz bildirim zaten gitti */ }
+    if (!up.ok && !/duplicate|already exists/i.test(await up.text())) return;
+    const r = await rpc("order_pdf_ready", {p_code: res.code, p_token: res.token});
+    if (r?.ok) { const o = findOrder(res.code); if (o) saveOrder({...o, pdfSent: true}); }
+  } catch (e) { /* PDF'siz bildirim zaten gitti; uygulama bir sonraki açılışta yeniden dener */ }
+}
+
+// Gönderilemeyen baskı PDF'lerini (internet yoktu, uygulama kapandı…) açılışta bir kez daha dener
+async function retryOrderPdfs() {
+  for (const o of orders()) {
+    if (o.pdfSent || !o.token || o.status === "iptal" || Date.now() - (o.created || 0) > 7 * 864e5) continue;
+    const t = findTag(o.tagCode);
+    if (t) await sendOrderPdf(o, {...t, design: o.design || t.design, size: o.size || t.size});
+  }
 }
 
 async function showOrderStatus(orderCode, isNew) {
@@ -1235,4 +1245,5 @@ addEventListener("hashchange", route);
 route();
 syncOrdersToAndroid();
 cloudRestore();
+setTimeout(retryOrderPdfs, 4000);
 if (!store.get("onboarded", false)) showOnboarding();

@@ -1288,7 +1288,7 @@ async function showOrders(orders, requests) {
   show(`
     ${tabsHtml(requests ? requests.filter(r => r.status === "yeni").length : 0)}
     ${orders ? "" : setupHtml("Sipariş sistemi kurulu değil.", "siparis.sql")}
-    ${orders && shopVersion < 8 ? setupHtml("Sipariş sistemi güncellemesi var: sipariş artık müşterinin seçtiği ölçüde 1 sticker (ölçü siparişe kaydedilir), İstatistik sekmesi, bildirimde baskı PDF'i.", "siparis.sql") : ""}
+    ${orders && shopVersion < 9 ? setupHtml("Sipariş sistemi güncellemesi var: siparişin PDF'ini panelden Telegram'a gönderme ve hata görme, sipariş ölçüsü (1 sticker, ör. 4×6 cm), İstatistik sekmesi.", "siparis.sql") : ""}
     ${orders && shop && !shop.active ? `<div class="msg err">Satış kapalı: uygulamada sipariş alınmıyor. <b>Ayarlar</b> sekmesinden açabilirsiniz.</div>` : ""}
     <div class="bar">
       <select id="ofilter" aria-label="Sipariş durumu">
@@ -1323,6 +1323,7 @@ async function showOrders(orders, requests) {
             ${NEW_ORDER.includes(o.status) ? `<button data-act="approve" style="background:var(--ok)">✓ Görüşüldü, onayla</button>` : ""}
             <button data-act="a4" style="background:var(--band)">🖨 A4'e yazdır</button>
             <button data-act="pdf">Baskı PDF'i indir</button>
+            <button data-act="tg" title="Baskı PDF'ini yeniden hazırlayıp Telegram'a ve bildirim e-postasına gönderir">📨 PDF'i Telegram'a gönder${o.pdf_sent_at ? " (tekrar)" : ""}</button>
             ${["onaylandi", "baskida"].includes(o.status) ? `<button data-act="mail" title="PDF ekli e-posta taslağı (.eml) indirir; açınca Outlook / Posta'da hazır gelir">Baskıcıya e-posta (PDF ekli)</button>
               ${canShareFiles ? `<button data-act="share">PDF'i paylaş (e-posta ekli)</button>` : ""}` : ""}
             <input data-f="tracking" placeholder="Kargo takip no" value="${esc(o.tracking || "")}" aria-label="Kargo takip no">
@@ -1365,6 +1366,8 @@ async function showOrders(orders, requests) {
         toast("Baskı PDF'i hazırlanıyor…", 30000);
         downloadBlob(await orderPdf(o), fileName);
         toast("PDF indirildi.");
+      } else if (act === "tg") {
+        await sendOrderPdfToTelegram(o, msg);
       } else if (act === "mail") {
         toast("Baskı PDF'i hazırlanıyor…", 30000);
         downloadBlob(await printerEml(o, await orderPdf(o), fileName, shop?.printer_email || ""), `baskici-${o.code}.eml`);
@@ -1391,6 +1394,45 @@ async function showOrders(orders, requests) {
       if (e.name !== "AbortError") msg.innerHTML = `<div class="msg err">İşlem yapılamadı: ${esc(e.message)}</div>`;
     } finally { btn.disabled = false; }
   };
+}
+
+// Siparişin baskı PDF'ini panelden hazırlayıp Storage'a yükler ve Telegram / e-postaya gönderir (siparis.sql sürüm 9).
+// Her adımın sonucunu ekranda gösterir; böylece PDF'in neden gelmediği görülür.
+async function sendOrderPdfToTelegram(o, msg) {
+  const steps = [];
+  const out = (ok, text) => { steps.push(`${ok ? "✅" : "❌"} ${esc(text)}`); msg.innerHTML = `<div class="msg ${ok ? "ok" : "err"}"><b>${esc(o.code)} · PDF gönderimi</b><br>${steps.join("<br>")}</div>`; };
+  toast("Baskı PDF'i hazırlanıyor…", 30000);
+  if (o.pdf_sent_at) {
+    try { await rpc("admin_order_pdf_reset", {p_key: adminKey, p_id: o.id}); }
+    catch (e) { return out(false, "Sipariş sistemi güncel değil: Siparişler sekmesindeki güncellemeyi (siparis.sql) çalıştırın."); }
+  }
+  let blob;
+  try { blob = await orderPdf(o); out(true, `PDF hazırlandı (${Math.round(blob.size / 1024)} KB)`); }
+  catch (e) { return out(false, "PDF hazırlanamadı: " + e.message); }
+  const headers = {"Content-Type": "application/pdf", apikey: SUPABASE_KEY, "x-upsert": "false"};
+  if (SUPABASE_KEY.startsWith("eyJ")) headers.Authorization = "Bearer " + SUPABASE_KEY;
+  const name = `siparis/${o.code}-${o.token}.pdf`;
+  const up = await fetch(`${SUPABASE_URL}/storage/v1/object/aracqr-pdf/${name}`, {method: "POST", headers, body: blob}).catch(e => ({ok: false, status: 0, text: async () => e.message}));
+  const upText = up.ok ? "" : await up.text();
+  if (up.ok) out(true, "Sunucuya yüklendi");
+  else if (/duplicate|already exists/i.test(upText)) out(true, "Dosya sunucuda zaten var");
+  else return out(false, `Sunucuya yüklenemedi (${up.status}): ${upText.slice(0, 200)}. Storage kovası ya da izni eksik olabilir: Siparişler sekmesindeki SQL güncellemesini çalıştırın.`);
+  let r;
+  try { r = await rpc("order_pdf_ready", {p_code: o.code, p_token: o.token}); }
+  catch (e) { return out(false, "Gönderim fonksiyonu çalışmadı: " + e.message); }
+  if (!r?.ok) return out(false, {no_file: "Sunucu dosyayı bulamadı", no_pg_net: "pg_net eklentisi kapalı (Supabase › Database › Extensions › pg_net'i açın)",
+    not_found: "Sipariş bulunamadı", failed: "Telegram / e-posta isteği oluşturulamadı"}[r?.error] || "Gönderilemedi: " + (r?.error || "bilinmeyen hata"));
+  out(true, "Telegram ve e-posta isteği gönderildi; birkaç saniye içinde gelmeli");
+  document.querySelector(".toast")?.remove();
+  // Telegram'ın cevabı birkaç saniye sonra pg_net kayıtlarına düşer
+  await new Promise(res => setTimeout(res, 5000));
+  try {
+    const log = await rpc("admin_net_log", {p_key: adminKey});
+    const tg = (log || []).find(x => /"ok"\s*:/.test(x.content || "") || x.error_msg);
+    if (!tg) out(true, "Telegram'ın cevabı henüz yok; birkaç saniye sonra Telegram'a bakın");
+    else if (tg.status_code === 200) out(true, "Telegram dosyayı kabul etti");
+    else out(false, `Telegram'ın cevabı (${tg.status_code || "hata"}): ${(tg.error_msg || tg.content || "").slice(0, 250)}`);
+  } catch (e) { /* kayıt okunamadıysa sessiz geç */ }
 }
 
 // İstatistik sekmesi: rakamlar ve son 14 günün okutma grafiği (supabase/siparis.sql sürüm 7: admin_stats)

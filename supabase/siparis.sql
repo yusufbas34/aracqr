@@ -78,7 +78,7 @@ alter table public.orders add column if not exists pdf_sent_at timestamptz;  -- 
 alter table public.orders add constraint orders_status_check
   check (status in ('yeni', 'odeme_bekleniyor', 'odeme_bildirildi', 'onaylandi', 'baskida', 'kargolandi', 'iptal'));
 
-create or replace function public.aracqr_shop_version() returns integer language sql immutable as 'select 8';
+create or replace function public.aracqr_shop_version() returns integer language sql immutable as 'select 9';
 
 -- ---------------------------------------------------------------- bildirim
 -- Telegram ve/veya e-posta (Resend) gönderir. Hata olursa siparişi bozmaz, yalnızca uyarı yazar.
@@ -180,7 +180,7 @@ language sql stable security definer set search_path = public
 as $$
   select exists (select 1 from orders o
     where p_name = 'siparis/' || o.code || '-' || o.token::text || '.pdf'
-      and o.created_at > now() - interval '1 day' and o.pdf_sent_at is null);
+      and o.created_at > now() - interval '30 days' and o.pdf_sent_at is null);  -- sürüm 9: panelden sonradan da gönderilebilsin
 $$;
 revoke all on function public.order_pdf_ok(text) from public;
 grant execute on function public.order_pdf_ok(text) to anon, authenticated;
@@ -473,3 +473,32 @@ grant execute on function public.admin_shop_set(text, boolean, integer, text, te
 grant execute on function public.admin_notify_test(text) to anon, authenticated;
 grant execute on function public.admin_orders(text) to anon, authenticated;
 grant execute on function public.admin_order_update(text, bigint, text, text, text) to anon, authenticated;
+
+-- ---------------------------------------------------------------- sürüm 9: baskı PDF'ini panelden gönderme ve hata ayıklama
+-- Panel, siparişin PDF'ini yeniden hazırlayıp yükler ve order_pdf_ready ile Telegram / e-postaya gönderir.
+-- Daha önce gönderildi işaretliyse önce bu işaret kaldırılır.
+create or replace function public.admin_order_pdf_reset(p_key text, p_id bigint)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+begin
+  perform public.admin_list(p_key);  -- şifre kontrolü
+  update orders set pdf_sent_at = null where id = p_id;
+end $$;
+
+-- Son dış istek sonuçları (Telegram / Resend): gönderim neden olmadı görmek için. pg_net yoksa boş döner.
+create or replace function public.admin_net_log(p_key text)
+returns table (id bigint, status_code integer, content text, error_msg text, created timestamptz)
+language plpgsql security definer set search_path = public
+as $$
+begin
+  perform public.admin_list(p_key);  -- şifre kontrolü
+  if to_regclass('net._http_response') is null then return; end if;
+  return query execute 'select r.id, r.status_code, left(r.content::text, 400), r.error_msg, r.created
+    from net._http_response r order by r.id desc limit 8';
+end $$;
+
+revoke all on function public.admin_order_pdf_reset(text, bigint) from public;
+revoke all on function public.admin_net_log(text) from public;
+grant execute on function public.admin_order_pdf_reset(text, bigint) to anon, authenticated;
+grant execute on function public.admin_net_log(text) to anon, authenticated;
