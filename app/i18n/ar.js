@@ -397,4 +397,5 @@ I18N.ar = {
   "A4 kağıt": "ورق A4",
   "A4 sayfaya 1 adet, gerçek ölçüsünde basılır. Kesik çizgiden kesin.": "يُطبع ملصق واحد على ورقة A4 بمقاسه الحقيقي. قصّه على الخط المتقطع.",
   "Sticker yazıcısı ya da matbaa için: sayfa, sticker'ın kendi ölçüsünde.": "لطابعة الملصقات أو المطبعة: الصفحة بمقاس الملصق نفسه.",
+  "Instagram'da takip edin": "تابعنا على Instagram",
 };

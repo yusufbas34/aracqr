@@ -164,6 +164,7 @@ function profile() {
 }
 
 // Kardeş uygulama Tasma QR'ın tanıtımı (şimdilik web sitesi; Play'e çıkınca bağlantı değişecek)
+const IG_URL = "https://www.instagram.com/aracqr/";
 const TASMA_URL = "https://yusufbas34.github.io/tasmaqr/";
 const tasmaAdHtml = () => `<a class="tasma-ad" href="${TASMA_URL}" target="_blank" rel="noopener">
       <img src="tasma-logo.svg" alt="" width="52" height="52">
@@ -275,6 +276,7 @@ function showProfile(saved = false) {
       <button class="btn ghost" type="button" id="howto">${L("Nasıl çalışır?")}</button>
       <button class="btn ghost share-app" type="button">${L("👋 Arkadaşına öner")}</button>
       <a class="btn ghost" href="#/yorumlar">${L("⭐ Yorumlar · yorum yaz")}</a>
+      <a class="ig-btn" href="${IG_URL}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none"/></svg> ${L("Instagram'da takip edin")} <small>@aracqr</small></a>
       <a class="btn ghost" href="${SITE}">${L("Web sitesi")}</a>
     </div>
 

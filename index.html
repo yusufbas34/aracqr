@@ -75,6 +75,9 @@ section > h2{font-size:24px;margin:0 0 14px}
 @keyframes sp-glow{50%{box-shadow:0 12px 34px rgba(255,90,60,.45)}}
 [dir=rtl] .scan-promo small,[dir=rtl] .scan-promo em{align-self:flex-end}
 @media (prefers-reduced-motion:reduce){.scan-promo,.scan-promo .sp-art,.scan-promo em{animation:none}}
+.ig-btn{display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;color:#fff;font-weight:700;border-radius:12px;padding:13px 16px;
+  background:linear-gradient(45deg,#f9a825,#e1306c 45%,#833ab4);box-shadow:0 6px 18px rgba(225,48,108,.3)}
+.ig-btn small{font-weight:400;opacity:.9}
 .tasma{display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;margin:0 0 38px;padding:20px 22px;border-radius:18px;
   background:linear-gradient(120deg,#b8501a,#d9692a 60%,#f08a4b);color:#fff;text-decoration:none;box-shadow:0 10px 28px rgba(184,80,26,.3);position:relative;overflow:hidden}
 .tasma::after{content:"🐾";position:absolute;right:-8px;bottom:-22px;font-size:110px;opacity:.12;transform:rotate(-18deg);pointer-events:none}
@@ -881,6 +884,7 @@ function showcaseHtml() {
   return `<div class="grid" style="--w:52mm;--h:78mm;--k:${52 / 60}">${stickerHtml("ÖRNEK", d, BASE + "app/", ph)}</div>`;
 }
 
+const IG_URL = "https://www.instagram.com/aracqr/";
 const APP_URL = "app/";  // web uygulaması: Android uygulamasıyla aynı kod
 
 function showHome() {
@@ -943,7 +947,8 @@ function showHome() {
       <details><summary>Telefonumu değiştirirsem QR'larım ne olur?</summary><p>QR'larınız çalışmaya devam eder. Numaranızı yeni telefondan değiştirebilmek için uygulamadaki PIN'inizi bir yere not edin.</p></details>
       <details><summary>Verilerimi nasıl silerim?</summary><p>Uygulamada QR'ınızı açıp “QR'ı kalıcı olarak sil”e ya da Profilim'de “Tüm verilerimi sil”e dokunun. Ayrıntılar <a href="gizlilik.html#silme">gizlilik politikasında</a>.</p></details>
     </section>
-    <p style="text-align:center;font-size:14px;margin-top:22px"><a href="gizlilik.html">Gizlilik politikası</a></p>`, "home");
+    <a class="ig-btn" href="${IG_URL}" target="_blank" rel="noopener" style="max-width:420px;margin:0 auto"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none"/></svg> Instagram'da takip edin <small>@aracqr</small></a>
+    <p style="text-align:center;font-size:14px;margin-top:22px"><a href="gizlilik.html">Gizlilik politikası</a> · <a href="${IG_URL}" target="_blank" rel="noopener">Instagram</a></p>`, "home");
   document.getElementById("another").onclick = () => { document.getElementById("sample").innerHTML = showcaseHtml(); };
   loadReviews();
   // Fiyat panelden değişebilir
