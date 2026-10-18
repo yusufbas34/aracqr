@@ -17,6 +17,7 @@ const store = {
   set(key, value) {
     try { localStorage.setItem("aracqr-" + key, JSON.stringify(value)); } catch (e) {}
     if (key === "tags" || key === "orders") cloudSave();
+    if (key === "tags") syncTagsToAndroid();
   },
 };
 const tags = () => store.get("tags", []);
@@ -688,7 +689,14 @@ async function loadStats(list) {
   if (!list.length) return cache;
   try {
     const rows = await rpc("self_tag_stats", {p_codes: list.map(t => t.code), p_pins: list.map(t => t.pin)});
-    for (const r of rows || []) cache[r.code] = {total: r.total, last30: r.last30, last: r.last};
+    for (const r of rows || []) {
+      // Uygulama açıkken QR ilk kez okutulduysa kutla
+      if (cache[r.code] && !cache[r.code].total && r.total > 0) {
+        const t = list.find(x => x.code === r.code);
+        setTimeout(() => { confetti(); toast(L("🎉 {name} ilk kez okutuldu! Sistem çalışıyor.", {name: t?.name || r.code}), 5000); }, 600);
+      }
+      cache[r.code] = {total: r.total, last30: r.last30, last: r.last};
+    }
     store.set("stats", cache);
   } catch (e) {}
   return cache;
@@ -960,6 +968,15 @@ const findOrder = code => orders().find(o => o.code === code);
 function saveOrder(o) { store.set("orders", [o, ...orders().filter(x => x.code !== o.code)]); syncOrdersToAndroid(); }
 
 // Arka plan bildirimleri için siparişleri Android tarafına bildirir (durum değişince bildirim gelsin)
+// İlk okutma bildirimi için QR listesini Android tarafına bildirir (Notifier.checkScans)
+function syncTagsToAndroid() {
+  try {
+    if (bridge && typeof bridge.syncTags === "function") {
+      bridge.syncTags(JSON.stringify(tags().map(t => ({code: t.code, pin: t.pin, name: t.name || "", created: t.created || 0}))));
+    }
+  } catch (e) {}
+}
+
 function syncOrdersToAndroid() {
   try {
     if (bridge && typeof bridge.syncOrders === "function") {
@@ -1242,6 +1259,7 @@ document.getElementById("back").onclick = () => history.length > 1 ? history.bac
 addEventListener("hashchange", route);
 route();
 syncOrdersToAndroid();
+syncTagsToAndroid();
 cloudRestore();
 setTimeout(retryOrderPdfs, 4000);
 if (!store.get("onboarded", false)) showOnboarding();

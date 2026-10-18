@@ -312,6 +312,12 @@ public class MainActivity extends Activity {
             Notifier.syncOrders(MainActivity.this, json);
         }
 
+        /** QR listesi değişince web arayüzü bildirir: ilk okutma bildirimi bunlara bakar. */
+        @JavascriptInterface
+        public void syncTags(String json) {
+            Notifier.syncTags(MainActivity.this, json);
+        }
+
         @JavascriptInterface
         public String versionName() {
             try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; }

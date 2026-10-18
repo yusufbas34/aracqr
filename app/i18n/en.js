@@ -398,4 +398,5 @@ I18N.en = {
   "A4 sayfaya 1 adet, gerçek ölçüsünde basılır. Kesik çizgiden kesin.": "Prints 1 sticker on an A4 page at real size. Cut along the dashed line.",
   "Sticker yazıcısı ya da matbaa için: sayfa, sticker'ın kendi ölçüsünde.": "For a sticker printer or print shop: the page is the sticker's own size.",
   "Instagram'da takip edin": "Follow us on Instagram",
+  "🎉 {name} ilk kez okutuldu! Sistem çalışıyor.": "🎉 {name} was scanned for the first time! It works.",
 };

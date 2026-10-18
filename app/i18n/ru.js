@@ -398,4 +398,5 @@ I18N.ru = {
   "A4 sayfaya 1 adet, gerçek ölçüsünde basılır. Kesik çizgiden kesin.": "На листе A4 печатается 1 наклейка в реальном размере. Вырежьте по пунктиру.",
   "Sticker yazıcısı ya da matbaa için: sayfa, sticker'ın kendi ölçüsünde.": "Для принтера наклеек или типографии: страница размером с наклейку.",
   "Instagram'da takip edin": "Мы в Instagram",
+  "🎉 {name} ilk kez okutuldu! Sistem çalışıyor.": "🎉 {name} впервые отсканировали! Всё работает.",
 };

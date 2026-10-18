@@ -215,6 +215,26 @@ details.howto ol{margin:8px 0 0;padding-left:20px;line-height:1.6;font-size:15px
 .a4page{width:190mm;height:277mm;overflow:hidden;background:#fff;break-after:page;page-break-after:always}
 .a4page:last-child{break-after:auto;page-break-after:auto}
 .a4fill{display:flex;flex-wrap:wrap;gap:3mm;align-content:flex-start}
+.a4rows{display:flex;flex-direction:column;gap:3mm}
+.introrow{display:flex;gap:3mm;overflow:hidden}
+.introrow .grid{display:block;flex:none}
+.grid.mirror .sticker{transform:scaleX(-1)}
+.intro{flex:1;min-width:0;box-sizing:border-box;border:.3mm dashed #9aa0a8;border-radius:3mm;padding:calc(var(--s)*3.5mm) calc(var(--s)*4mm);
+  display:flex;flex-direction:column;gap:calc(var(--s)*2mm);font-family:"Barlow",system-ui,sans-serif;color:#111418;overflow:hidden;
+  font-size:calc(var(--s)*3.5mm);line-height:1.3;background:#fff}
+.intro .i-head{display:flex;align-items:center;gap:calc(var(--s)*2mm);padding-bottom:calc(var(--s)*1.6mm);border-bottom:.3mm solid #d6dbe5}
+.intro .i-head img{width:calc(var(--s)*7mm);height:calc(var(--s)*7mm)}
+.intro .i-head b{font:700 calc(var(--s)*5.4mm)/1 "Barlow Condensed","Barlow",sans-serif;color:#0a3a9e;white-space:nowrap}
+.intro .i-head span{font-size:calc(var(--s)*2.9mm);font-weight:600;color:#3b4252}
+.intro .i-body{display:flex;gap:calc(var(--s)*3mm);flex:1;min-height:0;align-items:flex-start}
+.intro .i-qr{flex:none;width:calc(var(--s)*33mm);text-align:center;font-size:calc(var(--s)*2.3mm);color:#566074}
+.intro .i-qr svg{width:100%;height:auto;display:block;margin-bottom:calc(var(--s)*1mm)}
+.intro ol{margin:0;padding-left:calc(var(--s)*4.2mm);display:flex;flex-direction:column;gap:calc(var(--s)*1.4mm)}
+.intro .i-pin{display:flex;align-items:center;gap:calc(var(--s)*2.5mm);background:#fff6d6;border:.3mm solid #f5c518;border-radius:2mm;
+  padding:calc(var(--s)*1.4mm) calc(var(--s)*2.5mm);font-weight:700;font-size:calc(var(--s)*2.8mm)}
+.intro .i-pin b{font:700 calc(var(--s)*6.2mm)/1 "Barlow Condensed","Barlow",sans-serif;letter-spacing:.12em}
+.intro .i-pin small{font-weight:400;font-size:calc(var(--s)*2.6mm);color:#566074}
+.intro .i-foot{font-size:calc(var(--s)*2.5mm);color:#566074}
 .a4fill .grid{display:block}
 .a4pin{height:var(--h);border-top:calc(var(--k)*.4mm) dashed #9aa0a8;border-radius:calc(var(--k)*3mm);display:flex;flex-direction:column;justify-content:center;box-sizing:border-box;overflow:hidden}
 .a4help{font-size:14px;color:var(--muted);margin:6px 0 0}
@@ -610,6 +630,22 @@ async function savePdf(codes) {
         pdf.addImage(s.img, "PNG", (w - s.w) / 2, el.classList.contains("pin") ? 0 : (h - s.h) / 2, s.w, s.h, undefined, "FAST");
       }
     }
+  } else if (!printMode) {
+    // Tanıtım kartlı A4: sayfaları ekran dışında çizip olduğu gibi PDF'e koy
+    pdf = new jsPDF({unit: "mm", format: "a4"});
+    const box = document.createElement("div");
+    box.style.cssText = "position:fixed;left:-30000px;top:0;background:#fff";
+    document.body.append(box);
+    try {
+      const pages = packA4(codes);
+      for (let i = 0; i < pages.length; i++) {
+        box.innerHTML = pages[i];
+        await Promise.all([...box.querySelectorAll("img")].map(img => img.complete ? 0 : new Promise(r => { img.onload = img.onerror = r; })));
+        const canvas = await html2canvas(box.firstElementChild, {scale: 4, backgroundColor: "#ffffff", logging: false});
+        if (i) pdf.addPage();
+        pdf.addImage(canvas.toDataURL("image/png"), "PNG", A4.M, A4.M, A4.W - 2 * A4.M, A4.H - 2 * A4.M, undefined, "FAST");
+      }
+    } finally { box.remove(); }
   } else {
     pdf = new jsPDF({unit: "mm", format: "a4"});
     const {W, H, M, G} = A4;
@@ -652,6 +688,7 @@ let printMode = pref("mode", "", ["", "only-sticker", "only-pin"]);
 let defaultDesign = pref("design", "klasik");
 let stickerSize = pref("size", "60x90", Object.keys(SIZES));
 let paper = pref("paper", "a4", ["a4", "tek"]);
+let mirror = pref("mirror", "", ["", "1"]) === "1";  // cam içi baskıda sticker'ı aynala
 const designOf = {};
 
 // Verildi işaretleri (supabase/verildi.sql). Fonksiyon kurulu değilse null döner.
@@ -681,7 +718,35 @@ function a4Cells(codes) {
     ...(printMode !== "only-pin" ? [`<div class="${cls}" style="${style}">${stickerHtml(c, designOf[c], tagLink(c))}</div>`] : []),
     ...(printMode !== "only-sticker" && pinOf[c] ? [`<div class="${cls}" style="${style}">${pinCardHtml(c, pinOf[c])}</div>`] : [])]);
 }
+// Tanıtım kartlı A4: her sırada solda sticker, sağda kalan genişlikte kart (QR görseli, kullanım, PIN).
+// İçten yapıştırmalı sticker'da baskı yapışkanın altında kaldığı için kart, alan kişiye QR'ı ve kullanımı gösterir.
+function introCardHtml(code, pin, h) {
+  return `<div class="intro" style="--s:${Math.min(1.25, Math.max(.62, h / 90)).toFixed(3)}">
+    <div class="i-head"><img src="app/logo.svg" alt=""><b>Araç QR</b><span>Hatalı park ettiğinizde sizi tek dokunuşla arasınlar</span></div>
+    <div class="i-body">
+      <div class="i-qr">${qrSvg(tagLink(code))}<span>Sticker'ınızdaki QR · <b>${esc(code)}</b></span></div>
+      <ol>
+        <li><b>Yapıştırın:</b> Sticker'ı aracın camına içeriden yapıştırın; QR dışarıdan görünsün.</li>
+        <li><b>Numaranızı bağlayın:</b> QR'ı kendi telefonunuzla okutun, numaranızı ve aşağıdaki PIN'i girin.</li>
+        <li><b>Hazır:</b> Yolunu kapattığınız kişi QR'ı okutup sizi arar ya da mesaj atar. Numaranız camda yazmaz.</li>
+      </ol>
+    </div>
+    ${pin ? `<div class="i-pin">PIN <b>${esc(pin)}</b><small>Numaranızı bağlamak ve değiştirmek için gerekir. Bu kartı araçta bırakmayın.</small></div>` : ""}
+    <div class="i-foot">Sessiz saatler, QR'ı kapatma, okutma sayacı, su geçirmez vinil sticker siparişi: <b>Araç QR</b> uygulaması · yusufbas34.github.io/aracqr · Instagram @aracqr</div>
+  </div>`;
+}
+function introRowsA4(codes) {
+  const pinOf = Object.fromEntries((lastAdminRows || []).map(r => [r.code, r.pin]));
+  const {w, h, k} = dims(stickerSize), per = Math.max(1, Math.floor((A4.H - 2 * A4.M + A4.G) / (h + A4.G)));
+  const rows = codes.map(c => `<div class="introrow" style="height:${h}mm">
+      <div class="grid${k < .75 ? " small-size" : ""}${mirror ? " mirror" : ""}" style="--w:${w}mm;--h:${h}mm;--k:${k}">${stickerHtml(c, designOf[c], tagLink(c))}</div>
+      ${introCardHtml(c, pinOf[c], h)}</div>`);
+  const pages = [];
+  for (let i = 0; i < rows.length; i += per) pages.push(`<div class="a4page a4rows">${rows.slice(i, i + per).join("")}</div>`);
+  return pages;
+}
 function packA4(codes) {
+  if (!printMode) return introRowsA4(codes);
   const per = Math.max(1, perA4(dims(stickerSize))), pages = [[]];
   for (const group of a4Cells(codes)) {
     if (pages.at(-1).length + group.length > per && pages.at(-1).length) pages.push([]);
@@ -698,6 +763,8 @@ async function deliver(codes, how, givenSupported) {
     toast("PDF hazırlanıyor…", 60000);
     try { await savePdf(codes); toast("PDF kaydedildi."); }
     catch (e) { document.querySelector(".toast")?.remove(); return adminError("PDF oluşturulamadı: " + e.message); }
+  } else if (paper === "a4" && !printMode) {
+    await printA4(packA4(codes));  // tanıtım kartlı A4 düzeni
   } else {
     document.querySelectorAll(".tag").forEach(t => t.classList.toggle("skip", !codes.includes(t.dataset.code)));
     await new Promise(done => { addEventListener("afterprint", done, {once: true}); print(); });
@@ -755,10 +822,11 @@ async function showAdmin() {
         <option value="all">Tümü (${rows.length})</option>
       </select>
       <select id="mode" aria-label="Ne çıkarılsın">
-        <option value="">Sticker + PIN kartı</option>
+        <option value="">Sticker + tanıtım kartı (A4: her sırada 1 sticker + PIN'li kart)</option>
         <option value="only-sticker">Sadece stickerlar</option>
         <option value="only-pin">Sadece PIN kartları</option>
       </select>
+      <label class="pick" title="İçten yapıştırmalı sticker'da matbaa aynalamıyorsa açın"><input type="checkbox" id="mirror"${mirror ? " checked" : ""}> 🪞 Cam içi: sticker'ı aynala</label>
       <select id="size" aria-label="Baskı ölçüsü">${Object.entries(SIZES).map(([k, n]) =>
         `<option value="${k}"${k === stickerSize ? " selected" : ""}>${n} · A4'e ${perA4(dims(k))}</option>`).join("")}</select>
       <select id="paper" aria-label="Kağıt">
@@ -809,6 +877,7 @@ async function showAdmin() {
   applySize();
   $("view").onchange = () => { view = $("view").value; showAdmin(); };
   $("mode").onchange = () => { printMode = $("mode").value; savePref("mode", printMode); applySize(); };
+  $("mirror").onchange = () => { mirror = $("mirror").checked; savePref("mirror", mirror ? "1" : ""); };
   $("size").onchange = () => { stickerSize = $("size").value; savePref("size", stickerSize); applySize(); };
   $("paper").onchange = () => { paper = $("paper").value; savePref("paper", paper); applySize(); };
   const redesign = (code, d) => {

@@ -65,12 +65,22 @@ public class Notifier extends JobService {
         }
     }
 
+    /** Web arayüzünden gelen QR listesi: [{code, pin, name}]. İlk okutma bildirimi için. */
+    static void syncTags(Context ctx, String json) {
+        try {
+            new JSONArray(json);  // geçerli mi
+            prefs(ctx).edit().putString("tags", json).apply();
+        } catch (Exception ignored) {
+        }
+    }
+
     @Override
     public boolean onStartJob(JobParameters params) {
         new Thread(() -> {
             // Play sürümü kendini güncellemez; güncelleme duyurusunu Play Store yapar
             if (!"play".equals(BuildConfig.FLAVOR)) try { checkUpdate(); } catch (Exception ignored) { }
             try { checkOrders(); } catch (Exception ignored) { }
+            try { checkScans(); } catch (Exception ignored) { }
             jobFinished(params, false);
         }).start();
         return true;
@@ -99,6 +109,8 @@ public class Notifier extends JobService {
         TEXT.put("iptal", new String[]{"Siparişiniz iptal edildi.", "Your order has been canceled.", "تم إلغاء طلبك.", "Ваш заказ отменён."});
         TEXT.put("testTitle", new String[]{"Bildirimler çalışıyor ✓", "Notifications are working ✓", "الإشعارات تعمل ✓", "Уведомления работают ✓"});
         TEXT.put("testText", new String[]{"Yeni sürüm çıktığında ve siparişiniz ilerlediğinde böyle haber vereceğiz.", "We'll let you know like this when a new version is out and when your order moves forward.", "سنخبرك هكذا عند صدور إصدار جديد وعند تقدّم طلبك.", "Так мы сообщим о новой версии и о ходе вашего заказа."});
+        TEXT.put("scanTitle", new String[]{"🎉 QR'ınız ilk kez okutuldu!", "🎉 Your QR was scanned for the first time!", "🎉 تم مسح رمز QR الخاص بك لأول مرة!", "🎉 Ваш QR впервые отсканировали!"});
+        TEXT.put("scanText", new String[]{"%s: Biri QR'ınızı okuttu, sistem çalışıyor. Okutma sayısını uygulamada görebilirsiniz.", "%s: Someone scanned your QR — it works. You can see the scan count in the app.", "%s: قام شخص بمسح رمزك، النظام يعمل. يمكنك رؤية عدد مرات المسح في التطبيق.", "%s: Кто-то отсканировал ваш QR — всё работает. Число сканирований видно в приложении."});
         TEXT.put("chOrders", new String[]{"Sipariş durumu", "Order status", "حالة الطلب", "Статус заказа"});
         TEXT.put("chUpdate", new String[]{"Uygulama güncellemeleri", "App updates", "تحديثات التطبيق", "Обновления приложения"});
     }
@@ -161,6 +173,43 @@ public class Notifier extends JobService {
             if (!status.equals(o.optString("status"))) { o.put("status", status); changed = true; }
         }
         if (changed) p.edit().putString("orders", known.toString()).apply();
+    }
+
+    /**
+     * QR ilk kez okutulunca bildirim. Her QR'ın son bilinen okutma sayısı saklanır; 0'dan yukarı çıkınca bir kez haber verilir.
+     * Bu özellik gelmeden önce okutulmuş QR'lar için (ilk kontrolde sayı zaten > 0) bildirim gösterilmez.
+     */
+    private void checkScans() throws Exception {
+        SharedPreferences p = prefs(this);
+        JSONArray tags = new JSONArray(p.getString("tags", "[]"));
+        if (tags.length() == 0) return;
+        JSONArray codes = new JSONArray(), pins = new JSONArray();
+        for (int i = 0; i < tags.length(); i++) {
+            JSONObject t = tags.getJSONObject(i);
+            codes.put(t.optString("code"));
+            pins.put(t.optString("pin"));
+        }
+        JSONObject args = new JSONObject().put("p_codes", codes).put("p_pins", pins);
+        JSONArray rows = new JSONArray(http("POST", SUPABASE_URL + "/rest/v1/rpc/self_tag_stats", args.toString(), true));
+        JSONObject seen = new JSONObject(p.getString("scanSeen", "{}"));
+        for (int i = 0; i < rows.length(); i++) {
+            JSONObject r = rows.getJSONObject(i);
+            String code = r.optString("code");
+            long total = r.optLong("total", 0);
+            JSONObject t = find(tags, code);
+            // Yeni oluşturulmuş QR (son 1 gün) ilk kontrolden önce okutulduysa da haber ver
+            boolean fresh = t != null && System.currentTimeMillis() - t.optLong("created", 0) < 24 * 3600 * 1000L;
+            boolean known = seen.has(code) || fresh;
+            if (known && seen.optLong(code, 0) == 0 && total > 0) {
+                String name = t != null && !t.optString("name").isEmpty() ? t.optString("name") : code;
+                Intent open = new Intent(this, MainActivity.class)
+                        .putExtra(EXTRA_ROUTE, "#/etiket/" + code)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                post(this, CH_ORDERS, 3000 + Math.abs(code.hashCode() % 1000), tx(this, "scanTitle"), String.format(tx(this, "scanText"), name), open);
+            }
+            seen.put(code, total);
+        }
+        p.edit().putString("scanSeen", seen.toString()).apply();
     }
 
     /** Durum ilerlediyse müşteriye gösterilecek metin; değişmediyse null. */
