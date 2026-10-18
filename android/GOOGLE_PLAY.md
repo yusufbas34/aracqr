@@ -188,11 +188,13 @@ Araç satıldı, sticker kayboldu ya da tatildesiniz: QR'ı tek dokunuşla kapat
 ★ Yabancı da okutabilir
 QR'ı okutan kişinin sayfası telefonunun diline göre Türkçe, İngilizce, Arapça ya da Rusça açılır; mesaj size Türkçe gelir. Uygulama da bu 4 dilde kullanılabilir.
 
-★ Telefon değiştirince kaybolmaz
-Yedek koduyla QR'larınızı yeni telefona tek seferde taşıyın.
+★ Silseniz de kaybolmaz
+Uygulamayı silip yeniden kursanız da QR'larınız otomatik geri gelir. Yeni telefona yedek koduyla tek seferde taşıyın.
 
-★ Okutma sayacı ve sipariş bildirimleri
-QR'ınızın kaç kez okutulduğunu görün. Siparişinizin durumu değişince bildirim alın.
+★ Okutma sayacı ve bildirimler
+QR'ınız ilk kez okutulunca haber verelim, kaç kez okutulduğunu görün. Siparişinizin durumu değişince bildirim alın.
+
+Araç QR kod sticker, otopark ve site park sorunları, cama numara yazmadan ulaşılmak, çekici ve park cezasından kurtulmak için.
 
 Hesap açmanız gerekmez. Reklam yok. Verilerinizi istediğiniz an uygulamadan silebilirsiniz.
 ```
@@ -217,6 +219,32 @@ Hesap açmanız gerekmez. Reklam yok. Verilerinizi istediğiniz an uygulamadan s
 - `icon-512.png`: uygulama simgesi
 - `feature-1024x500.png`: öne çıkan görsel
 - `screen-*.png`: telefon ekran görüntüleri (en az 2, en fazla 8)
+
+### Play'de aranmak (ASO) için notlar
+
+- Play, **uygulama adı**, **kısa açıklama** ve **tam açıklama**daki kelimelere bakar. İnsanların arayacağı kelimeler: *araç QR, araç QR kod, park, hatalı park, otopark, cama numara, park numarası, araç sticker, çekici, beni ara*. Bunlar yukarıdaki metinlerde geçiyor; aynı kelimeyi 4-5 kereden fazla tekrarlamayın (Play bunu cezalandırır).
+- **Puan ve yorum** sıralamayı en çok etkileyen şey. İlk 20 yorumu test eden arkadaşlarınızdan isteyin; uygulama ilk okutmada zaten "işe yaradı" anını yakalıyor.
+- **Diğer diller:** Aşağıdaki İngilizce tam açıklamayı ekleyin. Arapça ve Rusça için ad ve kısa açıklama tabloda; tam açıklamayı Play Console'daki "çeviri" düğmesiyle İngilizceden alabilirsiniz.
+- Ekran görüntülerinin ilk 2'si en önemlisi (aramada görünen bunlar): `screen-1` (Hatalı mı park ettiniz?) ve `screen-5` (okutan kişinin ekranı) önde olsun.
+
+**English full description (en-US):**
+
+```
+Parked badly in a hurry? If the person you blocked can't reach you, you get a fine, a tow truck or an angry note. And you don't want your phone number written on the windshield.
+
+With Araç QR you stick your own QR sticker on your car. The person you blocked scans it with the phone camera and calls you with one tap or sends a ready message ("You're blocking me", "Your lights are on"). Your number is never shown on the glass or on the QR.
+
+★ Make it yours: 29 designs (classic, funny, team colors) and witty phrases.
+★ Print for free at home in the size you want, or order a waterproof vinyl sticker (Turkey).
+★ Quiet hours: during the hours you choose there is no call button, only SMS / WhatsApp.
+★ Number changed? Change it in the app with your PIN; the same sticker keeps working.
+★ Turn your QR off and on: car sold, sticker lost, on holiday.
+★ Anyone can scan: the scan page opens in Turkish, English, Arabic or Russian.
+★ Never lost: reinstall the app and your QRs come back automatically.
+★ Scan counter and a notification when your QR is scanned for the first time.
+
+No account needed. No ads. Delete your data any time in the app.
+```
 
 ## 8. Hazır metinler (kopyala-yapıştır)
 

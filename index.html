@@ -3,7 +3,35 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Araç QR</title>
+<title>Araç QR: Hatalı park ettiğinizde sizi arasınlar · Araç QR kod sticker</title>
+<meta name="description" content="Aracınıza QR sticker yapıştırın: yolunu kapattığınız kişi QR'ı okutup sizi tek dokunuşla arasın ya da mesaj atsın. Numaranız camda yazmaz. QR'ınızı ücretsiz oluşturun, evde yazdırın.">
+<link rel="canonical" href="https://yusufbas34.github.io/aracqr/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Araç QR">
+<meta property="og:locale" content="tr_TR">
+<meta property="og:url" content="https://yusufbas34.github.io/aracqr/">
+<meta property="og:title" content="Araç QR: Hatalı park ettiğinde seni arasınlar">
+<meta property="og:description" content="Camına QR sticker yapıştır; yolunu kapattığın kişi okutup seni tek dokunuşla arasın. Numaran camda yazmaz. Ücretsiz oluştur.">
+<meta property="og:image" content="https://yusufbas34.github.io/aracqr/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Araç QR sticker: Hatalı park ettiğinde seni arasınlar">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://yusufbas34.github.io/aracqr/og.jpg">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+ {"@type":"WebSite","name":"Araç QR","url":"https://yusufbas34.github.io/aracqr/","inLanguage":"tr"},
+ {"@type":"SoftwareApplication","name":"Araç QR: Hatalı Park, Beni Ara","operatingSystem":"Android, Web","applicationCategory":"UtilitiesApplication",
+  "url":"https://yusufbas34.github.io/aracqr/","description":"Araca yapıştırılan QR sticker ile hatalı park eden araç sahibine numarası görünmeden ulaşma.",
+  "offers":{"@type":"Offer","price":"0","priceCurrency":"TRY"}},
+ {"@type":"FAQPage","mainEntity":[
+  {"@type":"Question","name":"Araç QR ücretli mi?","acceptedAnswer":{"@type":"Answer","text":"QR oluşturmak ve kendiniz yazdırmak ücretsizdir. İsterseniz su geçirmez vinil sticker'ı istediğiniz ölçüde biz basıp gönderiyoruz."}},
+  {"@type":"Question","name":"Numaram herkese görünür mü?","acceptedAnswer":{"@type":"Answer","text":"Camda ve QR'da numaranız yazmaz. Yalnızca QR'ı okutan kişi sizi arayabilir ya da mesaj atabilir. Sessiz saatlerde arama butonu gösterilmez."}},
+  {"@type":"Question","name":"Telefon numaram değişirse sticker'ı yeniden basmam gerekir mi?","acceptedAnswer":{"@type":"Answer","text":"Hayır. Numaranız QR'ın içinde değil, sunucuda durur; uygulamadan PIN'inizle değiştirirsiniz, aynı sticker çalışmaya devam eder."}},
+  {"@type":"Question","name":"QR'ı okutan kişinin uygulama indirmesi gerekir mi?","acceptedAnswer":{"@type":"Answer","text":"Hayır. Telefon kamerasıyla okutması yeterli; açılan sayfadan tek dokunuşla arar ya da hazır mesaj gönderir."}}
+ ]}
+]}
+</script>
 <link rel="icon" type="image/svg+xml" href="app/logo.svg">
 <meta name="theme-color" content="#0a3a9e">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -89,6 +117,7 @@ section > h2{font-size:24px;margin:0 0 14px}
 @keyframes tasma-sway{50%{transform:rotate(-6deg)}}
 @media (max-width:640px){.tasma{grid-template-columns:auto 1fr}.tasma em{grid-column:1/-1;text-align:center}.tasma img{width:58px;height:58px}.tasma b{font-size:19px}}
 @media (prefers-reduced-motion:reduce){.tasma img{animation:none}}
+.guides ul{margin:0;padding-left:20px;line-height:1.9}.guides a{color:var(--band);font-weight:600}
 .rv-sum{display:flex;align-items:center;gap:12px;margin:-4px 0 18px;font-size:15px;color:var(--muted)}
 .rv-sum b{font-size:34px;color:var(--ink);line-height:1}
 .stars{color:#f5a400;letter-spacing:1px;white-space:nowrap}.stars i{color:#d3d7de;font-style:normal}
@@ -252,6 +281,8 @@ details.howto ol{margin:8px 0 0;padding-left:20px;line-height:1.6;font-size:15px
 <script>
 const app = document.getElementById("app");
 const params = new URLSearchParams(location.search);
+// Okutma, numara kaydetme ve yönetim sayfaları arama motorlarında çıkmasın (yalnızca ana sayfa çıksın)
+if ([...params.keys()].length) document.head.insertAdjacentHTML("beforeend", '<meta name="robots" content="noindex,nofollow">');
 const BASE = location.origin + location.pathname;
 
 // ---------------------------------------------------------------- yardımcılar
@@ -1017,6 +1048,14 @@ function showHome() {
       <details><summary>Verilerimi nasıl silerim?</summary><p>Uygulamada QR'ınızı açıp “QR'ı kalıcı olarak sil”e ya da Profilim'de “Tüm verilerimi sil”e dokunun. Ayrıntılar <a href="gizlilik.html#silme">gizlilik politikasında</a>.</p></details>
     </section>
     <a class="ig-btn" href="${IG_URL}" target="_blank" rel="noopener" style="max-width:420px;margin:0 auto"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none"/></svg> Instagram'da takip edin <small>@aracqr</small></a>
+    <section class="guides">
+      <h2>Rehberler</h2>
+      <ul>
+        <li><a href="arac-qr-kod.html">Araç QR kod sticker nedir, nasıl çalışır?</a></li>
+        <li><a href="cama-numara-yazmak.html">Araç camına telefon numarası yazmak güvenli mi?</a></li>
+        <li><a href="hatali-park.html">Hatalı park ettim, bana nasıl ulaşsınlar?</a></li>
+      </ul>
+    </section>
     <p style="text-align:center;font-size:14px;margin-top:22px"><a href="gizlilik.html">Gizlilik politikası</a> · <a href="${IG_URL}" target="_blank" rel="noopener">Instagram</a></p>`, "home");
   document.getElementById("another").onclick = () => { document.getElementById("sample").innerHTML = showcaseHtml(); };
   loadReviews();
