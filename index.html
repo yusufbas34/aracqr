@@ -244,30 +244,29 @@ details.howto ol{margin:8px 0 0;padding-left:20px;line-height:1.6;font-size:15px
 .a4page{width:190mm;height:277mm;overflow:hidden;background:#fff;break-after:page;page-break-after:always}
 .a4page:last-child{break-after:auto;page-break-after:auto}
 .a4fill{display:flex;flex-wrap:wrap;gap:3mm;align-content:flex-start}
-.a4rows{display:flex;flex-direction:column;gap:3mm}
-.introrow{display:flex;gap:3mm;overflow:hidden}
-.introrow .grid{display:block;flex:none}
+.a4abs{position:relative}
 .grid.mirror .sticker{transform:scaleX(-1)}
-.intro{flex:1;min-width:0;box-sizing:border-box;display:flex;border:.3mm dashed #9aa0a8;border-radius:3mm;overflow:hidden;background:#fff;
-  font-family:"Barlow",system-ui,sans-serif;color:#111418;font-size:calc(var(--s)*2.95mm);line-height:1.28}
-.intro .i-page{flex:1;min-width:0;padding:calc(var(--s)*3mm);display:flex;flex-direction:column;gap:calc(var(--s)*1.8mm);overflow:hidden}
-.intro .i-page+.i-page{border-left:.3mm dashed #9aa0a8;background:#fbfcfe}
-.intro .i-head{display:flex;align-items:center;gap:calc(var(--s)*1.8mm)}
-.intro .i-head img{width:calc(var(--s)*7mm);height:calc(var(--s)*7mm)}
-.intro .i-head b{font:700 calc(var(--s)*5.6mm)/1 "Barlow Condensed","Barlow",sans-serif;color:#0a3a9e}
-.intro .i-slogan{font-weight:700;font-size:calc(var(--s)*3.2mm);line-height:1.2;color:#0a3a9e}
-.intro .i-qr{display:flex;flex-direction:column;align-items:center;font-size:calc(var(--s)*2.3mm);color:#566074;text-align:center}
-.intro .i-qr svg{width:calc(var(--s)*24mm);height:auto;display:block;margin-bottom:calc(var(--s)*.8mm)}
-.intro ol{margin:0;padding-left:calc(var(--s)*4mm);display:flex;flex-direction:column;gap:calc(var(--s)*1mm)}
-.intro .i-pin{display:flex;align-items:center;justify-content:center;gap:calc(var(--s)*2.5mm);background:#fff6d6;border:.4mm solid #f5c518;border-radius:2mm;padding:calc(var(--s)*2mm)}
-.intro .i-pin span{font-weight:700;font-size:calc(var(--s)*3mm)}
-.intro .i-pin b{font:700 calc(var(--s)*8mm)/1 "Barlow Condensed","Barlow",sans-serif;letter-spacing:.12em}
-.intro .i-note{font-size:calc(var(--s)*2.5mm);color:#3b4252;text-align:center}
-.intro .i-feat{font-size:calc(var(--s)*3.1mm);line-height:1.45}
-.intro .i-feat ul{margin:calc(var(--s)*.6mm) 0 0;padding-left:calc(var(--s)*4mm)}
-.intro .i-ig{margin-top:auto;display:flex;align-items:center;gap:calc(var(--s)*2mm);border-top:.3mm solid #e1e5ec;padding-top:calc(var(--s)*1.8mm);font-size:calc(var(--s)*2.6mm)}
-.intro .i-ig svg{width:calc(var(--s)*14mm);height:auto;flex:none}
-.intro .i-ig span{display:flex;flex-direction:column}.intro .i-ig b{color:#c13584}
+.bcard{width:var(--w);height:var(--h);box-sizing:border-box;border:.3mm dashed #9aa0a8;border-radius:3mm;overflow:hidden;background:#fff;
+  padding:calc(var(--s)*3mm);display:flex;flex-direction:column;gap:calc(var(--s)*1.7mm);
+  font-family:"Barlow",system-ui,sans-serif;color:#111418;font-size:calc(var(--s)*2.85mm);line-height:1.27}
+.bcard.back{background:#fbfcfe}
+.bcard .i-head{display:flex;align-items:center;gap:calc(var(--s)*1.8mm)}
+.bcard .i-head img{width:calc(var(--s)*7mm);height:calc(var(--s)*7mm)}
+.bcard .i-head b{font:700 calc(var(--s)*5.6mm)/1 "Barlow Condensed","Barlow",sans-serif;color:#0a3a9e}
+.bcard .i-slogan{font-weight:700;font-size:calc(var(--s)*3.1mm);line-height:1.2;color:#0a3a9e}
+.bcard .i-qr{display:flex;flex-direction:column;align-items:center;font-size:calc(var(--s)*2.3mm);color:#566074;text-align:center}
+.bcard .i-qr svg{width:calc(var(--s)*25mm);height:auto;display:block;margin-bottom:calc(var(--s)*.8mm)}
+.bcard ol{margin:0;padding-left:calc(var(--s)*4mm);display:flex;flex-direction:column;gap:calc(var(--s)*.9mm)}
+.bcard .i-pin{display:flex;align-items:center;justify-content:center;gap:calc(var(--s)*2.5mm);background:#fff6d6;border:.4mm solid #f5c518;border-radius:2mm;padding:calc(var(--s)*1.8mm)}
+.bcard .i-pin span{font-weight:700;font-size:calc(var(--s)*3mm)}
+.bcard .i-pin b{font:700 calc(var(--s)*8mm)/1 "Barlow Condensed","Barlow",sans-serif;letter-spacing:.12em}
+.bcard .i-note{font-size:calc(var(--s)*2.35mm);color:#3b4252;text-align:center}
+.bcard .i-app{display:flex;align-items:center;gap:calc(var(--s)*2mm);border-top:.3mm solid #e1e5ec;border-bottom:.3mm solid #e1e5ec;padding:calc(var(--s)*1.5mm) 0}
+.bcard .i-app svg{width:calc(var(--s)*17mm);height:auto;flex:none}
+.bcard .i-app span{display:flex;flex-direction:column;font-size:calc(var(--s)*2.5mm);color:#3b4252}
+.bcard .i-app b{font-size:calc(var(--s)*3.2mm);color:#0a3a9e}
+.bcard .i-feat{margin:0;padding-left:calc(var(--s)*4mm);font-size:calc(var(--s)*2.6mm);display:flex;flex-direction:column;gap:calc(var(--s)*.5mm)}
+.bcard .i-foot{margin-top:auto;text-align:center;font-size:calc(var(--s)*2.6mm);color:#c13584}
 .a4fill .grid{display:block}
 .a4pin{height:var(--h);border-top:calc(var(--k)*.4mm) dashed #9aa0a8;border-radius:calc(var(--k)*3mm);display:flex;flex-direction:column;justify-content:center;box-sizing:border-box;overflow:hidden}
 .a4help{font-size:14px;color:var(--muted);margin:6px 0 0}
@@ -761,42 +760,67 @@ function a4Cells(codes) {
     ...(printMode !== "only-pin" ? [`<div class="${cls}" style="${style}">${stickerHtml(c, designOf[c], tagLink(c))}</div>`] : []),
     ...(printMode !== "only-sticker" && pinOf[c] ? [`<div class="${cls}" style="${style}">${pinCardHtml(c, pinOf[c])}</div>`] : [])]);
 }
-// Tanıtım kartlı A4: her sırada solda sticker, sağda kalan genişlikte kart (QR görseli, kullanım, PIN).
-// İçten yapıştırmalı sticker'da baskı yapışkanın altında kaldığı için kart, alan kişiye QR'ı ve kullanımı gösterir.
-function introCardHtml(code, pin, h) {
-  // İki sayfalık katlanır kart: 1. sayfa tanıtım ve kullanım, 2. sayfa PIN ve Instagram
-  return `<div class="intro" style="--s:${Math.min(1.25, Math.max(.62, h / 90)).toFixed(3)}">
-    <div class="i-page">
-      <div class="i-head"><img src="app/logo.svg" alt=""><b>Araç QR</b></div>
-      <div class="i-slogan">Hatalı park ettiğinizde sizi tek dokunuşla arasınlar</div>
-      <div class="i-qr">${qrSvg(tagLink(code))}<span>Sticker'ınızdaki QR · <b>${esc(code)}</b></span></div>
-      <ol>
-        <li><b>Yapıştırın:</b> camın içinden, QR dışarıdan görünsün.</li>
-        <li><b>Bağlayın:</b> QR'ı okutun, numaranızı ve PIN'i girin.</li>
-        <li><b>Hazır:</b> yolunu kapattığınız kişi sizi arar ya da mesaj atar.</li>
-      </ol>
-    </div>
-    <div class="i-page">
-      ${pin ? `<div class="i-pin"><span>PIN</span><b>${esc(pin)}</b></div>
-      <div class="i-note">Numaranızı bağlamak ve değiştirmek için gerekir. <b>Bu kartı araçta bırakmayın.</b></div>` : ""}
-      <div class="i-feat"><b>Uygulamada:</b>
-        <ul><li>Numaranız camda yazmaz</li><li>Gece sessiz saatler</li><li>QR'ı kapatıp açma</li><li>Okutma sayacı</li><li>Su geçirmez sticker siparişi</li></ul></div>
-      <div class="i-ig">${qrSvg("https://www.instagram.com/aracqr/")}<span><b>Instagram'da takip edin</b>@aracqr</span></div>
-    </div>
+// Sticker + kartvizit: sticker'lar sticker kağıdına, kartlar sert kağıda önlü arkalı basılır. Kart sticker'la aynı ölçüdedir.
+// Ön yüz: tanıtım, QR görseli ve kullanım. Arka yüz: PIN, uygulama QR'ı ve avantajlar.
+// Çift taraflı baskıda (uzun kenardan çevir) arka yüzler ön yüzlerin tam arkasına gelsin diye sütunlar aynalanır.
+const APP_QR_URL = "https://yusufbas34.github.io/aracqr/";  // Play'de herkese açılınca Play bağlantısıyla değiştirin
+const cardScale = h => Math.min(1.25, Math.max(.6, h / 90)).toFixed(3);
+function cardFrontHtml(code, h) {
+  return `<div class="bcard" style="--s:${cardScale(h)}">
+    <div class="i-head"><img src="app/logo.svg" alt=""><b>Araç QR</b></div>
+    <div class="i-slogan">Hatalı park ettiğinizde sizi tek dokunuşla arasınlar</div>
+    <div class="i-qr">${qrSvg(tagLink(code))}<span>Sticker'ınızdaki QR · <b>${esc(code)}</b></span></div>
+    <ol>
+      <li><b>Yapıştırın:</b> camın içinden, QR dışarıdan görünsün.</li>
+      <li><b>Bağlayın:</b> QR'ı okutun, numaranızı ve arkadaki PIN'i girin.</li>
+      <li><b>Hazır:</b> yolunu kapattığınız kişi sizi arar ya da mesaj atar.</li>
+    </ol>
   </div>`;
 }
-function introRowsA4(codes) {
+function cardBackHtml(code, pin, h) {
+  return `<div class="bcard back" style="--s:${cardScale(h)}">
+    ${pin ? `<div class="i-pin"><span>PIN</span><b>${esc(pin)}</b></div>
+    <div class="i-note">QR <b>${esc(code)}</b> · numaranızı bağlamak ve değiştirmek için gerekir. <b>Bu kartı araçta bırakmayın.</b></div>` : ""}
+    <div class="i-app">${qrSvg(APP_QR_URL)}<span><b>Uygulamayı indirin</b>Numaranızı, tasarımınızı ve ayarlarınızı telefondan yönetin.</span></div>
+    <ul class="i-feat">
+      <li>Numaranızı istediğiniz an değiştirin, sticker aynı kalır</li>
+      <li>Gece sessiz saatler: yalnızca mesaj gelir</li>
+      <li>QR'ı tek dokunuşla kapatıp açın</li>
+      <li>Kaç kez okutulduğunu görün</li>
+      <li>Su geçirmez sticker siparişi</li>
+    </ul>
+    <div class="i-foot">Instagram <b>@aracqr</b></div>
+  </div>`;
+}
+const introGrid = () => {
+  const {w, h} = dims(stickerSize), G = A4.G;
+  const cols = Math.max(1, Math.floor((A4.W - 2 * A4.M + G) / (w + G))), rows = Math.max(1, Math.floor((A4.H - 2 * A4.M + G) / (h + G)));
+  return {w, h, cols, per: cols * rows, left: (A4.W - 2 * A4.M - (cols * w + (cols - 1) * G)) / 2};
+};
+function introPagesA4(codes) {
   const pinOf = Object.fromEntries((lastAdminRows || []).map(r => [r.code, r.pin]));
-  const {w, h, k} = dims(stickerSize), per = Math.max(1, Math.floor((A4.H - 2 * A4.M + A4.G) / (h + A4.G)));
-  const rows = codes.map(c => `<div class="introrow" style="height:${h}mm">
-      <div class="grid${k < .75 ? " small-size" : ""}${mirror ? " mirror" : ""}" style="--w:${w}mm;--h:${h}mm;--k:${k}">${stickerHtml(c, designOf[c], tagLink(c))}</div>
-      ${introCardHtml(c, pinOf[c], h)}</div>`);
+  const {w, h, cols, per, left} = introGrid(), {k} = dims(stickerSize), G = A4.G;
+  const at = (i, mirrored) => { const r = Math.floor(i / cols), c = i % cols; return `left:${left + (mirrored ? cols - 1 - c : c) * (w + G)}mm;top:${r * (h + G)}mm`; };
+  const cell = (inner, pos, cls = "") => `<div class="grid${k < .75 ? " small-size" : ""}${cls}" style="position:absolute;${pos};--w:${w}mm;--h:${h}mm;--k:${k}">${inner}</div>`;
   const pages = [];
-  for (let i = 0; i < rows.length; i += per) pages.push(`<div class="a4page a4rows">${rows.slice(i, i + per).join("")}</div>`);
+  for (let i = 0; i < codes.length; i += per) {  // 1) sticker sayfaları (sticker kağıdı)
+    pages.push(`<div class="a4page a4abs">${codes.slice(i, i + per).map((c, j) => cell(stickerHtml(c, designOf[c], tagLink(c)), at(j), mirror ? " mirror" : "")).join("")}</div>`);
+  }
+  for (let i = 0; i < codes.length; i += per) {  // 2) kartlar: ön yüz, ardından aynalanmış arka yüz (sert kağıt, çift taraflı)
+    const part = codes.slice(i, i + per);
+    pages.push(`<div class="a4page a4abs">${part.map((c, j) => cell(cardFrontHtml(c, h), at(j))).join("")}</div>`);
+    pages.push(`<div class="a4page a4abs">${part.map((c, j) => cell(cardBackHtml(c, pinOf[c], h), at(j, true))).join("")}</div>`);
+  }
   return pages;
 }
+// Kartvizit düzeninde hangi sayfanın hangi kağıda basılacağını söyler
+function introPrintNote(codes) {
+  if (printMode) return;
+  const n = Math.ceil(codes.length / introGrid().per);
+  alert(`Baskı sırası (${codes.length} etiket):\n\n• Sayfa 1${n > 1 ? `–${n}` : ""}: sticker'lar → sticker kağıdına\n• Sayfa ${n + 1}–${3 * n}: kartlar → sert kağıda, ÇİFT TARAFLI (uzun kenardan çevir)\n\nYazdırma ekranında sayfa aralığını seçerek iki kağıdı ayrı ayrı basın. Ölçek %100 olmalı.`);
+}
 function packA4(codes) {
-  if (!printMode) return introRowsA4(codes);
+  if (!printMode) return introPagesA4(codes);
   const per = Math.max(1, perA4(dims(stickerSize))), pages = [[]];
   for (const group of a4Cells(codes)) {
     if (pages.at(-1).length + group.length > per && pages.at(-1).length) pages.push([]);
@@ -807,6 +831,7 @@ function packA4(codes) {
 const a4PageCount = codes => codes.length ? packA4(codes).length : 0;
 async function deliver(codes, how, givenSupported) {
   if (!codes.length) return;
+  if ((how === "a4" || (how === "print" && paper === "a4")) && !printMode) introPrintNote(codes);
   if (how === "a4") {
     await printA4(packA4(codes));
   } else if (how === "pdf") {
@@ -872,7 +897,7 @@ async function showAdmin() {
         <option value="all">Tümü (${rows.length})</option>
       </select>
       <select id="mode" aria-label="Ne çıkarılsın">
-        <option value="">Sticker + tanıtım kartı (A4: her sırada 1 sticker + PIN'li kart)</option>
+        <option value="">Sticker + kartvizit (sticker sayfası ve önlü arkalı kart sayfaları)</option>
         <option value="only-sticker">Sadece stickerlar</option>
         <option value="only-pin">Sadece PIN kartları</option>
       </select>
