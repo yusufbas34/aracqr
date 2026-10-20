@@ -403,4 +403,9 @@ I18N.en = {
   "🚗 Araç QR bilgilerim": "🚗 My Araç QR details",
   "QR'ı test et": "Test the QR",
   "🔒 Bu mesajı kimseyle paylaşmayın.": "🔒 Don't share this message with anyone.",
+  "🔕 Rahatsız Etmeyin": "🔕 Do Not Disturb",
+  "Belirli saatlerde aranmak istemezseniz, size sadece mesaj atabilirler.": "If you don't want calls at certain hours, people can only message you.",
+  "Rahatsız Etmeyin saatlerinin başlangıç ve bitişini farklı seçin.": "Choose different start and end times for Do Not Disturb.",
+  "Rahatsız Etmeyin saatleri geçersiz.": "Do Not Disturb hours are invalid.",
+  "🔕 Rahatsız Etmeyin: belirli saatlerde (ör. 23:00–07:00) aranmak istemezseniz arama butonu gösterilmez; okutan kişi size sadece SMS ya da WhatsApp mesajı atabilir.": "🔕 Do Not Disturb: if you don't want calls at certain hours (e.g. 23:00–07:00), the call button is hidden; the person who scans can only send you an SMS or WhatsApp message.",
 };

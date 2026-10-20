@@ -778,7 +778,7 @@ function showTag(code, isNew) {
     <h2>${L("Arama ayarları")}</h2>
     <form class="opts" id="cs" novalidate style="padding-top:4px">
       <div id="cs-msg"></div>
-      <label class="check"><input type="checkbox" id="q-on"${t.quietStart != null ? " checked" : ""}> <span><b>${L("Sessiz saatler")}</b>${L("Bu saatlerde QR'ı okutan kişiye arama butonu gösterilmez; size yalnızca SMS ya da WhatsApp mesajı gönderebilir.")}</span></label>
+      <label class="check"><input type="checkbox" id="q-on"${t.quietStart != null ? " checked" : ""}> <span><b>${L("🔕 Rahatsız Etmeyin")}</b>${L("Belirli saatlerde aranmak istemezseniz, size sadece mesaj atabilirler.")}</span></label>
       <div class="row" id="q-times"${t.quietStart != null ? "" : " hidden"}>
         <div><label for="q-start">${L("Başlangıç")}</label><input id="q-start" type="time" value="${hhmm(t.quietStart ?? 1380)}"></div>
         <div><label for="q-end">${L("Bitiş")}</label><input id="q-end" type="time" value="${hhmm(t.quietEnd ?? 420)}"></div>
@@ -820,7 +820,7 @@ function showTag(code, isNew) {
     const quiet = document.getElementById("q-on").checked;
     const qs = quiet ? toMinutes(document.getElementById("q-start").value) : null;
     const qe = quiet ? toMinutes(document.getElementById("q-end").value) : null;
-    if (quiet && (qs == null || qe == null || qs === qe)) return fail(L("Sessiz saatlerin başlangıç ve bitişini farklı seçin."));
+    if (quiet && (qs == null || qe == null || qs === qe)) return fail(L("Rahatsız Etmeyin saatlerinin başlangıç ve bitişini farklı seçin."));
     ev.submitter && (ev.submitter.disabled = true);
     let res;
     try { res = await rpc("self_tag_settings", {p_code: t.code, p_pin: t.pin, p_backup_phone: null, p_backup_name: null, p_quiet_start: qs, p_quiet_end: qe}); }
@@ -830,7 +830,7 @@ function showTag(code, isNew) {
     }
     if (!res?.ok) {
       ev.submitter && (ev.submitter.disabled = false);
-      return fail({bad_hours: L("Sessiz saatler geçersiz."), bad_pin: L("PIN eşleşmedi."),
+      return fail({bad_hours: L("Rahatsız Etmeyin saatleri geçersiz."), bad_pin: L("PIN eşleşmedi."),
         locked: L("Çok fazla deneme. 15 dakika sonra tekrar deneyin."), not_found: L("QR sunucuda bulunamadı.")}[res?.error] || "Kaydedilemedi.");
     }
     saveTag({...findTag(code), backupPhone: null, backupName: "", quietStart: qs, quietEnd: qe});

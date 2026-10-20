@@ -159,7 +159,7 @@ const ONB_SLIDES = [
   {
     bg: "linear-gradient(160deg,#141c3d,#05070f)",
     title: L("Gece rahat uyuyun"),
-    text: () => L("Sessiz saatleri siz belirleyin (ör. 23:00–07:00). Bu saatlerde arama butonu gösterilmez; okutan kişi size yalnızca SMS ya da WhatsApp mesajı gönderebilir."),
+    text: () => L("🔕 Rahatsız Etmeyin: belirli saatlerde (ör. 23:00–07:00) aranmak istemezseniz arama butonu gösterilmez; okutan kişi size sadece SMS ya da WhatsApp mesajı atabilir."),
     art: () => `<svg viewBox="0 0 360 300" class="onb-art" role="img" aria-label="${L("Gece, telefonda arama kapalı, SMS balonu")}">
       <rect width="360" height="300" rx="22" fill="#1b2550"/>
       ${[[30, 40], [80, 24], [300, 30], [330, 90], [40, 120], [270, 140], [20, 230], [340, 240]].map(([x, y], i) =>

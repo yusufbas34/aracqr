@@ -403,4 +403,9 @@ I18N.ar = {
   "🚗 Araç QR bilgilerim": "🚗 بيانات Araç QR الخاصة بي",
   "QR'ı test et": "اختبر رمز QR",
   "🔒 Bu mesajı kimseyle paylaşmayın.": "🔒 لا تشارك هذه الرسالة مع أحد.",
+  "🔕 Rahatsız Etmeyin": "🔕 عدم الإزعاج",
+  "Belirli saatlerde aranmak istemezseniz, size sadece mesaj atabilirler.": "إذا كنت لا تريد تلقي مكالمات في ساعات معينة، يمكنهم مراسلتك فقط.",
+  "Rahatsız Etmeyin saatlerinin başlangıç ve bitişini farklı seçin.": "اختر وقتي بداية ونهاية مختلفين لوضع عدم الإزعاج.",
+  "Rahatsız Etmeyin saatleri geçersiz.": "ساعات عدم الإزعاج غير صالحة.",
+  "🔕 Rahatsız Etmeyin: belirli saatlerde (ör. 23:00–07:00) aranmak istemezseniz arama butonu gösterilmez; okutan kişi size sadece SMS ya da WhatsApp mesajı atabilir.": "🔕 عدم الإزعاج: إذا كنت لا تريد مكالمات في ساعات معينة (مثل 23:00–07:00) يُخفى زر الاتصال، ويمكن لمن يمسح الرمز مراسلتك عبر SMS أو واتساب فقط.",
 };

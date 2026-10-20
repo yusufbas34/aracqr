@@ -95,7 +95,7 @@ function render() {
     <ol><li><b>Sticker'ı</b> camın içinden yapıştırın, QR dışarıdan görünsün.</li>
       <li>QR'ı okutun; numaranızı ve <b>karttaki PIN'i</b> girin.</li>
       <li>Yolunu kapattığınız kişi sizi tek dokunuşla arar ya da mesaj atar.</li></ol>
-    <ul><li>Numaranız camda yazmaz</li><li>Numara değişince sticker aynı kalır</li><li>Gece sessiz saatler</li><li>QR'ı kapatıp açma, okutma sayacı</li></ul>
+    <ul><li>Numaranız camda yazmaz</li><li>Numara değişince sticker aynı kalır</li><li>🔕 Rahatsız Etmeyin modu</li><li>QR'ı kapatıp açma, okutma sayacı</li></ul>
     <div class="qrs"><div>${qrSvg(APP_URL)}<b>Uygulamayı indirin</b></div><div class="ig">${qrSvg(IG)}<b>Instagram</b>@aracqr</div></div>`);
   html += P("side", x.side1, y0, D, H, `<span>ARAÇ QR · HATALI PARK, BENİ ARA</span>`);
   const zoom = Math.min(1, (W - 16) / s.w, (H - 52) / s.h);

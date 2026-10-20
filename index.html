@@ -26,7 +26,7 @@
   "offers":{"@type":"Offer","price":"0","priceCurrency":"TRY"}},
  {"@type":"FAQPage","mainEntity":[
   {"@type":"Question","name":"Araç QR ücretli mi?","acceptedAnswer":{"@type":"Answer","text":"QR oluşturmak ve kendiniz yazdırmak ücretsizdir. İsterseniz su geçirmez vinil sticker'ı istediğiniz ölçüde biz basıp gönderiyoruz."}},
-  {"@type":"Question","name":"Numaram herkese görünür mü?","acceptedAnswer":{"@type":"Answer","text":"Camda ve QR'da numaranız yazmaz. Yalnızca QR'ı okutan kişi sizi arayabilir ya da mesaj atabilir. Sessiz saatlerde arama butonu gösterilmez."}},
+  {"@type":"Question","name":"Numaram herkese görünür mü?","acceptedAnswer":{"@type":"Answer","text":"Camda ve QR'da numaranız yazmaz. Yalnızca QR'ı okutan kişi sizi arayabilir ya da mesaj atabilir. Rahatsız Etmeyin saatlerinde arama butonu gösterilmez."}},
   {"@type":"Question","name":"Telefon numaram değişirse sticker'ı yeniden basmam gerekir mi?","acceptedAnswer":{"@type":"Answer","text":"Hayır. Numaranız QR'ın içinde değil, sunucuda durur; uygulamadan PIN'inizle değiştirirsiniz, aynı sticker çalışmaya devam eder."}},
   {"@type":"Question","name":"QR'ı okutan kişinin uygulama indirmesi gerekir mi?","acceptedAnswer":{"@type":"Answer","text":"Hayır. Telefon kamerasıyla okutması yeterli; açılan sayfadan tek dokunuşla arar ya da hazır mesaj gönderir."}}
  ]}
@@ -383,7 +383,7 @@ function istanbulMinutes(now = new Date()) {
 }
 const hhmm = min => `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
 
-// Sessiz saatler gece yarısını geçebilir (ör. 23:00–07:00)
+// Rahatsız Etmeyin modu gece yarısını geçebilir (ör. 23:00–07:00)
 function inQuietHours(tag, now) {
   if (tag.quiet_start == null || tag.quiet_end == null) return false;
   const t = istanbulMinutes(now), a = tag.quiet_start, b = tag.quiet_end;
@@ -394,7 +394,7 @@ function inQuietHours(tag, now) {
 // QR'ı yabancı biri de okutabilir: telefonunun diline göre açılır, üstteki düğmelerle değiştirilebilir.
 const SCAN_TEXT = {
   tr: {callTitle: "Araç sahibini arayın", callIntro: "Arama ekranı açılmadıysa aşağıdaki butona dokunun.", call: "Ara",
-    quietTitle: "Araç sahibi şu an sessiz saatlerde",
+    quietTitle: "Araç sahibi şu an Rahatsız Etmeyin modunda",
     quietText: (a, b) => `Araç sahibi ${a}–${b} arasında arama almıyor. Aşağıdan ona SMS ya da WhatsApp mesajı gönderebilirsiniz; acil durumlar için de hazır mesaj var.`,
     msgTitle: "Mesaj gönderin", msgOr: "Ya da hazır mesaj gönderin", via: "Gönderme yolu", note: "",
     offTitle: "Bu QR şu an kullanılmıyor", offText: "Aracın sahibi bu QR'ı geçici olarak kapatmış. Araç satılmış ya da sticker artık kullanılmıyor olabilir.",
@@ -403,7 +403,7 @@ const SCAN_TEXT = {
     backup: "Ulaşamazsanız", backupCall: "Yedek numarayı ara", owner: "Aracın sahibi misiniz? Numarayı değiştirin", promoTag: "Sen de ister misin?", promoTitle: "Hatalı park ettiğinde seni de tek dokunuşla arasınlar",
     promoText: "Aracına kendi QR'ını ücretsiz yap; numaran camda yazmaz. Yazıcıyla uğraşmak istemezsen su geçirmez sticker'ını istediğin ölçüde biz basıp gönderelim.", promoPrice: "Basılı vinil sticker", promoCta: "Ücretsiz QR'ımı oluştur"},
   en: {callTitle: "Call the vehicle owner", callIntro: "If the call screen didn't open, tap the button below.", call: "Call",
-    quietTitle: "The owner is in quiet hours",
+    quietTitle: "The owner has Do Not Disturb on",
     quietText: (a, b) => `The owner doesn't take calls between ${a} and ${b} (Turkey time). You can send an SMS or WhatsApp message below; there are ready messages for emergencies too.`,
     msgTitle: "Send a message", msgOr: "Or send a ready message", via: "Send via", note: "The message is sent in Turkish together with your language, so the owner understands it.",
     offTitle: "This QR is not in use right now", offText: "The owner has turned this QR off for now. The vehicle may have been sold or the sticker is no longer used.",
@@ -412,7 +412,7 @@ const SCAN_TEXT = {
     backup: "If you can't reach them", backupCall: "Call the backup number", owner: "Are you the owner? Change the number", promoTag: "Want one too?", promoTitle: "Let people call you with one tap when you park badly",
     promoText: "Make your own car QR for free; your number is never shown on the window. Printed waterproof stickers are available in Turkey.", promoPrice: "Printed vinyl sticker", promoCta: "Create my free QR"},
   ar: {callTitle: "اتصل بصاحب السيارة", callIntro: "إذا لم تُفتح شاشة الاتصال، اضغط على الزر أدناه.", call: "اتصال",
-    quietTitle: "صاحب السيارة في ساعات الهدوء الآن",
+    quietTitle: "صاحب السيارة في وضع عدم الإزعاج الآن",
     quietText: (a, b) => `لا يستقبل صاحب السيارة المكالمات بين ${a} و${b} (بتوقيت تركيا). يمكنك إرسال رسالة SMS أو واتساب أدناه، وتوجد رسائل جاهزة للحالات الطارئة.`,
     msgTitle: "أرسل رسالة", msgOr: "أو أرسل رسالة جاهزة", via: "طريقة الإرسال", note: "تُرسل الرسالة بالتركية مع لغتك حتى يفهمها صاحب السيارة.",
     offTitle: "رمز QR هذا غير مستخدم حاليًا", offText: "أوقف صاحب السيارة هذا الرمز مؤقتًا. ربما بيعت السيارة أو لم يعد الملصق مستخدمًا.",
@@ -421,7 +421,7 @@ const SCAN_TEXT = {
     backup: "إذا لم تتمكن من الوصول", backupCall: "اتصل بالرقم الاحتياطي", owner: "هل أنت صاحب السيارة؟ غيّر الرقم", promoTag: "هل تريد واحدًا أيضًا؟", promoTitle: "دع الناس يتصلون بك بلمسة واحدة إذا ركنت بشكل خاطئ",
     promoText: "أنشئ رمز QR لسيارتك مجانًا؛ رقمك لا يظهر على الزجاج. تتوفر ملصقات مطبوعة مقاومة للماء داخل تركيا.", promoPrice: "ملصق فينيل مطبوع", promoCta: "أنشئ رمزي المجاني"},
   ru: {callTitle: "Позвоните владельцу автомобиля", callIntro: "Если экран звонка не открылся, нажмите кнопку ниже.", call: "Позвонить",
-    quietTitle: "У владельца сейчас тихие часы",
+    quietTitle: "У владельца сейчас режим «Не беспокоить»",
     quietText: (a, b) => `Владелец не принимает звонки с ${a} до ${b} (по времени Турции). Вы можете отправить ему SMS или сообщение в WhatsApp ниже; для срочных случаев есть готовые сообщения.`,
     msgTitle: "Отправьте сообщение", msgOr: "Или отправьте готовое сообщение", via: "Способ отправки", note: "Сообщение уходит на турецком вместе с текстом на вашем языке, чтобы владелец понял.",
     offTitle: "Этот QR сейчас не используется", offText: "Владелец временно отключил этот QR. Возможно, автомобиль продан или наклейка больше не используется.",
@@ -554,7 +554,7 @@ function showCall(code, tag, again = false) {
       ${owner}`, render);
     bindQuickMessages();
     bindScanPromo();
-    return; // sessiz saatlerde otomatik arama yok
+    return; // Rahatsız Etmeyin saatlerinde otomatik arama yok
   }
   showScan(`
     ${plate(code)}
@@ -786,7 +786,7 @@ function cardBackHtml(code, pin, h) {
     <div class="i-app">${qrSvg(APP_QR_URL)}<span><b>Uygulamayı indirin</b>Numaranızı, tasarımınızı ve ayarlarınızı telefondan yönetin.</span></div>
     <ul class="i-feat">
       <li>Numaranızı istediğiniz an değiştirin, sticker aynı kalır</li>
-      <li>Gece sessiz saatler: yalnızca mesaj gelir</li>
+      <li>🔕 Rahatsız Etmeyin: belirli saatlerde sadece mesaj gelir</li>
       <li>QR'ı tek dokunuşla kapatıp açın</li>
       <li>Kaç kez okutulduğunu görün</li>
       <li>Su geçirmez sticker siparişi</li>
@@ -924,7 +924,7 @@ async function showAdmin() {
       <a class="btn" id="boxlink" href="kutu.html?size=${encodeURIComponent(stickerSize)}" target="_blank" rel="noopener" title="Sticker ve kartın sığdığı, askılı ince kutunun kesim/katlama kalıbı">📦 Askılı kutu kalıbı</a>
     </div>
     ${given ? "" : setupHtml('"Verildi" takibi kurulu değil.', "verildi.sql")}
-    ${appReady ? "" : setupHtml("Android uygulaması için veritabanı kurulumu eksik ya da güncel değil (otomatik yedek, sessiz saatler, okutma sayacı, QR kapat/aç, QR silme). Kurulmadan uygulamada QR oluşturulamaz.", "uygulama.sql")}
+    ${appReady ? "" : setupHtml("Android uygulaması için veritabanı kurulumu eksik ya da güncel değil (otomatik yedek, Rahatsız Etmeyin modu, okutma sayacı, QR kapat/aç, QR silme). Kurulmadan uygulamada QR oluşturulamaz.", "uygulama.sql")}
     <p class="noprint">Talep edene etiket verirken tasarımı seçip <b>Yazdır ve ver</b> ya da <b>PDF kaydet ve ver</b>'e basın; etiket verildi olarak işaretlenip bu listeden kalkar.
       Kişi QR'ı okutup numarasını ve PIN'i girdiğinde etiket o numarayı aramaya başlar.
       Yazdırırken ölçek <b>%100 / Gerçek boyut</b> olmalı. Etiket yazıcısı ya da matbaa için “Her sayfaya bir etiket”i seçin; sayfa ölçüsü sticker ölçüsü olur.</p>
@@ -1069,7 +1069,7 @@ function showHome() {
       <h2>Neden Araç QR?</h2>
       <div class="perks">
         <div><b>Numaranız camda yazmaz</b>Yoldan geçen herkes numaranızı göremez; yalnızca QR'ı okutan kişi size ulaşır.</div>
-        <div><b>Gece rahat uyuyun</b>Sessiz saatlerde (ör. 23:00–07:00) arama butonu gösterilmez; okutan kişi size yalnızca SMS ya da WhatsApp mesajı gönderir.</div>
+        <div><b>Gece rahat uyuyun</b>Rahatsız Etmeyin saatlerinde (ör. 23:00–07:00) arama butonu gösterilmez; okutan kişi size yalnızca SMS ya da WhatsApp mesajı gönderir.</div>
         <div><b>Hazır mesajlar</b>“Önümü kapattınız”, “Farlarınız açık”, “Aracınıza çarpıldı” gibi mesajlar tek dokunuşla.</div>
         <div><b>Ücretsiz ya da baskılı</b>Kendiniz ücretsiz yazdırın ya da su geçirmez vinil sticker'ınız istediğiniz ölçüde (4×6 cm'den 8×12 cm'ye) kapınıza gelsin.</div>
         <div><b>Numaranızı siz yönetin</b>Telefon değiştirince numarayı uygulamadan güncellersiniz; sticker'ı yeniden basmanız gerekmez.</div>
@@ -1088,7 +1088,7 @@ function showHome() {
     <section>
       <h2>Sık sorulanlar</h2>
       <details><summary>Ücretli mi?</summary><p>QR oluşturmak ve kendiniz yazdırmak ücretsizdir. İsterseniz su geçirmez vinil sticker'ınızı istediğiniz ölçüde <span class="price-tag">250 TL</span>'ye biz basıp gönderiyoruz.</p></details>
-      <details><summary>Numaram herkese görünür mü?</summary><p>Camda ve QR'da numaranız yazmaz. QR'ı okutan kişi sizi arayabilsin ya da mesaj atabilsin diye numaranıza ulaşır. Sessiz saatlerde arama butonu gösterilmez.</p></details>
+      <details><summary>Numaram herkese görünür mü?</summary><p>Camda ve QR'da numaranız yazmaz. QR'ı okutan kişi sizi arayabilsin ya da mesaj atabilsin diye numaranıza ulaşır. Rahatsız Etmeyin saatlerinde arama butonu gösterilmez.</p></details>
       <details><summary>Telefon numaram değişirse ne olacak?</summary><p>Uygulamada QR'ınızı açıp “Numarayı değiştir”e dokunun. Sticker'ı yeniden basmanız gerekmez.</p></details>
       <details><summary>Sticker'ı nereye yapıştırmalıyım?</summary><p>Camın dış yüzüne, kaportaya ya da tampona yapıştırın. Normal bir sticker camın içine yapıştırılırsa dışarıdan ters görünür ve okunmaz. QR kod yüksek hata düzeltmeyle üretilir; biraz çizilse de okunur.</p></details>
       <details><summary>Telefonumu değiştirirsem QR'larım ne olur?</summary><p>QR'larınız çalışmaya devam eder. Numaranızı yeni telefondan değiştirebilmek için uygulamadaki PIN'inizi bir yere not edin.</p></details>

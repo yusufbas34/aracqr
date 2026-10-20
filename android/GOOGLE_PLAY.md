@@ -115,7 +115,7 @@ Pratik yol:
    - İlk açılış tanıtımı ve "Başlayalım" ile tasarım seçme (yana kaydırma)
    - QR oluşturma, yazdırma ya da PDF paylaşma
    - Başka bir telefonla QR'ı okutup aramanın gelmesi
-   - Sessiz saatleri açıp o saatte okutunca yalnızca mesaj seçeneğinin çıkması
+   - Rahatsız Etmeyin saatlerini açıp o saatte okutunca yalnızca mesaj seçeneğinin çıkması
    - Söz ve tasarım değiştirme, QR'ı kapatıp açma
    - Sipariş verme: Telegram/e-postaya düşüyor mu, iptal ediliyor mu, durum değişince bildirim geliyor mu
    - QR'ı kalıcı silme ve Tüm verilerimi sil
@@ -176,7 +176,7 @@ Araç QR ile aracınıza size özel bir QR sticker yapıştırırsınız. Yolunu
 ★ Ücretsiz yazdırın ya da biz basalım
 Evdeki yazıcıdan istediğiniz ölçüde yazdırın, PDF olarak matbaaya gönderin. İsterseniz yağmura ve güneşe dayanıklı vinil sticker'ınızı istediğiniz ölçüde biz basıp kargolayalım.
 
-★ Gece rahat uyuyun: sessiz saatler
+★ Gece rahat uyuyun: Rahatsız Etmeyin modu
 Belirlediğiniz saatlerde arama butonu gösterilmez. QR'ı okutan kişi size yalnızca SMS ya da WhatsApp mesajı gönderebilir.
 
 ★ Numara değişti mi? Sticker'ı yeniden basmayın
@@ -204,7 +204,7 @@ Hesap açmanız gerekmez. Reklam yok. Verilerinizi istediğiniz an uygulamadan s
 **İletişim e-postası:** Play bu adresi mağazada herkese gösterir. Gizlilik sayfası iletişim için bu adresi gösteriyor; geliştirici hesabındaki e-posta da olur, ayrı bir adres açabilirsiniz de.
 **Web sitesi:** `https://yusufbas34.github.io/aracqr/`
 
-**İlk sürüm notu:** `İlk sürüm: QR oluşturma, 20+ tasarım, sessiz saatler, hazır mesajlar, baskılı sticker siparişi.`
+**İlk sürüm notu:** `İlk sürüm: QR oluşturma, 20+ tasarım, Rahatsız Etmeyin modu, hazır mesajlar, baskılı sticker siparişi.`
 
 **Diğer diller** (Play Console › Mağaza girişi › Çeviri ekle; uygulama bu dilleri destekliyor):
 
@@ -236,7 +236,7 @@ With Araç QR you stick your own QR sticker on your car. The person you blocked 
 
 ★ Make it yours: 29 designs (classic, funny, team colors) and witty phrases.
 ★ Print for free at home in the size you want, or order a waterproof vinyl sticker (Turkey).
-★ Quiet hours: during the hours you choose there is no call button, only SMS / WhatsApp.
+★ Do Not Disturb: if you don't want calls at certain hours, people can only message you.
 ★ Number changed? Change it in the app with your PIN; the same sticker keeps working.
 ★ Turn your QR off and on: car sold, sticker lost, on holiday.
 ★ Anyone can scan: the scan page opens in Turkish, English, Arabic or Russian.
@@ -274,7 +274,7 @@ Google Play'e çıkması için 14 gün test eden 12 kişi lazım. 5 dakikanı al
 
 ### Sürüm notu (kapalı test ve ilk yayın)
 
-- **Türkçe:** `İlk sürüm: QR sticker oluşturma, 29 tasarım, sessiz saatler, hazır mesajlar, yedekleme, basılı sticker siparişi. 4 dil.`
+- **Türkçe:** `İlk sürüm: QR sticker oluşturma, 29 tasarım, Rahatsız Etmeyin modu, hazır mesajlar, yedekleme, basılı sticker siparişi. 4 dil.`
 - **English:** `First release: create QR stickers, 29 designs, quiet hours, ready messages, backup, printed sticker orders. 4 languages.`
 
 ### Üretim erişimi başvurusu (14 gün sonra) cevap taslakları
@@ -282,7 +282,7 @@ Play Console sorularına kendi deneyiminizle tamamlayın; testte gerçekten olan
 
 1. **Testçileri nasıl buldunuz?** `Aile, arkadaşlar ve çevremdeki araç sahipleri; WhatsApp üzerinden Google Grubu ile davet ettim.`
 2. **Testçi bulmak ne kadar kolaydı?** `Kolaydı; uygulama araç sahiplerine yönelik ve herkesin günlük karşılaştığı bir sorunu çözüyor.`
-3. **Testçiler uygulamayı nasıl kullandı?** `QR oluşturdular, başka telefonla okutup aramayı ve hazır mesajları denediler, sessiz saatleri, tasarım/söz değiştirmeyi, PDF paylaşmayı, yedeklemeyi ve bildirimleri test ettiler.`
+3. **Testçiler uygulamayı nasıl kullandı?** `QR oluşturdular, başka telefonla okutup aramayı ve hazır mesajları denediler, Rahatsız Etmeyin saatlerini, tasarım/söz değiştirmeyi, PDF paylaşmayı, yedeklemeyi ve bildirimleri test ettiler.`
 4. **Hangi geri bildirimleri aldınız, nasıl topladınız?** `WhatsApp üzerinden topladım. (Buraya gerçek örnekler: ör. "şu metin anlaşılmıyordu", "şu ölçü eklensin".)`
 5. **Geri bildirime göre ne değiştirdiniz?** `(Buraya yapılan düzeltmeler; test sırasında yayınlanan güncellemeleri yazın.)`
 6. **Uygulama kime yönelik, ne değer sağlıyor?** `Türkiye'deki araç sahipleri. Hatalı park edildiğinde araç sahibine numarası görünmeden ulaşılmasını sağlar; ceza, çekici ve tartışmanın önüne geçer.`

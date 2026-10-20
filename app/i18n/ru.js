@@ -403,4 +403,9 @@ I18N.ru = {
   "🚗 Araç QR bilgilerim": "🚗 Мои данные Araç QR",
   "QR'ı test et": "Проверить QR",
   "🔒 Bu mesajı kimseyle paylaşmayın.": "🔒 Никому не пересылайте это сообщение.",
+  "🔕 Rahatsız Etmeyin": "🔕 Не беспокоить",
+  "Belirli saatlerde aranmak istemezseniz, size sadece mesaj atabilirler.": "Если не хотите звонков в определённые часы, вам смогут только написать.",
+  "Rahatsız Etmeyin saatlerinin başlangıç ve bitişini farklı seçin.": "Выберите разное время начала и конца режима «Не беспокоить».",
+  "Rahatsız Etmeyin saatleri geçersiz.": "Неверное время режима «Не беспокоить».",
+  "🔕 Rahatsız Etmeyin: belirli saatlerde (ör. 23:00–07:00) aranmak istemezseniz arama butonu gösterilmez; okutan kişi size sadece SMS ya da WhatsApp mesajı atabilir.": "🔕 Не беспокоить: если не хотите звонков в определённые часы (напр. 23:00–07:00), кнопка звонка скрыта — отсканировавший сможет только написать вам SMS или в WhatsApp.",
 };
