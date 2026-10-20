@@ -94,12 +94,14 @@ document.getElementById("size").innerHTML = sizes.map(k => `<option value="${k}"
 function render() {
   const s = dims(size);
   const W = s.w + 4, H = s.h + 4, D = 6;          // iç ölçü: kart + sticker + pay
-  const GL = 10, TUCK = 14, DUST = Math.min(12, W / 3), HEAD = 30;  // yapıştırma payı, kapak dili, toz kanadı, askı dili
+  const GL = 10, TUCK = 12, DUST = Math.min(11, W / 3), HEAD = 24;  // yapıştırma payı, kapak dili, toz kanadı, askı dili
   // Yatay dizilim: [yapıştırma][arka][yan][ön][yan]
   const x = {glue: 0, back: GL, side1: GL + W, front: GL + W + D, side2: GL + 2 * W + D}, totalW = GL + 2 * W + 2 * D;
   const topY = Math.max(HEAD, D + TUCK), y0 = topY;  // gövdenin üst kenarı
   const totalH = topY + H + D + TUCK;
-  const ox = (210 - totalW) / 2, oy = Math.max(12, (297 - totalH) / 2);
+  // A4'e sığdığı kadar kutu (6×9 cm'de 2 adet): alt alta, aralarında 5 mm
+  const GAP = 5, count = 2 * totalH + GAP <= 297 - 16 ? 2 : 1;
+  const ox = (210 - totalW) / 2, oy = (297 - (count * totalH + (count - 1) * GAP)) / 2;
   const P = (cls, l, t, w, h, html = "") => `<div class="pn ${cls}" style="left:${l}mm;top:${t}mm;width:${w}mm;height:${h}mm">${html}</div>`;
   const cut = [], fold = [];
   const L = (a, b, c, d) => `M${a} ${b}L${c} ${d}`;
@@ -178,8 +180,9 @@ function render() {
       <path d="${cut.join("")}" fill="none" stroke="#111" stroke-width=".3"/>
       <path d="${fold.join("")}" fill="none" stroke="#e4002b" stroke-width=".25" stroke-dasharray="1.6 1.2"/>
     </g></svg>`;
-  document.getElementById("a4").innerHTML = `<div class="box" style="left:${ox}mm;top:${oy}mm;width:${totalW}mm;height:${totalH}mm">${html}${svg}</div>
-    <div class="note" style="left:${ox}mm;top:${oy + totalH + 4}mm">Siyah düz çizgi: kes · Kırmızı kesikli çizgi: katla · Çizgili alan: yapıştır · İç ölçü ${W}×${H}×${D} mm · %100 basın</div>`;
+  const one = top => `<div class="box" style="left:${ox}mm;top:${top}mm;width:${totalW}mm;height:${totalH}mm">${html}${svg}</div>`;
+  document.getElementById("a4").innerHTML = Array.from({length: count}, (_, i) => one(oy + i * (totalH + GAP))).join("") +
+    `<div class="note" style="left:${ox}mm;top:${Math.min(297 - 6, oy + count * totalH + (count - 1) * GAP + 1.5)}mm">Siyah düz çizgi: kes · Kırmızı kesikli çizgi: katla · Çizgili alan: yapıştır · İç ölçü ${W}×${H}×${D} mm · Sayfada ${count} kutu · %100 basın</div>`;
 }
 render();
 document.getElementById("size").onchange = ev => { size = ev.target.value; render(); };
