@@ -399,4 +399,8 @@ I18N.en = {
   "Sticker yazıcısı ya da matbaa için: sayfa, sticker'ın kendi ölçüsünde.": "For a sticker printer or print shop: the page is the sticker's own size.",
   "Instagram'da takip edin": "Follow us on Instagram",
   "🎉 {name} ilk kez okutuldu! Sistem çalışıyor.": "🎉 {name} was scanned for the first time! It works.",
+  "📲 PIN'imi WhatsApp'ta kendime gönder": "📲 Send my PIN to myself on WhatsApp",
+  "🚗 Araç QR bilgilerim": "🚗 My Araç QR details",
+  "QR'ı test et": "Test the QR",
+  "🔒 Bu mesajı kimseyle paylaşmayın.": "🔒 Don't share this message with anyone.",
 };

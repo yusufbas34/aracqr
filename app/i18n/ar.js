@@ -399,4 +399,8 @@ I18N.ar = {
   "Sticker yazıcısı ya da matbaa için: sayfa, sticker'ın kendi ölçüsünde.": "لطابعة الملصقات أو المطبعة: الصفحة بمقاس الملصق نفسه.",
   "Instagram'da takip edin": "تابعنا على Instagram",
   "🎉 {name} ilk kez okutuldu! Sistem çalışıyor.": "🎉 تم مسح {name} لأول مرة! النظام يعمل.",
+  "📲 PIN'imi WhatsApp'ta kendime gönder": "📲 أرسل رمز PIN لنفسي على واتساب",
+  "🚗 Araç QR bilgilerim": "🚗 بيانات Araç QR الخاصة بي",
+  "QR'ı test et": "اختبر رمز QR",
+  "🔒 Bu mesajı kimseyle paylaşmayın.": "🔒 لا تشارك هذه الرسالة مع أحد.",
 };

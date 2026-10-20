@@ -711,6 +711,13 @@ function statText(st) {
 
 let celebrated = "";
 
+// QR bilgilerini (kod, numara, PIN) kişinin kendi WhatsApp sohbetine hazır yazar; kişi yalnızca Gönder'e basar
+function selfWhatsApp(t) {
+  const text = [L("🚗 Araç QR bilgilerim"), "", `${L("QR kodu")}: ${t.code}`, `${L("Aranacak numara")}: ${prettyPhone(t.phone)}`, `PIN: ${t.pin}`, "",
+    `${L("QR'ı test et")}: ${qrLink(t.code)}`, "", L("🔒 Bu mesajı kimseyle paylaşmayın.")].join("\n");
+  return `https://wa.me/${String(t.phone).replace(/\D/g, "")}?text=${encodeURIComponent(text)}`;
+}
+
 function showTag(code, isNew) {
   const t = findTag(code);
   if (!t) { location.replace("#/"); return; }
@@ -761,6 +768,7 @@ function showTag(code, isNew) {
         <dt>PIN</dt><dd><span class="secret" id="pin">••••••</span> <button type="button" class="btn ghost" id="showpin" style="display:inline;width:auto;margin:0 0 0 6px;padding:4px 12px;font-size:14px">${L("Göster")}</button></dd>
       </dl>
       <div class="hint">${L("PIN numarayı değiştirmek için gerekir ve bu telefonda saklanır. Telefon değiştirecekseniz <a href='#/yedek'>Profilim › Yedekle / taşı</a> ile QR'larınızı yeni telefona taşıyın.")}</div>
+      <a class="btn ghost" href="${esc(selfWhatsApp(t))}">${L("📲 PIN'imi WhatsApp'ta kendime gönder")}</a>
       <a class="btn ghost" href="#/etiket/${encodeURIComponent(t.code)}/numara">${L("Numarayı değiştir")}</a>
       <a class="btn ghost" href="${esc(qrLink(t.code))}">${L("QR'ı dene (okutan kişinin göreceği sayfa)")}</a>
       <button class="btn danger" id="delete" type="button">${L("QR'ı kalıcı olarak sil")}</button>

@@ -399,4 +399,8 @@ I18N.ru = {
   "Sticker yazıcısı ya da matbaa için: sayfa, sticker'ın kendi ölçüsünde.": "Для принтера наклеек или типографии: страница размером с наклейку.",
   "Instagram'da takip edin": "Мы в Instagram",
   "🎉 {name} ilk kez okutuldu! Sistem çalışıyor.": "🎉 {name} впервые отсканировали! Всё работает.",
+  "📲 PIN'imi WhatsApp'ta kendime gönder": "📲 Отправить PIN себе в WhatsApp",
+  "🚗 Araç QR bilgilerim": "🚗 Мои данные Araç QR",
+  "QR'ı test et": "Проверить QR",
+  "🔒 Bu mesajı kimseyle paylaşmayın.": "🔒 Никому не пересылайте это сообщение.",
 };

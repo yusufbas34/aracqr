@@ -352,7 +352,7 @@ function showForm(code, {title, intro, button, overwrite}, error = "", phoneVal 
     try {
       const res = SELF ? await rpc("self_tag_save", {p_code: code, p_pin: pin, p_phone: phone})
                        : await rpc("tag_save", {p_code: code, p_pin: pin, p_phone: phone, p_overwrite: overwrite});
-      if (res.ok) return showSaved(code, res.phone);
+      if (res.ok) return showSaved(code, res.phone, pin);
       const errors = {
         bad_pin: SELF ? "PIN hatalı. Etiketi oluştururken uygulamada gösterilen 6 haneli PIN'i girin (uygulamada “Etiketlerim” bölümünde de yazar)."
                       : "PIN hatalı. Etiketle birlikte gelen karttaki 6 haneli PIN'i girin.",
@@ -569,12 +569,20 @@ function showCall(code, tag, again = false) {
   if (!again) setTimeout(() => { location.href = "tel:" + phone; }, 250);  // dil değiştirince yeniden arama açılmasın
 }
 
-function showSaved(code, phone) {
+// Kişinin kendi WhatsApp sohbetine (kendine mesaj) QR bilgilerini hazır yazar; kişi yalnızca Gönder'e basar
+function selfWhatsApp(code, phone, pin) {
+  const text = `🚗 Araç QR bilgilerim\n\nQR kodu: ${code}\nAranacak numara: ${prettyPhone(phone)}\nPIN: ${pin}\n\n` +
+    `Numarayı değiştirmek için: ${ownLink(code)}&degistir\nQR'ı test et: ${ownLink(code)}\n\n🔒 Bu mesajı kimseyle paylaşmayın.`;
+  return `https://wa.me/${String(phone).replace(/\D/g, "")}?text=${encodeURIComponent(text)}`;
+}
+
+function showSaved(code, phone, pin) {
   show(`
     ${plate(code)}
     <div class="msg ok">Kaydedildi. Bu QR artık ${esc(prettyPhone(phone))} numarasını arar.</div>
-    <p>PIN kartını saklayın; numarayı değiştirmek için gerekecek.</p>
-    <a class="btn" href="${esc(ownLink(code))}">QR'ı test et</a>`);
+    <p>PIN'i saklayın; numarayı değiştirmek için gerekecek. Bilgilerinizi kendi WhatsApp'ınıza kaydedin, kart kaybolsa da elinizde olsun.</p>
+    ${pin ? `<a class="btn" style="background:#128c4a" href="${esc(selfWhatsApp(code, phone, pin))}">📲 Bilgilerimi WhatsApp'ta kendime gönder</a>` : ""}
+    <a class="btn ghost" href="${esc(ownLink(code))}">QR'ı test et</a>`);
   confetti();
 }
 
