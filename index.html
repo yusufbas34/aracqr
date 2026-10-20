@@ -921,6 +921,7 @@ async function showAdmin() {
       </span>
       <button class="btn" id="pdf">Listedekileri PDF kaydet</button>
       <button class="btn" id="add">10 etiket daha üret</button>
+      <a class="btn" id="boxlink" href="kutu.html?size=${encodeURIComponent(stickerSize)}" target="_blank" rel="noopener" title="Sticker ve kartın sığdığı, askılı ince kutunun kesim/katlama kalıbı">📦 Askılı kutu kalıbı</a>
     </div>
     ${given ? "" : setupHtml('"Verildi" takibi kurulu değil.', "verildi.sql")}
     ${appReady ? "" : setupHtml("Android uygulaması için veritabanı kurulumu eksik ya da güncel değil (otomatik yedek, sessiz saatler, okutma sayacı, QR kapat/aç, QR silme). Kurulmadan uygulamada QR oluşturulamaz.", "uygulama.sql")}
