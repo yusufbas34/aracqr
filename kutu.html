@@ -34,7 +34,19 @@ body{margin:0;background:#eef0f3;font-family:"Barlow",system-ui,sans-serif;color
 .front .fbrand img{width:7mm;height:7mm;border-radius:1.6mm;box-shadow:0 0 0 .4mm #ffffff66}
 .front h1{margin:0;font:700 7.4mm/1 "Barlow Condensed","Barlow",sans-serif}
 .front h1 span{color:#ffd23f}
-.front .sample{margin-top:1mm;transform:rotate(-4deg);filter:drop-shadow(0 1.5mm 2mm rgba(0,0,0,.35))}
+.front .demo{display:flex;align-items:center;justify-content:center;gap:1mm;margin-top:1mm}
+.front .sample{transform:rotate(-4deg);filter:drop-shadow(0 1.5mm 2mm rgba(0,0,0,.35));flex:none}
+.front .arrow{display:flex;flex-direction:column;align-items:center;font-size:4mm;line-height:1;color:#ffd23f;font-weight:700}
+.front .arrow span{font-size:2.1mm;letter-spacing:.05em;text-transform:uppercase;margin-bottom:.4mm}
+.front .phone{width:var(--pw);flex:none;background:#111418;border-radius:3.5mm;padding:1.3mm;box-shadow:0 1.5mm 3mm rgba(0,0,0,.4);transform:rotate(3deg)}
+.front .scr{background:#eef0f3;border-radius:2.4mm;padding:1.6mm 1.4mm;display:flex;flex-direction:column;gap:1.1mm;color:#111418;text-align:left}
+.front .scr .pl{display:flex;border:.35mm solid #111418;border-radius:.8mm;overflow:hidden;background:#fff;font:700 2.3mm/1 "Barlow Condensed","Barlow",sans-serif;letter-spacing:.06em}
+.front .scr .pl i{font-style:normal;background:#0a3a9e;color:#fff;font-size:1.4mm;padding:1.1mm .7mm .4mm;display:flex;align-items:flex-end}
+.front .scr .pl span{flex:1;text-align:center;padding:.8mm}
+.front .scr b{font-size:2.3mm;line-height:1.1}
+.front .scr .call{background:#0c7a43;color:#fff;border-radius:1mm;text-align:center;font-weight:700;font-size:2.2mm;padding:1.1mm}
+.front .scr .qm{display:grid;grid-template-columns:1fr 1fr;gap:.8mm}
+.front .scr .qm span{background:#fff;border:.25mm solid #c9ced6;border-radius:.8mm;text-align:center;font-size:1.35mm;line-height:1.15;font-weight:700;padding:.7mm .3mm}
 .front .inside{margin-top:auto;background:#ffd23f;color:#2b2200;border-radius:1.5mm;padding:1.2mm 2.5mm;font-weight:700;font-size:2.6mm;line-height:1.2}
 .back{background:#fff;padding:3.5mm;display:flex;flex-direction:column;gap:2mm;font-size:2.75mm;line-height:1.3}
 .back h2{margin:0;font:700 4.6mm/1.05 "Barlow Condensed","Barlow",sans-serif;color:#0a3a9e}
@@ -98,10 +110,20 @@ function render() {
     <ul><li>Numaranız camda yazmaz</li><li>Numara değişince sticker aynı kalır</li><li>🔕 Rahatsız Etmeyin modu</li><li>QR'ı kapatıp açma, okutma sayacı</li></ul>
     <div class="qrs"><div>${qrSvg(APP_URL)}<b>Uygulamayı indirin</b></div><div class="ig">${qrSvg(IG)}<b>Instagram</b>@aracqr</div></div>`);
   html += P("side", x.side1, y0, D, H, `<span>ARAÇ QR · HATALI PARK, BENİ ARA</span>`);
-  const zoom = Math.min(1, (W - 16) / s.w, (H - 52) / s.h);
+  // Sticker ve yanında QR okutulunca açılan arama ekranı (telefon görseli) yan yana sığsın
+  const zoom = Math.min(1, (W - 8) * .5 / s.w, (H - 50) / s.h), phoneW = Math.min(30, W - 8 - s.w * zoom - 5);
   html += P("front", x.front, y0, W, H, `<div class="fbrand"><img src="app/logo.svg" alt="">Araç QR</div>
     <h1>Hatalı park ettiğinde<br><span>seni arasınlar</span></h1>
-    <div class="sample grid" style="--w:${s.w}mm;--h:${s.h}mm;--k:${s.k};zoom:${zoom.toFixed(3)}">${stickerHtml("ÖRNEK", "klasik", APP_URL)}</div>
+    <div class="demo">
+      <div class="sample grid" style="--w:${s.w}mm;--h:${s.h}mm;--k:${s.k};zoom:${zoom.toFixed(3)}">${stickerHtml("ÖRNEK", "klasik", APP_URL)}</div>
+      <div class="arrow"><span>okut</span>➜</div>
+      <div class="phone" style="--pw:${phoneW}mm"><div class="scr">
+        <div class="pl"><i>TR</i><span>ÖRNEK</span></div>
+        <b>Araç sahibini arayın</b>
+        <div class="call">📞 Ara</div>
+        <div class="qm"><span>🚗<br>Önümü kapatıyorsunuz</span><span>💡<br>Farlarınız açık</span><span>🪟<br>Camınız açık</span><span>💥<br>Aracınıza çarpıldı</span></div>
+      </div></div>
+    </div>
     <div class="inside">İçinde: 1 QR sticker (${String(s.w / 10).replace(".", ",")}×${String(s.h / 10).replace(".", ",")} cm) + PIN kartı</div>`);
   html += P("side", x.side2, y0, D, H, `<span>NUMARAN CAMDA YAZMAZ</span>`);
   // üst: arka panelden askı dili, ön panelden kapak + dil, yanlarda toz kanatları
