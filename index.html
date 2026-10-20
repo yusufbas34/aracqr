@@ -266,7 +266,9 @@ details.howto ol{margin:8px 0 0;padding-left:20px;line-height:1.6;font-size:15px
 .bcard .i-app span{display:flex;flex-direction:column;font-size:calc(var(--s)*2.5mm);color:#3b4252}
 .bcard .i-app b{font-size:calc(var(--s)*3.2mm);color:#0a3a9e}
 .bcard .i-feat{margin:0;padding-left:calc(var(--s)*4mm);font-size:calc(var(--s)*2.6mm);display:flex;flex-direction:column;gap:calc(var(--s)*.5mm)}
-.bcard .i-foot{margin-top:auto;text-align:center;font-size:calc(var(--s)*2.6mm);color:#c13584}
+.bcard .i-ig{margin-top:auto;display:flex;align-items:center;gap:calc(var(--s)*2mm);border-top:.3mm solid #e1e5ec;padding-top:calc(var(--s)*1.5mm);font-size:calc(var(--s)*2.6mm);color:#3b4252}
+.bcard .i-ig svg{width:calc(var(--s)*15mm);height:auto;flex:none}
+.bcard .i-ig span{display:flex;flex-direction:column}.bcard .i-ig b{color:#c13584;font-size:calc(var(--s)*3mm)}
 .a4fill .grid{display:block}
 .a4pin{height:var(--h);border-top:calc(var(--k)*.4mm) dashed #9aa0a8;border-radius:calc(var(--k)*3mm);display:flex;flex-direction:column;justify-content:center;box-sizing:border-box;overflow:hidden}
 .a4help{font-size:14px;color:var(--muted);margin:6px 0 0}
@@ -789,7 +791,7 @@ function cardBackHtml(code, pin, h) {
       <li>Kaç kez okutulduğunu görün</li>
       <li>Su geçirmez sticker siparişi</li>
     </ul>
-    <div class="i-foot">Instagram <b>@aracqr</b></div>
+    <div class="i-ig">${qrSvg("https://www.instagram.com/aracqr/")}<span><b>Instagram'da takip edin</b>@aracqr</span></div>
   </div>`;
 }
 const introGrid = () => {
