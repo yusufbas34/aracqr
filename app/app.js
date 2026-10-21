@@ -3,7 +3,7 @@
 
 const SUPABASE_URL = "https://icedhptvywmqsiarxpio.supabase.co";
 const SUPABASE_KEY = "sb_publishable_IEPlZ5oNcsrQt7_8DK_QKQ_1s9UMT6z";
-const SITE = "https://yusufbas34.github.io/aracqr/";
+const SITE = "https://arac.bulqr.com.tr/";
 const bridge = window.AndroidBridge; // Android dışında (tarayıcıda denerken) yok
 // Otomatik yedek anahtarı: telefona ve uygulamaya özel, yeniden kurulumda değişmez (MainActivity.backupKey). Tarayıcıda yok.
 const BACKUP_KEY = (() => { try { const k = bridge && typeof bridge.backupKey === "function" ? bridge.backupKey() : ""; return /^[0-9a-f]{64}$/.test(k) ? k : ""; } catch (e) { return ""; } })();
@@ -166,7 +166,7 @@ function profile() {
 
 // Kardeş uygulama Tasma QR'ın tanıtımı (şimdilik web sitesi; Play'e çıkınca bağlantı değişecek)
 const IG_URL = "https://www.instagram.com/aracqr/";
-const TASMA_URL = "https://yusufbas34.github.io/tasmaqr/";
+const TASMA_URL = "https://tasma.bulqr.com.tr/";
 const tasmaAdHtml = () => `<a class="tasma-ad" href="${TASMA_URL}" target="_blank" rel="noopener">
       <img src="tasma-logo.svg" alt="" width="52" height="52">
       <span><small>${L("Köpeğiniz için")}</small><b>Tasma QR</b>${L("Kaybolursa onu bulan kişi tek dokunuşla sizi arar, yerini gönderir.")}</span>

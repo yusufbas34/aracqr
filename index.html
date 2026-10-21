@@ -5,24 +5,24 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Araç QR: Hatalı park ettiğinizde sizi arasınlar · Araç QR kod sticker</title>
 <meta name="description" content="Aracınıza QR sticker yapıştırın: yolunu kapattığınız kişi QR'ı okutup sizi tek dokunuşla arasın ya da mesaj atsın. Numaranız camda yazmaz. QR'ınızı ücretsiz oluşturun, evde yazdırın.">
-<link rel="canonical" href="https://yusufbas34.github.io/aracqr/">
+<link rel="canonical" href="https://arac.bulqr.com.tr/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Araç QR">
 <meta property="og:locale" content="tr_TR">
-<meta property="og:url" content="https://yusufbas34.github.io/aracqr/">
+<meta property="og:url" content="https://arac.bulqr.com.tr/">
 <meta property="og:title" content="Araç QR: Hatalı park ettiğinde seni arasınlar">
 <meta property="og:description" content="Camına QR sticker yapıştır; yolunu kapattığın kişi okutup seni tek dokunuşla arasın. Numaran camda yazmaz. Ücretsiz oluştur.">
-<meta property="og:image" content="https://yusufbas34.github.io/aracqr/og.jpg">
+<meta property="og:image" content="https://arac.bulqr.com.tr/og.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Araç QR sticker: Hatalı park ettiğinde seni arasınlar">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://yusufbas34.github.io/aracqr/og.jpg">
+<meta name="twitter:image" content="https://arac.bulqr.com.tr/og.jpg">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@graph":[
- {"@type":"WebSite","name":"Araç QR","url":"https://yusufbas34.github.io/aracqr/","inLanguage":"tr"},
+ {"@type":"WebSite","name":"Araç QR","url":"https://arac.bulqr.com.tr/","inLanguage":"tr"},
  {"@type":"SoftwareApplication","name":"Araç QR: Hatalı Park, Beni Ara","operatingSystem":"Android, Web","applicationCategory":"UtilitiesApplication",
-  "url":"https://yusufbas34.github.io/aracqr/","description":"Araca yapıştırılan QR sticker ile hatalı park eden araç sahibine numarası görünmeden ulaşma.",
+  "url":"https://arac.bulqr.com.tr/","description":"Araca yapıştırılan QR sticker ile hatalı park eden araç sahibine numarası görünmeden ulaşma.",
   "offers":{"@type":"Offer","price":"0","priceCurrency":"TRY"}},
  {"@type":"FAQPage","mainEntity":[
   {"@type":"Question","name":"Araç QR ücretli mi?","acceptedAnswer":{"@type":"Answer","text":"QR oluşturmak ve kendiniz yazdırmak ücretsizdir. İsterseniz su geçirmez vinil sticker'ı istediğiniz ölçüde biz basıp gönderiyoruz."}},
@@ -515,7 +515,7 @@ function bindQuickMessages() {
 function scanPromoHtml() {
   const t = T();
   return `<a class="scan-promo" href="${APP_URL}">
-    <span class="sp-art" aria-hidden="true"><span class="grid" style="--w:40mm;--h:60mm;--k:.667">${stickerHtml("SENİN-QR", "klasik", "https://yusufbas34.github.io/aracqr/")}</span></span>
+    <span class="sp-art" aria-hidden="true"><span class="grid" style="--w:40mm;--h:60mm;--k:.667">${stickerHtml("SENİN-QR", "klasik", "https://arac.bulqr.com.tr/")}</span></span>
     <span class="sp-body"><small>${esc(t.promoTag)}</small><b>${esc(t.promoTitle)}</b><span>${esc(t.promoText)}</span>
       <span class="sp-price" hidden>${esc(t.promoPrice)}: <strong></strong></span>
       <em>${esc(t.promoCta)} →</em></span>
@@ -765,7 +765,7 @@ function a4Cells(codes) {
 // Sticker + kartvizit: sticker'lar sticker kağıdına, kartlar sert kağıda önlü arkalı basılır. Kart sticker'la aynı ölçüdedir.
 // Ön yüz: tanıtım, QR görseli ve kullanım. Arka yüz: PIN, uygulama QR'ı ve avantajlar.
 // Çift taraflı baskıda (uzun kenardan çevir) arka yüzler ön yüzlerin tam arkasına gelsin diye sütunlar aynalanır.
-const APP_QR_URL = "https://yusufbas34.github.io/aracqr/";  // Play'de herkese açılınca Play bağlantısıyla değiştirin
+const APP_QR_URL = "https://arac.bulqr.com.tr/";  // Play'de herkese açılınca Play bağlantısıyla değiştirin
 const cardScale = h => Math.min(1.25, Math.max(.6, h / 90)).toFixed(3);
 function cardFrontHtml(code, h) {
   return `<div class="bcard" style="--s:${cardScale(h)}">
@@ -1077,7 +1077,7 @@ function showHome() {
       </div>
     </section>
 
-    <a class="tasma" href="https://yusufbas34.github.io/tasmaqr/" target="_blank" rel="noopener">
+    <a class="tasma" href="https://tasma.bulqr.com.tr/" target="_blank" rel="noopener">
       <img src="app/tasma-logo.svg" alt="" width="72" height="72">
       <div><small>Yeni · Köpeğiniz için</small>
         <b>Tasma QR: dostunuz kaybolursa size geri getirsin</b>
@@ -1103,7 +1103,7 @@ function showHome() {
         <li><a href="hatali-park.html">Hatalı park ettim, bana nasıl ulaşsınlar?</a></li>
       </ul>
     </section>
-    <p style="text-align:center;font-size:14px;margin-top:22px"><a href="gizlilik.html">Gizlilik politikası</a> · <a href="${IG_URL}" target="_blank" rel="noopener">Instagram</a></p>`, "home");
+    <p style="text-align:center;font-size:14px;margin-top:22px"><a href="gizlilik.html">Gizlilik politikası</a> · <a href="${IG_URL}" target="_blank" rel="noopener">Instagram</a> · <a href="https://bulqr.com.tr/">Bul QR</a></p>`, "home");
   document.getElementById("another").onclick = () => { document.getElementById("sample").innerHTML = showcaseHtml(); };
   loadReviews();
   // Fiyat panelden değişebilir
@@ -1295,7 +1295,7 @@ const ORDER_STATUS = {
   odeme_bildirildi: "Eski: ödeme bildirildi", odeme_bekleniyor: "Eski: ödeme bekleniyor",
 };
 const NEW_ORDER = ["yeni", "odeme_bildirildi", "odeme_bekleniyor"];
-const SELF_SITE = "https://yusufbas34.github.io/aracqr/";
+const SELF_SITE = "https://arac.bulqr.com.tr/";
 const selfLink = code => `${SELF_SITE}?s=${encodeURIComponent(code)}`;
 let orderFilter = "yeni";
 

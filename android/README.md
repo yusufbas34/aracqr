@@ -3,7 +3,7 @@
 Kullanıcı bir tasarım seçer, telefon numarasını girer, uygulama ona özel bir QR etiketi ve PIN oluşturur.
 Etiket istenen ölçüde yazdırılır ya da PDF olarak paylaşılır.
 
-QR, `https://yusufbas34.github.io/aracqr/?s=KOD` adresini açar. Numara QR'ın içinde değil sunucuda
+QR, `https://arac.bulqr.com.tr/?s=KOD` adresini açar. Numara QR'ın içinde değil sunucuda
 tutulur, bu yüzden PIN ile sonradan değiştirilebilir ve sticker'ı yeniden basmak gerekmez.
 
 ## İlk kurulum (bir kez)

@@ -9,10 +9,10 @@ Veri güvenliği formu cevapları ve mağaza metinleri. Görseller `android/stor
   `play` sürümü (AAB) kendini güncellemez, GitHub'a hiç bağlanmaz. Güncellemeyi Play Store yapar; bu Play'in kuralıdır.
 - **Hedef API 36** (Android 16). 31 Ağustos 2026'dan beri yeni uygulama ve güncellemelerde zorunlu.
 - **Yeni geri hareketi** (Android 13+ "predictive back") desteklenir.
-- **Gizlilik politikası:** https://yusufbas34.github.io/aracqr/gizlilik.html
+- **Gizlilik politikası:** https://arac.bulqr.com.tr/gizlilik.html
 - **Veri silme:**
   - Uygulama içinde iki yol var: QR sayfasında "QR'ı kalıcı olarak sil", Profilim'de "Tüm verilerimi sil".
-  - Web'de: https://yusufbas34.github.io/aracqr/gizlilik.html#silme
+  - Web'de: https://arac.bulqr.com.tr/gizlilik.html#silme
 - **İzinler:**
   - İnternet ve ağ durumu
   - Bildirim (Android 13+ bir kez sorulur)
@@ -73,7 +73,7 @@ Sürüm numarası her derlemede otomatik artar, bu yüzden her güncellemede yen
    - Dil: Türkçe
    - Uygulama, Ücretsiz
 3. **Uygulama içeriği** bölümündeki formlar (cevaplar aşağıda, 6. bölümde):
-   - Gizlilik politikası: `https://yusufbas34.github.io/aracqr/gizlilik.html`
+   - Gizlilik politikası: `https://arac.bulqr.com.tr/gizlilik.html`
    - Uygulama erişimi: "Tüm işlevler özel erişim olmadan kullanılabilir"
    - Reklamlar: Hayır
    - İçerik derecelendirmesi anketi: Kategori "Yardımcı program / üretkenlik". Şiddet, cinsellik, kumar vb. sorulara hep Hayır. Kullanıcılar birbiriyle iletişim kurabilir mi sorusuna: Hayır (QR'ı okutan, telefonun kendi arama/SMS uygulamasıyla arar; uygulamada sohbet yok).
@@ -137,7 +137,7 @@ Gizlilik politikasıyla birebir aynı olmalı. Biri değişirse diğerini de gü
 - Uygulama kullanıcı verisi topluyor ya da paylaşıyor mu: **Evet**
 - Veriler aktarım sırasında şifreleniyor mu: **Evet** (HTTPS)
 - Kullanıcılar verilerinin silinmesini isteyebilir mi: **Evet**
-  - Silme bağlantısı: `https://yusufbas34.github.io/aracqr/gizlilik.html#silme`
+  - Silme bağlantısı: `https://arac.bulqr.com.tr/gizlilik.html#silme`
   - Uygulama içinde silme de var.
 - Hesap oluşturma: **Yok**. Hesap olmadığı için "hesap silme bağlantısı" zorunlu değildir, yine de silme sayfası var.
 
@@ -202,7 +202,7 @@ Hesap açmanız gerekmez. Reklam yok. Verilerinizi istediğiniz an uygulamadan s
 **Kategori:** Araçlar ve Taşıtlar (Auto & Vehicles) ya da Araçlar (Tools)
 **Etiketler:** araç, otopark, QR kod, sticker
 **İletişim e-postası:** Play bu adresi mağazada herkese gösterir. Gizlilik sayfası iletişim için bu adresi gösteriyor; geliştirici hesabındaki e-posta da olur, ayrı bir adres açabilirsiniz de.
-**Web sitesi:** `https://yusufbas34.github.io/aracqr/`
+**Web sitesi:** `https://arac.bulqr.com.tr/`
 
 **İlk sürüm notu:** `İlk sürüm: QR oluşturma, 20+ tasarım, Rahatsız Etmeyin modu, hazır mesajlar, baskılı sticker siparişi.`
 
@@ -259,7 +259,7 @@ groups.google.com › **Grup oluştur**:
 | Kimler katılabilir | **Herkes katılabilir** (testçiler bağlantıyla kendileri katılsın) |
 
 Grubun adresini (`https://groups.google.com/g/aracqr-test`) ve Play'in verdiği katılım bağlantısını bana gönderin;
-testçi sayfasına (`https://yusufbas34.github.io/aracqr/test.html`) eklerim. Testçilere yalnızca bu sayfayı göndermeniz yeterli olur.
+testçi sayfasına (`https://arac.bulqr.com.tr/test.html`) eklerim. Testçilere yalnızca bu sayfayı göndermeniz yeterli olur.
 
 ### WhatsApp davet mesajı
 
@@ -267,7 +267,7 @@ testçi sayfasına (`https://yusufbas34.github.io/aracqr/test.html`) eklerim. Te
 Selam! 🙌 Araç QR diye bir uygulama yaptım: arabanın camına QR sticker yapıştırıyorsun, hatalı park ettiğinde yolunu kapattığın kişi seni tek dokunuşla arıyor, numaran camda yazmıyor.
 
 Google Play'e çıkması için 14 gün test eden 12 kişi lazım. 5 dakikanı alır, sonra telefonda dursun yeter:
-👉 https://yusufbas34.github.io/aracqr/test.html
+👉 https://arac.bulqr.com.tr/test.html
 
 Çok teşekkürler! 💙
 ```

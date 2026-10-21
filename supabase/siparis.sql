@@ -124,7 +124,7 @@ begin
     new.code || ' · ' || new.amount || ' TL' || E'\n' ||
     new.full_name || ' · ' || new.phone || E'\n' ||
     new.district || ' / ' || new.city || E'\n\n' ||
-    'Hesabınızı kontrol edip panelden onaylayın: https://yusufbas34.github.io/aracqr/?admin');
+    'Hesabınızı kontrol edip panelden onaylayın: https://arac.bulqr.com.tr/?admin');
   return new;
 end $$;
 
@@ -145,7 +145,7 @@ begin
     '🎨 Tasarım: ' || new.design || coalesce(' · söz: ' || new.phrase, '') || ' · QR: ' || new.tag_code || E'\n' ||
     '📐 ' || coalesce('1 adet sticker, ' || public.aracqr_cm(new.size), 'A4 set (6 ölçü, 9 sticker)') || E'\n' ||
     case when new.note is not null then '📝 ' || new.note || E'\n' else '' end ||
-    E'\nPanel: https://yusufbas34.github.io/aracqr/?admin');
+    E'\nPanel: https://arac.bulqr.com.tr/?admin');
   return new;
 end $$;
 
@@ -370,7 +370,7 @@ begin
   update orders set status = 'iptal', cancelled_by = 'musteri', cancelled_at = now(), updated_at = now() where id = o.id;
   perform public.aracqr_notify('Araç QR: sipariş iptal edildi ' || o.code,
     o.full_name || ' (' || o.phone || ') ' || o.code || ' numaralı siparişini uygulamadan iptal etti.' || E'\n\n' ||
-    'Panel: https://yusufbas34.github.io/aracqr/?admin');
+    'Panel: https://arac.bulqr.com.tr/?admin');
   return json_build_object('ok', true, 'status', 'iptal');
 end $$;
 

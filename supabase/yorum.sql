@@ -84,7 +84,7 @@ begin
   begin
     perform public.aracqr_notify('Araç QR: yeni yorum (' || r.rating || '★)',
       r.name || coalesce(' · ' || r.city, '') || ' · ' || repeat('★', r.rating) || E'\n' || r.comment ||
-      E'\n\nOnaylamak için: https://yusufbas34.github.io/aracqr/?admin');
+      E'\n\nOnaylamak için: https://arac.bulqr.com.tr/?admin');
   exception when others then null;  -- bildirim kurulu değilse yorum yine kaydedilir
   end;
   return json_build_object('ok', true, 'id', r.id,
