@@ -39,6 +39,7 @@ a{color:var(--band)}
 <tr><td>Rahatsız Etmeyin saatleri, QR açık/kapalı durumu</td><td>Ayarlarda seçtiğinizde</td><td>Belirlediğiniz saatlerde arama yerine yalnızca mesaj seçeneği gösterilmesi</td></tr>
 <tr><td>Okutma zamanı (yalnızca QR kodu ve saat)</td><td>QR her okutulduğunda</td><td>Size "kaç kez okutuldu" bilgisini göstermek. Okutan kişinin IP'si, konumu ya da cihazı kaydedilmez.</td></tr>
 <tr><td>Rastgele uygulama kimliği</td><td>QR oluştururken ve sipariş verirken</td><td>Kötüye kullanımı sınırlamak (ör. bir cihazdan günde en fazla 10 QR). Cihazınızın gerçek kimliğiyle ilgisi yoktur.</td></tr>
+<tr><td>PIN kurtarma e-postası</td><td>Yalnızca Profilim'e e-posta yazarsanız</td><td>PIN'inizi unuttuğunuzda ya da telefonunuz değiştiğinde QR kodlarınızı ve PIN'lerinizi istek üzerine bu adrese göndermek. Başka bir amaçla kullanılmaz; e-postayı Profilim'den silince sunucudan da silinir.</td></tr>
 <tr><td>Ad soyad, telefon, e-posta, adres, sipariş notu, seçilen tasarım</td><td>Yalnızca "Biz basıp gönderelim" siparişi verirseniz</td><td>Sticker'ı basmak, size ulaşmak ve kargolamak</td></tr>
 <tr><td>Otomatik yedek: QR listeniz (QR kodu, PIN, numara, tasarım, araç adı) ve sipariş numaralarınız</td><td>Android uygulamasında QR ya da sipariş listeniz her değiştiğinde</td><td>Uygulamayı silip aynı telefona yeniden kurduğunuzda QR'larınızın kendiliğinden geri gelmesi. Yedek, telefonunuzun Android kimliğinden tek yönlü olarak türetilen bir anahtarla saklanır; kimliğin kendisi gönderilmez.</td></tr>
 <tr><td>Yorum: görünecek ad, şehir, puan, yorum metni ve isteğe bağlı fotoğraf</td><td>Yalnızca "Yorum yaz" ile yorum gönderirseniz</td><td>Onaylandıktan sonra uygulamada ve web sitesinde herkese açık olarak yayınlamak</td></tr>
@@ -52,7 +53,7 @@ a{color:var(--band)}
 <p>Verileri satmıyor, reklam için kullanmıyoruz. Hizmetin çalışması için şu altyapılar kullanılır:</p>
 <ul>
 <li><b>Supabase</b>: veritabanı (QR kayıtları, siparişler ve yorumlar), yorum fotoğrafları ve sipariş edilen sticker sayfasının baskı dosyası (PDF; içinde yalnızca sticker'lar var, kişisel bilgi yok). Bağlantılar şifrelidir (HTTPS).</li>
-<li><b>Telegram ve e-posta (Resend)</b>: yeni bir sipariş geldiğinde sipariş bilgileri ve baskı dosyası yalnızca işletmeciye bildirim olarak gönderilir.</li>
+<li><b>Telegram ve e-posta (Resend)</b>: yeni bir sipariş geldiğinde sipariş bilgileri ve baskı dosyası yalnızca işletmeciye bildirim olarak gönderilir. "PIN'imi unuttum" dediğinizde QR kodunuz ve PIN'iniz Resend üzerinden yalnızca kayıtlı e-posta adresinize gönderilir.</li>
 <li><b>Baskı firması</b>: sipariş onaylanınca basılacak sticker dosyası ve gönderim için gereken bilgiler iletilebilir.</li>
 <li><b>Kargo firması</b>: gönderim için ad, telefon ve adres.</li>
 <li><b>GitHub</b>: site ve uygulama dosyaları GitHub Pages'te barındırılır. Elden kurulan (APK) sürüm yeni sürüm olup olmadığını GitHub'a sorar; Google Play sürümü bunu yapmaz.</li>

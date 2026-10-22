@@ -67,6 +67,26 @@ async function cloudRestore() {
   toast(L("☁️ QR'larınız yedekten geri yüklendi"), 4500);
 }
 
+// ---------------------------------------------------------------- PIN kurtarma e-postası (supabase/pin.sql)
+// Profildeki e-posta her QR'a kurtarma e-postası olarak kaydedilir; PIN unutulunca QR bilgileri bu adrese gönderilir.
+let emailSyncing = false;
+async function syncRecoveryEmail() {
+  if (emailSyncing) return;
+  const want = (profile().email || "").trim().toLowerCase();
+  const todo = tags().filter(t => (t.email || "") !== want);
+  if (!todo.length) return;
+  emailSyncing = true;
+  try {
+    for (const t of todo) {
+      let res;
+      try { res = await rpc("self_tag_email_set", {p_code: t.code, p_pin: t.pin, p_email: want || null}); }
+      catch (e) { break; }  // internet yok ya da sunucu henüz güncellenmedi: sonra tekrar denenir
+      const cur = findTag(t.code);
+      if (res?.ok && cur) saveTag({...cur, email: res.email || ""});
+    }
+  } finally { emailSyncing = false; }
+}
+
 // ---------------------------------------------------------------- yardımcılar
 async function rpc(fn, args) {
   const headers = {"Content-Type": "application/json", apikey: SUPABASE_KEY};
@@ -189,7 +209,7 @@ function showHome() {
       </ol>
       <a class="btn" href="#/yeni">${L("Başlayalım")}</a>
       <button class="btn ghost" type="button" id="howto">${L("Nasıl çalışır?")}</button>
-      <a class="btn ghost" href="#/yedek">${L("Eski telefonumdaki QR'ları getir")}</a>
+      <a class="btn ghost" href="#/yedek">${L("Eski telefonumdaki QR'ları getir / PIN'imi unuttum")}</a>
       ${tasmaAdHtml()}`, false, "", "qr"), bindHowto(), homeBubbles();
   }
   show(L("QR'larım"), `
@@ -248,6 +268,7 @@ function showProfile(saved = false) {
       <label for="p-name">${L("Ad soyad")}</label><input id="p-name" autocomplete="name" ${val("name")}>
       <label for="p-phone">${L("Telefon")}</label><input id="p-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="${L("05xx xxx xx xx")}" ${val("phone")}>
       <label for="p-email">${L("E-posta")}</label><input id="p-email" type="email" inputmode="email" autocomplete="email" ${val("email")}>
+      <div class="hint">${L("🔑 PIN'inizi unutursanız ya da telefonunuz değişirse QR bilgilerinizi bu adrese göndeririz.")}</div>
       <div class="row">
         <div><label for="p-city">${L("İl")}</label><input id="p-city" autocomplete="address-level1" ${val("city")}></div>
         <div><label for="p-district">${L("İlçe")}</label><input id="p-district" autocomplete="address-level2" ${val("district")}></div>
@@ -308,6 +329,7 @@ function showProfile(saved = false) {
     if (v.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.email)) return fail(L("E-posta adresi geçersiz."));
     store.set("profile", v);
     showProfile(true);
+    syncRecoveryEmail();
   });
 }
 
@@ -559,7 +581,30 @@ function showBackup(msg = "") {
       <textarea id="bk-in" rows="4" placeholder="${L("ARACQR1.…")}" style="font-family:monospace;font-size:12px"></textarea>
       <button class="btn" type="submit">${L("Geri yükle")}</button>
       <div class="hint">${L("Bu telefondaki QR'lar silinmez; yedekteki QR'lar listeye eklenir.")}</div>
+    </form>
+    <h2>${L("🔑 PIN'imi unuttum")}</h2>
+    <form class="opts" id="fg-form" style="padding-top:14px" novalidate>
+      <div id="fg-msg"></div>
+      <div class="hint" style="margin-top:0">${L("Yedek kodunuz yoksa: Profilim'e kaydettiğiniz e-postayı yazın. QR kodlarınızı, PIN'lerinizi ve geri yükleme kodunu bu adrese gönderelim.")}</div>
+      <label for="fg-email">${L("E-posta")}</label>
+      <input id="fg-email" type="email" inputmode="email" autocomplete="email" value="${esc(profile().email || "")}">
+      <button class="btn" type="submit">${L("PIN'imi e-postama gönder")}</button>
     </form>`, true, "", "profile");
+  document.getElementById("fg-form").addEventListener("submit", async ev => {
+    ev.preventDefault();
+    const box = document.getElementById("fg-msg"), email = document.getElementById("fg-email").value.trim();
+    const say = (t, ok) => { box.innerHTML = `<div class="msg ${ok ? "ok" : "err"}" role="${ok ? "status" : "alert"}">${esc(t)}</div>`; };
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return say(L("E-posta adresi geçersiz."));
+    ev.submitter && (ev.submitter.disabled = true);
+    let res;
+    try { res = await rpc("pin_forgot", {p_email: email, p_code: null, p_lang: LANG}); }
+    catch (e) { res = {error: e.status === 404 ? "mail_off" : "net"}; }
+    ev.submitter && (ev.submitter.disabled = false);
+    if (res?.ok) return say(L("Bu e-postaya kayıtlı QR varsa bilgileri birkaç dakika içinde gelir. Gelen kutunuzu ve gereksiz (spam) klasörünü kontrol edin; e-postadaki kodu yukarıdaki “Geri yükle” alanına yapıştırın."), true);
+    say({bad_email: L("E-posta adresi geçersiz."), busy: L("Çok fazla istek. Bir saat sonra tekrar deneyin."),
+      mail_off: L("E-posta gönderimi şu an kapalı. Instagram'dan @aracqr hesabına yazın, yardımcı olalım."),
+      net: L("Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edin.")}[res?.error] || L("Gönderilemedi, tekrar deneyin."));
+  });
   const copy = document.getElementById("bk-copy");
   if (copy) copy.onclick = async () => {
     const ta = document.getElementById("bk-code");
@@ -676,6 +721,7 @@ function showPhone(error = "", value = "") {
     }
     store.set("lastPhone", raw);
     saveTag({code: res.code, pin: res.pin, phone, design: draft.design, size: "60x90", paper: "a4", copies: 1, created: Date.now()});
+    syncRecoveryEmail();
     location.replace(`#/etiket/${encodeURIComponent(res.code)}/yeni`);
   });
 }
@@ -768,6 +814,8 @@ function showTag(code, isNew) {
         <dt>PIN</dt><dd><span class="secret" id="pin">••••••</span> <button type="button" class="btn ghost" id="showpin" style="display:inline;width:auto;margin:0 0 0 6px;padding:4px 12px;font-size:14px">${L("Göster")}</button></dd>
       </dl>
       <div class="hint">${L("PIN numarayı değiştirmek için gerekir ve bu telefonda saklanır. Telefon değiştirecekseniz <a href='#/yedek'>Profilim › Yedekle / taşı</a> ile QR'larınızı yeni telefona taşıyın.")}</div>
+      ${t.email ? `<div class="hint">${L("🔑 PIN'i unutursanız {email} adresine göndeririz.", {email: `<b>${esc(t.email)}</b>`})} <a href="#/profil">${L("Değiştir")}</a></div>`
+        : `<a class="msg info" style="display:block;text-decoration:none;color:inherit" href="#/profil">${L("🔑 <b>PIN'i unutmamak için e-postanızı ekleyin.</b> Unutursanız ya da telefonunuz değişirse QR bilgilerinizi e-postanıza göndeririz. ›")}</a>`}
       <a class="btn ghost" href="${esc(selfWhatsApp(t))}">${L("📲 PIN'imi WhatsApp'ta kendime gönder")}</a>
       <a class="btn ghost" href="#/etiket/${encodeURIComponent(t.code)}/numara">${L("Numarayı değiştir")}</a>
       <a class="btn ghost" href="${esc(qrLink(t.code))}">${L("QR'ı dene (okutan kişinin göreceği sayfa)")}</a>
@@ -1270,4 +1318,5 @@ syncOrdersToAndroid();
 syncTagsToAndroid();
 cloudRestore();
 setTimeout(retryOrderPdfs, 4000);
+setTimeout(syncRecoveryEmail, 6000);
 if (!store.get("onboarded", false)) showOnboarding();

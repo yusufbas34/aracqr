@@ -340,8 +340,10 @@ function showForm(code, {title, intro, button, overwrite}, error = "", phoneVal 
       <label for="pin">Karttaki PIN</label>
       <input id="pin" type="text" inputmode="numeric" maxlength="6" placeholder="6 haneli" autocomplete="off" required>
       <button class="btn" type="submit">${esc(button)}</button>
-    </form>`);
+    </form>
+    <p class="small" style="text-align:center"><a href="#" id="forgot">🔑 PIN'imi unuttum</a></p>`);
   const opts = {title, intro, button, overwrite};
+  document.getElementById("forgot").onclick = ev => { ev.preventDefault(); showForgot(code); };
   document.getElementById("f").addEventListener("submit", async ev => {
     ev.preventDefault();
     const raw = document.getElementById("phone").value;
@@ -367,6 +369,45 @@ function showForm(code, {title, intro, button, overwrite}, error = "", phoneVal 
       showForm(code, opts, "Bağlantı hatası. İnternetinizi kontrol edip tekrar deneyin.", raw);
     }
   });
+}
+
+// PIN'imi unuttum: uygulamadan oluşturulan QR'larda kayıtlı e-postaya gönderilir (supabase/pin.sql).
+// Yönetimden basılan etiketlerin PIN'i etiketle gelen kartta yazar; kart kaybolduysa bize yazılır.
+function showForgot(code, msg = "") {
+  const back = `<p class="small" style="text-align:center"><a href="#" id="fg-back">← Geri</a></p>`;
+  if (!SELF) {
+    show(`${plate(code)}
+      <h1>PIN'imi unuttum</h1>
+      <p>PIN, etiketle birlikte gelen kartta yazar. Kartı kaybettiyseniz Instagram'dan <a href="https://www.instagram.com/aracqr/" target="_blank" rel="noopener">@aracqr</a> hesabına QR kodunu (<b>${esc(code)}</b>) yazın; etiketin sahibi olduğunuzu doğruladıktan sonra yardımcı olalım.</p>
+      ${back}`);
+  } else {
+    show(`${plate(code)}
+      <h1>PIN'imi unuttum</h1>
+      <p>Uygulamada <b>Profilim</b>'e kaydettiğiniz e-postayı yazın. Bu QR o e-postaya kayıtlıysa QR kodunu ve PIN'i birkaç dakika içinde gönderelim.</p>
+      ${msg}
+      <form id="fg" novalidate>
+        <label for="fg-email">E-posta</label>
+        <input id="fg-email" type="email" inputmode="email" autocomplete="email" required>
+        <button class="btn" type="submit">PIN'imi e-postama gönder</button>
+      </form>
+      <p class="hint">PIN uygulamada da yazar: <b>QR'larım</b> › QR › <b>PIN · Göster</b>.</p>
+      ${back}`);
+    document.getElementById("fg").addEventListener("submit", async ev => {
+      ev.preventDefault();
+      const email = document.getElementById("fg-email").value.trim();
+      const say = (t, ok) => showForgot(code, `<div class="msg ${ok ? "ok" : "err"}">${esc(t)}</div>`);
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return say("E-posta adresi geçersiz.");
+      ev.submitter && (ev.submitter.disabled = true);
+      let res;
+      try { res = await rpc("pin_forgot", {p_email: email, p_code: code, p_lang: "tr"}); }
+      catch (e) { res = {error: "net"}; }
+      if (res?.ok) return say("Bu QR bu e-postaya kayıtlıysa PIN birkaç dakika içinde gelir. Gelen kutunuzu ve gereksiz (spam) klasörünü kontrol edin.", true);
+      say({bad_email: "E-posta adresi geçersiz.", busy: "Çok fazla istek. Bir saat sonra tekrar deneyin.",
+        mail_off: "E-posta gönderimi şu an kapalı. Instagram'dan @aracqr hesabına yazın, yardımcı olalım.",
+        net: "Bağlantı hatası. İnternetinizi kontrol edip tekrar deneyin."}[res?.error] || "Gönderilemedi, tekrar deneyin.");
+    });
+  }
+  document.getElementById("fg-back").onclick = ev => { ev.preventDefault(); route(); };
 }
 
 const CLAIM = {title: "Bu etiketi numaranıza bağlayın", button: "Numarayı kaydet", overwrite: false,
@@ -1738,6 +1779,19 @@ async function showSettings(requests, error = "") {
       </details>
       <label for="s-resend">Resend API anahtarı</label><input id="s-resend" autocomplete="off" placeholder="re_…" value="${esc(shop.resend_api_key || "")}">
       <label for="s-notify">Bildirim e-postası</label><input id="s-notify" type="email" value="${esc(shop.notify_email || "")}">
+      ${"mail_from" in shop ? `
+      <h2>PIN'imi unuttum e-postası</h2>
+      <p class="hint">Kullanıcı PIN'ini unutunca QR kodu ve PIN, uygulamada kaydettiği e-postaya yukarıdaki Resend anahtarıyla gönderilir.</p>
+      <details class="howto"><summary>Müşterilere e-posta gidebilmesi için (bir kez)</summary>
+        <ol>
+          <li>Resend'de <b>Domains › Add Domain</b>: <b>bulqr.com.tr</b> yazın.</li>
+          <li>Resend'in verdiği DNS kayıtlarını (TXT/MX) <b>Cloudflare › bulqr.com.tr › DNS</b>'e ekleyin (Proxy kapalı, gri bulut).</li>
+          <li>Resend'de alan adı <b>Verified</b> olunca aşağıya <b>Araç QR &lt;pin@bulqr.com.tr&gt;</b> yazıp Kaydet'e basın.</li>
+        </ol>
+        <p class="hint">Gönderen adresi boşken e-postalar onboarding@resend.dev'den gider ve yalnızca Resend hesabınızın e-postasına ulaşır.</p>
+      </details>
+      <label for="s-from">Gönderen adresi</label><input id="s-from" autocomplete="off" placeholder="Araç QR <pin@bulqr.com.tr>" value="${esc(shop.mail_from || "")}">
+      ` : setupHtml("“PIN'imi unuttum” e-postası kurulu değil.", "pin.sql")}
       ` : `<div class="msg err">Bildirimler için veritabanını güncelleyin: ${setupHtml("Sipariş sistemi güncellemesi var.", "siparis.sql")}</div>`}
 
       <button class="btn" type="submit">Kaydet</button>
@@ -1783,6 +1837,11 @@ async function showSettings(requests, error = "") {
       if (notify.p_notify_email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(notify.p_notify_email)) return showSettings(requests, "Bildirim e-postası geçersiz.");
       await rpc("admin_shop_set", {p_key: adminKey, p_active: active, p_price: price, p_iban: shop.iban, p_account_name: shop.account_name,
         p_bank_name: shop.bank_name, p_printer_email: g("s-printer"), p_shipping_text: g("s-ship"), ...notify});
+      if (document.getElementById("s-from")) {
+        const from = g("s-from");
+        if (from && !/^[^<>]*<?[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+>?$/.test(from)) return showSettings(requests, "Gönderen adresi geçersiz. Örnek: Araç QR <pin@bulqr.com.tr>");
+        await rpc("admin_mail_from_set", {p_key: adminKey, p_from: from});
+      }
       await showSettings(requests);
       toast(active ? "Kaydedildi. Satış açık." : "Kaydedildi. Satış kapalı.");
     } catch (e) { showSettings(requests, "Kaydedilemedi: " + e.message); }
