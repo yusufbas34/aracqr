@@ -6,8 +6,16 @@
 <meta name="robots" content="noindex">
 <title>Araç QR kutu kalıbı</title>
 <link rel="icon" type="image/svg+xml" href="app/logo.svg">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=Barlow+Condensed:wght@700&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:"Barlow";font-weight:400;src:url(app/fonts/barlow-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow";font-weight:400;src:url(app/fonts/barlow-latin-ext-400-normal.woff2) format("woff2");unicode-range:U+0100-02AF,U+1E00-1EFF}
+@font-face{font-family:"Barlow";font-weight:600;src:url(app/fonts/barlow-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow";font-weight:600;src:url(app/fonts/barlow-latin-ext-600-normal.woff2) format("woff2");unicode-range:U+0100-02AF,U+1E00-1EFF}
+@font-face{font-family:"Barlow";font-weight:700;src:url(app/fonts/barlow-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow";font-weight:700;src:url(app/fonts/barlow-latin-ext-700-normal.woff2) format("woff2");unicode-range:U+0100-02AF,U+1E00-1EFF}
+@font-face{font-family:"Barlow Condensed";font-weight:700;src:url(app/fonts/barlow-condensed-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-weight:700;src:url(app/fonts/barlow-condensed-latin-ext-700-normal.woff2) format("woff2");unicode-range:U+0100-02AF,U+1E00-1EFF}
+</style>
 <link rel="stylesheet" href="app/sticker.css">
 <script src="app/vendor/qrcode.js"></script>
 <script src="app/sticker.js"></script>
@@ -29,28 +37,36 @@ body{margin:0;background:#eef0f3;font-family:"Barlow",system-ui,sans-serif;color
 .box svg.lines{position:absolute;left:0;top:0;overflow:visible;z-index:3;pointer-events:none}
 .pn{position:absolute;overflow:hidden}
 /* panel grafikleri */
-.front{background:linear-gradient(160deg,#0a3a9e,#1e5fd8 70%,#3c7bff);color:#fff;display:flex;flex-direction:column;align-items:center;padding:4mm 3.5mm;gap:2mm;text-align:center}
+.front{background:linear-gradient(160deg,#0a3a9e,#1e5fd8 70%,#3c7bff);color:#fff;display:flex;flex-direction:column;align-items:center;padding:3.5mm 3.5mm 3mm;gap:1.6mm;text-align:center}
 .front .fbrand{display:flex;align-items:center;gap:2mm;font-weight:700;font-size:4.6mm}
 .front .fbrand img{width:7mm;height:7mm;border-radius:1.6mm;box-shadow:0 0 0 .4mm #ffffff66}
-.front h1{margin:0;font:700 7.4mm/1 "Barlow Condensed","Barlow",sans-serif}
+.front h1{margin:0;font:700 7mm/1 "Barlow Condensed","Barlow",sans-serif}
 .front h1 span{color:#ffd23f}
 .front .demo{display:flex;align-items:center;justify-content:center;gap:1mm;margin-top:1mm}
 .front .sample{transform:rotate(-4deg);filter:drop-shadow(0 1.5mm 2mm rgba(0,0,0,.35));flex:none}
 .front .arrow{display:flex;flex-direction:column;align-items:center;font-size:4mm;line-height:1;color:#ffd23f;font-weight:700}
 .front .arrow span{font-size:2.1mm;letter-spacing:.05em;text-transform:uppercase;margin-bottom:.4mm}
 .front .phone{width:var(--pw);flex:none;background:#1b1f27;border-radius:4mm;padding:1mm;box-shadow:0 0 0 .3mm #3a404c,0 2mm 3.5mm rgba(0,0,0,.45);transform:rotate(3deg)}
-.front .scr{position:relative;background:#eef0f3;border-radius:3mm;padding:3.2mm 1.6mm 2mm;display:flex;flex-direction:column;gap:1.2mm;color:#111418;text-align:center;overflow:hidden}
+.front .scr{position:relative;background:#eef0f3;border-radius:3mm;padding:2.8mm 1.5mm 1.6mm;display:flex;flex-direction:column;gap:.9mm;color:#111418;text-align:center;overflow:hidden}
 .front .scr .notch{position:absolute;top:.9mm;left:50%;width:6mm;height:1.2mm;margin-left:-3mm;border-radius:1mm;background:#1b1f27}
 .front .scr .pl{display:flex;align-items:stretch;border:.35mm solid #111418;border-radius:.9mm;overflow:hidden;background:#fff}
 .front .scr .pl i{font-style:normal;background:#0a3a9e;color:#fff;font:700 1.3mm/1 "Barlow",sans-serif;padding:0 .7mm .5mm;display:flex;align-items:flex-end}
 .front .scr .pl span{flex:1;text-align:center;font:700 2.4mm/1 "Barlow Condensed","Barlow",sans-serif;letter-spacing:.08em;padding:.9mm 0}
 .front .scr .ttl{font-weight:700;font-size:2.15mm;line-height:1.15}
-.front .scr .call{background:#0c7a43;color:#fff;border-radius:1.2mm;font-weight:700;font-size:2.5mm;padding:1.4mm 0;box-shadow:0 .4mm 0 #075c31}
+.front .scr .call{background:#0c7a43;color:#fff;border-radius:1.2mm;font-weight:700;font-size:2.4mm;padding:1.1mm 0;box-shadow:0 .4mm 0 #075c31}
 .front .scr .or{font-size:1.35mm;font-weight:700;color:#3b4252}
 .front .scr .qm{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.8mm}
-.front .scr .qm span{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.3mm;height:6.2mm;background:#fff;border:.25mm solid #c9ced6;border-radius:1mm;font-size:1.2mm;line-height:1.1;font-weight:700;padding:0 .3mm}
+.front .scr .qm span{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.3mm;height:5.2mm;background:#fff;border:.25mm solid #c9ced6;border-radius:1mm;font-size:1.2mm;line-height:1.1;font-weight:700;padding:0 .3mm}
 .front .scr .qm em{font-style:normal;font-size:2.1mm;line-height:1}
-.front .inside{margin-top:auto;background:#ffd23f;color:#2b2200;border-radius:1.5mm;padding:1.2mm 2.5mm;font-weight:700;font-size:2.6mm;line-height:1.2}
+.front .feats{margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:1.5mm;width:100%}
+.front .feats div{display:flex;align-items:center;gap:1.2mm;background:rgba(255,255,255,.14);border:.3mm solid rgba(255,255,255,.35);border-radius:1.6mm;padding:1.2mm 1.4mm;text-align:left}
+.front .feats i{font-style:normal;font-size:3mm;line-height:1}
+.front .feats span{display:flex;flex-direction:column;font-size:1.6mm;line-height:1.2;opacity:.95}
+.front .feats b{font-size:2.05mm;color:#fff;white-space:nowrap}
+.front .scr .via{display:grid;grid-template-columns:1fr 1fr;gap:.8mm}
+.front .scr .via span{border:.3mm solid #c9ced6;border-radius:.8mm;background:#fff;font-size:1.3mm;font-weight:700;padding:.6mm 0}
+.front .scr .via span.on{border-color:#0a3a9e;background:#e8efff;color:#0a3a9e}
+.front .inside{margin-top:1.5mm;background:#ffd23f;color:#2b2200;border-radius:1.5mm;padding:1.2mm 2.5mm;font-weight:700;font-size:2.6mm;line-height:1.2}
 .back{background:#fff;padding:3.5mm;display:flex;flex-direction:column;gap:2mm;font-size:2.75mm;line-height:1.3}
 .back h2{margin:0;font:700 4.6mm/1.05 "Barlow Condensed","Barlow",sans-serif;color:#0a3a9e}
 .back ol,.back ul{margin:0;padding-left:4mm;display:flex;flex-direction:column;gap:.7mm}
@@ -116,7 +132,7 @@ function render() {
     <div class="qrs"><div>${qrSvg(APP_URL)}<b>Uygulamayı indirin</b></div><div class="ig">${qrSvg(IG)}<b>Instagram</b>@aracqr</div></div>`);
   html += P("side", x.side1, y0, D, H, `<span>ARAÇ QR · HATALI PARK, BENİ ARA</span>`);
   // Sticker ve yanında QR okutulunca açılan arama ekranı (telefon görseli) yan yana sığsın
-  const zoom = Math.min(1, (W - 8) * .44 / s.w, (H - 50) / s.h), phoneW = Math.min(30, W - 8 - s.w * zoom - 6);
+  const zoom = Math.min(1, (W - 8) * .42 / s.w, (H - 66) / s.h), phoneW = Math.min(25, W - 8 - s.w * zoom - 6);
   html += P("front", x.front, y0, W, H, `<div class="fbrand"><img src="app/logo.svg" alt="">Araç QR</div>
     <h1>Hatalı park ettiğinde<br><span>seni arasınlar</span></h1>
     <div class="demo">
@@ -128,11 +144,16 @@ function render() {
         <div class="ttl">Araç sahibini arayın</div>
         <div class="call">📞 Ara</div>
         <div class="or">Ya da hazır mesaj gönderin</div>
+        <div class="via"><span class="on">SMS</span><span>WhatsApp</span></div>
         <div class="qm">
           <span><em>🚗</em>Önümü kapattınız</span><span><em>💡</em>Farlarınız açık</span>
           <span><em>🪟</em>Camınız açık</span><span><em>💥</em>Aracınıza çarpıldı</span>
         </div>
       </div></div>
+    </div>
+    <div class="feats">
+      <div><i>🔕</i><span><b>Rahatsız Etmeyin</b>Belirli saatlerde arama yok, sadece mesaj</span></div>
+      <div><i>💬</i><span><b>SMS · WhatsApp</b>Tek dokunuşla hazır mesaj gönderilir</span></div>
     </div>
     <div class="inside">İçinde: 1 QR sticker (${String(s.w / 10).replace(".", ",")}×${String(s.h / 10).replace(".", ",")} cm) + PIN kartı</div>`);
   html += P("side", x.side2, y0, D, H, `<span>NUMARAN CAMDA YAZMAZ</span>`);
