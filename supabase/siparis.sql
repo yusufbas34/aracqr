@@ -28,6 +28,9 @@ alter table public.shop_settings add column if not exists telegram_bot_token tex
 alter table public.shop_settings add column if not exists telegram_chat_id text;
 alter table public.shop_settings add column if not exists resend_api_key text;
 alter table public.shop_settings add column if not exists notify_email text;
+-- sürüm 10: e-postaların gönderen adresi (Resend'de doğrulanmış alan adı, ör. Araç QR <pin@bulqr.com.tr>).
+-- Boşken onboarding@resend.dev kullanılır; o adres yalnızca Resend hesabının sahibine e-posta gönderebilir.
+alter table public.shop_settings add column if not exists mail_from text;
 alter table public.shop_settings enable row level security;
 revoke all on public.shop_settings from anon, authenticated;
 
@@ -78,7 +81,7 @@ alter table public.orders add column if not exists pdf_sent_at timestamptz;  -- 
 alter table public.orders add constraint orders_status_check
   check (status in ('yeni', 'odeme_bekleniyor', 'odeme_bildirildi', 'onaylandi', 'baskida', 'kargolandi', 'iptal'));
 
-create or replace function public.aracqr_shop_version() returns integer language sql immutable as 'select 9';
+create or replace function public.aracqr_shop_version() returns integer language sql immutable as 'select 10';
 
 -- ---------------------------------------------------------------- bildirim
 -- Telegram ve/veya e-posta (Resend) gönderir. Hata olursa siparişi bozmaz, yalnızca uyarı yazar.
@@ -102,7 +105,7 @@ begin
   if coalesce(s.resend_api_key, '') <> '' and coalesce(s.notify_email, '') <> '' then
     execute 'select net.http_post(url := $1, body := $2, headers := $3)'
       using 'https://api.resend.com/emails',
-            jsonb_build_object('from', 'Araç QR <onboarding@resend.dev>', 'to', jsonb_build_array(s.notify_email),
+            jsonb_build_object('from', coalesce(nullif(trim(s.mail_from), ''), 'Araç QR <onboarding@resend.dev>'), 'to', jsonb_build_array(s.notify_email),
               'subject', p_subject, 'text', p_text),
             jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || s.resend_api_key);
     sent := true;
@@ -225,7 +228,7 @@ begin
   if coalesce(s.resend_api_key, '') <> '' and coalesce(s.notify_email, '') <> '' then
     execute 'select net.http_post(url := $1, body := $2, headers := $3)'
       using 'https://api.resend.com/emails',
-            jsonb_build_object('from', 'Araç QR <onboarding@resend.dev>', 'to', jsonb_build_array(s.notify_email),
+            jsonb_build_object('from', coalesce(nullif(trim(s.mail_from), ''), 'Araç QR <onboarding@resend.dev>'), 'to', jsonb_build_array(s.notify_email),
               'subject', 'Araç QR: baskı PDF''i ' || o.code, 'text', v_caption || E'\n\nPDF ektedir: ' || v_url,
               'attachments', jsonb_build_array(jsonb_build_object('filename', 'baski-' || o.code || '.pdf', 'path', v_url))),
             jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || s.resend_api_key);
