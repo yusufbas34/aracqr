@@ -146,7 +146,7 @@ Toplanan veri türleri:
 | Tür | Toplanıyor | Paylaşılıyor* | İsteğe bağlı mı | Amaç |
 |---|---|---|---|---|
 | Kişisel bilgi › Ad | Evet (yalnızca siparişte) | Hayır | İsteğe bağlı | Uygulama işlevi |
-| Kişisel bilgi › E-posta | Evet (yalnızca siparişte) | Hayır | İsteğe bağlı | Uygulama işlevi, iletişim |
+| Kişisel bilgi › E-posta adresi | Evet (siparişte ya da Profilim'e yazılırsa) | Hayır | İsteğe bağlı | Uygulama işlevi, Hesap yönetimi (PIN kurtarma), iletişim |
 | Kişisel bilgi › Telefon numarası | Evet | Hayır | Zorunlu (uygulamanın amacı) | Uygulama işlevi |
 | Kişisel bilgi › Adres | Evet (yalnızca siparişte) | Hayır | İsteğe bağlı | Uygulama işlevi (kargo) |
 | Uygulama etkinliği › Diğer işlemler (okutma zamanı) | Evet | Hayır | Zorunlu | Uygulama işlevi (okutma sayacı) |
@@ -190,6 +190,9 @@ QR'ı okutan kişinin sayfası telefonunun diline göre Türkçe, İngilizce, Ar
 
 ★ Silseniz de kaybolmaz
 Uygulamayı silip yeniden kursanız da QR'larınız otomatik geri gelir. Yeni telefona yedek koduyla tek seferde taşıyın.
+
+★ PIN'inizi unutsanız da sorun yok
+E-postanızı ekleyin: QR kodlarınız ve PIN'leriniz e-postanıza gelsin. PIN'i unutursanız "PIN'imi unuttum" ile tekrar gönderelim.
 
 ★ Okutma sayacı ve bildirimler
 QR'ınız ilk kez okutulunca haber verelim, kaç kez okutulduğunu görün. Siparişinizin durumu değişince bildirim alın.
@@ -241,6 +244,7 @@ With Araç QR you stick your own QR sticker on your car. The person you blocked 
 ★ Turn your QR off and on: car sold, sticker lost, on holiday.
 ★ Anyone can scan: the scan page opens in Turkish, English, Arabic or Russian.
 ★ Never lost: reinstall the app and your QRs come back automatically.
+★ Forgot your PIN? Add your email and we'll send your QR codes and PINs to your inbox.
 ★ Scan counter and a notification when your QR is scanned for the first time.
 
 No account needed. No ads. Delete your data any time in the app.
@@ -271,6 +275,11 @@ Google Play'e çıkması için 14 gün test eden 12 kişi lazım. 5 dakikanı al
 
 Çok teşekkürler! 💙
 ```
+
+### Sürüm notu: PIN kurtarma güncellemesi (derleme 46 ve sonrası)
+
+- **Türkçe:** `Yeni: PIN'imi unuttum. E-postanızı ekleyin, QR kodlarınız ve PIN'leriniz e-postanıza gelsin. Yeni adres: arac.bulqr.com.tr`
+- **English:** `New: Forgot PIN. Add your email and get your QR codes and PINs in your inbox. New address: arac.bulqr.com.tr`
 
 ### Sürüm notu (kapalı test ve ilk yayın)
 
