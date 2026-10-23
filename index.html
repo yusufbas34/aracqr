@@ -1834,7 +1834,12 @@ async function showSettings(requests, error = "") {
     try {
       const notify = document.getElementById("s-tg-token") ? {p_telegram_bot_token: g("s-tg-token"), p_telegram_chat_id: g("s-tg-chat"),
         p_resend_api_key: g("s-resend"), p_notify_email: g("s-notify")} : {};
-      if (notify.p_notify_email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(notify.p_notify_email)) return showSettings(requests, "Bildirim e-postası geçersiz.");
+      // "Ad <e@posta.com>" ya da görünmez karakterli yapıştırmalarda yalnızca adresi al
+      if (notify.p_notify_email) {
+        const m = notify.p_notify_email.replace(/[\u200b-\u200f\u2060\ufeff]/g, "").match(/[^\s<>@"',;]+@[^\s<>@"',;]+\.[^\s<>@"',;]+/);
+        if (!m) return showSettings(requests, `Bildirim e-postası geçersiz: “${notify.p_notify_email}”. Yalnızca adresi yazın, ör. ornek@gmail.com`);
+        notify.p_notify_email = m[0];
+      }
       await rpc("admin_shop_set", {p_key: adminKey, p_active: active, p_price: price, p_iban: shop.iban, p_account_name: shop.account_name,
         p_bank_name: shop.bank_name, p_printer_email: g("s-printer"), p_shipping_text: g("s-ship"), ...notify});
       if (document.getElementById("s-from")) {
