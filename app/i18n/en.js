@@ -419,4 +419,8 @@ I18N.en = {
   "Bu e-postaya kayıtlı QR varsa bilgileri birkaç dakika içinde gelir. Gelen kutunuzu ve gereksiz (spam) klasörünü kontrol edin; e-postadaki kodu yukarıdaki “Geri yükle” alanına yapıştırın.": "If any QR is registered to this email, the details will arrive within a few minutes. Check your inbox and spam folder, then paste the code from the email into “Restore” above.",
   "Çok fazla istek. Bir saat sonra tekrar deneyin.": "Too many requests. Try again in an hour.",
   "E-posta gönderimi şu an kapalı. Instagram'dan @aracqr hesabına yazın, yardımcı olalım.": "Email sending is currently off. Message @aracqr on Instagram and we'll help.",
+  "📧 QR bilgileriniz {email} adresine gönderildi.": "📧 Your QR details were sent to {email}.",
+  "📧 QR bilgilerinizi e-postanıza gönderelim": "📧 Let us email you your QR details",
+  "ornek@gmail.com": "name@gmail.com",
+  "QR kodu ve PIN e-postanızda dursun; PIN'i unutursanız ya da telefonunuz değişirse geri alırsınız.": "Keep your QR code and PIN in your inbox; if you forget the PIN or change phones, you can get them back.",
 };

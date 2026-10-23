@@ -419,4 +419,8 @@ I18N.ru = {
   "Bu e-postaya kayıtlı QR varsa bilgileri birkaç dakika içinde gelir. Gelen kutunuzu ve gereksiz (spam) klasörünü kontrol edin; e-postadaki kodu yukarıdaki “Geri yükle” alanına yapıştırın.": "Если к этому e-mail привязан QR, данные придут в течение нескольких минут. Проверьте «Входящие» и «Спам», затем вставьте код из письма в поле «Восстановить» выше.",
   "Çok fazla istek. Bir saat sonra tekrar deneyin.": "Слишком много запросов. Попробуйте через час.",
   "E-posta gönderimi şu an kapalı. Instagram'dan @aracqr hesabına yazın, yardımcı olalım.": "Отправка писем сейчас недоступна. Напишите @aracqr в Instagram — мы поможем.",
+  "📧 QR bilgileriniz {email} adresine gönderildi.": "📧 Данные ваших QR отправлены на {email}.",
+  "📧 QR bilgilerinizi e-postanıza gönderelim": "📧 Отправим данные QR вам на почту",
+  "ornek@gmail.com": "name@gmail.com",
+  "QR kodu ve PIN e-postanızda dursun; PIN'i unutursanız ya da telefonunuz değişirse geri alırsınız.": "Пусть QR-код и PIN хранятся в почте: если забудете PIN или смените телефон, сможете их вернуть.",
 };

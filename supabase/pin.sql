@@ -21,7 +21,7 @@ create index if not exists pin_mail_log_idx on public.pin_mail_log (email, creat
 alter table public.pin_mail_log enable row level security;  -- politika yok: doğrudan erişim kapalı
 revoke all on public.pin_mail_log from anon, authenticated;
 
-create or replace function public.aracqr_pin_version() returns integer language sql immutable as 'select 1';
+create or replace function public.aracqr_pin_version() returns integer language sql immutable as 'select 2';
 
 create or replace function public.aracqr_email_ok(p_email text) returns boolean language sql immutable
   as $q$ select coalesce(p_email, '') ~ '^[^@\s<>",;]+@[^@\s<>",;]+\.[^@\s<>",;]+$' and length(p_email) <= 254 $q$;
@@ -67,10 +67,10 @@ end $$;
 create or replace function public.aracqr_b64url(p text) returns text language sql immutable
   as $q$ select rtrim(translate(replace(encode(convert_to(p, 'UTF8'), 'base64'), E'\n', ''), '+/', '-_'), '=') $q$;
 
--- PIN'imi unuttum. p_code verilirse yalnızca o QR, verilmezse bu e-postaya kayıtlı tüm QR'lar gönderilir.
--- Kimin hangi e-postayı kaydettiği anlaşılmasın diye eşleşme olsa da olmasa da aynı yanıt döner: {ok:true}.
--- Hata: bad_email | busy (çok sık istek) | mail_off (e-posta gönderimi kurulu değil)
-create or replace function public.pin_forgot(p_email text, p_code text default null, p_lang text default 'tr')
+-- QR bilgileri e-postası: e-postaya kayıtlı QR'ların kodu, PIN'i, numara değiştirme bağlantısı ve uygulamaya geri
+-- yükleme kodu. p_code verilirse yalnızca o QR. p_welcome: QR'a e-posta ilk bağlandığında giden "bilgileriniz" e-postası,
+-- değilse "PIN'imi unuttum" yanıtı. Sınır: aynı e-postaya saatte 3, toplamda saatte 60. {ok} ya da {ok:false, error}
+create or replace function public.aracqr_tags_mail(p_email text, p_code text, p_lang text, p_welcome boolean)
 returns json
 language plpgsql security definer set search_path = public
 as $$
@@ -82,6 +82,7 @@ declare
   v_list text := '';
   v_tags jsonb := '[]'::jsonb;
   v_n integer := 0;
+  v_restore text;
   t record;
 begin
   if not public.aracqr_email_ok(v_email) then return json_build_object('ok', false, 'error', 'bad_email'); end if;
@@ -90,7 +91,6 @@ begin
     return json_build_object('ok', false, 'error', 'mail_off');
   end if;
   delete from pin_mail_log where created_at < now() - interval '2 days';
-  -- sınır: aynı e-postaya saatte 3, toplamda saatte 60 istek
   if (select count(*) from pin_mail_log where email = v_email and created_at > now() - interval '1 hour') >= 3
      or (select count(*) from pin_mail_log where created_at > now() - interval '1 hour') >= 60 then
     return json_build_object('ok', false, 'error', 'busy');
@@ -108,23 +108,59 @@ begin
 
   insert into pin_mail_log (email, sent) values (v_email, v_n > 0);
   if v_n = 0 then return json_build_object('ok', true); end if;
+  v_restore := 'ARACQR1.' || public.aracqr_b64url(json_build_object('t', v_tags, 'o', '[]'::json)::text);
 
   perform public.aracqr_mail(v_email,
-    case when v_tr then 'Araç QR · PIN''iniz' else 'Araç QR · your PIN' end,
+    case when p_welcome and v_tr then 'Araç QR · QR bilgileriniz'
+         when p_welcome then 'Araç QR · your QR details'
+         when v_tr then 'Araç QR · PIN''iniz' else 'Araç QR · your PIN' end,
     case when v_tr then
-      'Merhaba,' || E'\n\n' || 'PIN''imi unuttum isteğiniz üzerine Araç QR bilgileriniz:' || E'\n' || v_list || E'\n' ||
+      'Merhaba,' || E'\n\n' ||
+      case when p_welcome then 'Araç QR bilgileriniz aşağıda. Bu e-postayı saklayın: PIN''inizi unutursanız ya da telefonunuz değişirse işinize yarar.'
+           else 'PIN''imi unuttum isteğiniz üzerine Araç QR bilgileriniz:' end || E'\n' || v_list || E'\n' ||
       'QR''larınızı uygulamaya geri eklemek için aşağıdaki kodu kopyalayın; uygulamada Profilim › Yedekle / taşı › Geri yükle''ye yapıştırın:' ||
-      E'\n\n' || 'ARACQR1.' || public.aracqr_b64url(json_build_object('t', v_tags, 'o', '[]'::json)::text) || E'\n\n' ||
+      E'\n\n' || v_restore || E'\n\n' ||
       '🔒 Bu e-postayı kimseyle paylaşmayın: PIN''i bilen numaranızı değiştirebilir.' || E'\n' ||
-      'Bu isteği siz yapmadıysanız e-postayı silebilirsiniz; bilgileriniz değişmedi.' || E'\n\n' || 'Araç QR · https://arac.bulqr.com.tr'
+      case when p_welcome then 'Bu e-postayı Araç QR uygulamasında Profilim''e kaydettiğiniz için aldınız.'
+           else 'Bu isteği siz yapmadıysanız e-postayı silebilirsiniz; bilgileriniz değişmedi.' end ||
+      E'\n\n' || 'Araç QR · https://arac.bulqr.com.tr'
     else
-      'Hello,' || E'\n\n' || 'You asked for your Araç QR PIN. Here are your details:' || E'\n' || v_list || E'\n' ||
+      'Hello,' || E'\n\n' ||
+      case when p_welcome then 'Here are your Araç QR details. Keep this email: it helps if you forget your PIN or change phones.'
+           else 'You asked for your Araç QR PIN. Here are your details:' end || E'\n' || v_list || E'\n' ||
       'To add your QR codes back to the app, copy the code below and paste it in Profile › Back up / move › Restore:' ||
-      E'\n\n' || 'ARACQR1.' || public.aracqr_b64url(json_build_object('t', v_tags, 'o', '[]'::json)::text) || E'\n\n' ||
+      E'\n\n' || v_restore || E'\n\n' ||
       '🔒 Do not share this email: anyone with the PIN can change your number.' || E'\n' ||
-      'If you did not request this, you can delete this email; nothing was changed.' || E'\n\n' || 'Araç QR · https://arac.bulqr.com.tr'
+      case when p_welcome then 'You received this email because you saved it in your Araç QR profile.'
+           else 'If you did not request this, you can delete this email; nothing was changed.' end ||
+      E'\n\n' || 'Araç QR · https://arac.bulqr.com.tr'
     end);
   return json_build_object('ok', true);
+end $$;
+revoke all on function public.aracqr_tags_mail(text, text, text, boolean) from public, anon, authenticated;  -- yalnızca içeriden
+
+-- PIN'imi unuttum. p_code verilirse yalnızca o QR, verilmezse bu e-postaya kayıtlı tüm QR'lar gönderilir.
+-- Kimin hangi e-postayı kaydettiği anlaşılmasın diye eşleşme olsa da olmasa da aynı yanıt döner: {ok:true}.
+-- Hata: bad_email | busy (çok sık istek) | mail_off (e-posta gönderimi kurulu değil)
+create or replace function public.pin_forgot(p_email text, p_code text default null, p_lang text default 'tr')
+returns json
+language sql security definer set search_path = public
+as $$ select public.aracqr_tags_mail(p_email, p_code, p_lang, false) $$;
+
+-- QR'a e-posta bağlanınca (uygulama, PIN ile): o e-postaya kayıtlı tüm QR'ların bilgileri tek e-postada gönderilir
+create or replace function public.tags_welcome_mail(p_code text, p_pin text, p_lang text default 'tr')
+returns json
+language plpgsql security definer set search_path = public
+as $$
+declare
+  v_code text := upper(trim(coalesce(p_code, '')));
+  v_err text := public.self_tag_check_pin(v_code, p_pin);
+  v_email text;
+begin
+  if v_err is not null then return json_build_object('ok', false, 'error', v_err); end if;
+  select email into v_email from self_tags where code = v_code;
+  if v_email is null then return json_build_object('ok', false, 'error', 'no_email'); end if;
+  return public.aracqr_tags_mail(v_email, null, p_lang, true);
 end $$;
 
 -- Yönetim: PIN e-postalarının gönderen adresi (Resend'de doğrulanmış alan adından olmalı). Boş = onboarding@resend.dev
@@ -151,11 +187,13 @@ end $$;
 revoke all on function public.aracqr_b64url(text) from public, anon, authenticated;
 revoke all on function public.self_tag_email_set(text, text, text) from public;
 revoke all on function public.pin_forgot(text, text, text) from public;
+revoke all on function public.tags_welcome_mail(text, text, text) from public;
 revoke all on function public.admin_mail_from_set(text, text) from public;
 revoke all on function public.admin_pin_stats(text) from public;
 grant execute on function public.aracqr_pin_version() to anon, authenticated;
 grant execute on function public.aracqr_email_ok(text) to anon, authenticated;
 grant execute on function public.self_tag_email_set(text, text, text) to anon, authenticated;
 grant execute on function public.pin_forgot(text, text, text) to anon, authenticated;
+grant execute on function public.tags_welcome_mail(text, text, text) to anon, authenticated;
 grant execute on function public.admin_mail_from_set(text, text) to anon, authenticated;
 grant execute on function public.admin_pin_stats(text) to anon, authenticated;

@@ -419,4 +419,8 @@ I18N.ar = {
   "Bu e-postaya kayıtlı QR varsa bilgileri birkaç dakika içinde gelir. Gelen kutunuzu ve gereksiz (spam) klasörünü kontrol edin; e-postadaki kodu yukarıdaki “Geri yükle” alanına yapıştırın.": "إذا كان هناك رمز QR مسجل بهذا البريد فستصلك البيانات خلال دقائق. تحقق من البريد الوارد ومجلد الرسائل غير المرغوب فيها، ثم الصق الرمز من الرسالة في خانة «استعادة» أعلاه.",
   "Çok fazla istek. Bir saat sonra tekrar deneyin.": "طلبات كثيرة جدًا. حاول مرة أخرى بعد ساعة.",
   "E-posta gönderimi şu an kapalı. Instagram'dan @aracqr hesabına yazın, yardımcı olalım.": "إرسال البريد متوقف حاليًا. راسل حساب ‎@aracqr على إنستغرام وسنساعدك.",
+  "📧 QR bilgileriniz {email} adresine gönderildi.": "📧 تم إرسال بيانات رموز QR إلى {email}.",
+  "📧 QR bilgilerinizi e-postanıza gönderelim": "📧 دعنا نرسل بيانات رمز QR إلى بريدك",
+  "ornek@gmail.com": "name@gmail.com",
+  "QR kodu ve PIN e-postanızda dursun; PIN'i unutursanız ya da telefonunuz değişirse geri alırsınız.": "احتفظ برمز QR ورقم PIN في بريدك؛ إذا نسيت PIN أو غيّرت هاتفك يمكنك استعادتهما.",
 };

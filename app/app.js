@@ -76,13 +76,20 @@ async function syncRecoveryEmail() {
   const todo = tags().filter(t => (t.email || "") !== want);
   if (!todo.length) return;
   emailSyncing = true;
+  let added = null;  // e-postası yeni bağlanan bir QR: tüm QR bilgileri tek e-postada gönderilir
   try {
     for (const t of todo) {
       let res;
       try { res = await rpc("self_tag_email_set", {p_code: t.code, p_pin: t.pin, p_email: want || null}); }
       catch (e) { break; }  // internet yok ya da sunucu henüz güncellenmedi: sonra tekrar denenir
       const cur = findTag(t.code);
-      if (res?.ok && cur) saveTag({...cur, email: res.email || ""});
+      if (res?.ok && cur) { saveTag({...cur, email: res.email || ""}); if (res.email) added = cur; }
+    }
+    if (added) {
+      try {
+        const r = await rpc("tags_welcome_mail", {p_code: added.code, p_pin: added.pin, p_lang: LANG});
+        if (r?.ok) toast(L("📧 QR bilgileriniz {email} adresine gönderildi.", {email: want}), 4500);
+      } catch (e) { /* sunucu güncel değilse e-posta gitmez; kurtarma yine çalışır */ }
     }
   } finally { emailSyncing = false; }
 }
@@ -772,7 +779,13 @@ function showTag(code, isNew) {
   const fit = Math.min(1, (Math.min(innerWidth, 560) - 64) / (w * 96 / 25.4));
   show(isNew ? L("3. Yazdırın") : (t.name || t.code), `
     ${isNew ? `<div class="steps"><span class="on"></span><span class="on"></span><span class="on"></span></div>
-      <div class="msg ok"><b>${L("QR'ınız hazır!")}</b> ${L("Okutan kişi {phone} numarasına ulaşır.", {phone: esc(prettyPhone(t.phone))})}</div>` : ""}
+      <div class="msg ok"><b>${L("QR'ınız hazır!")}</b> ${L("Okutan kişi {phone} numarasına ulaşır.", {phone: esc(prettyPhone(t.phone))})}</div>
+      ${profile().email ? "" : `<form class="opts" id="nm" novalidate style="padding-top:14px;margin-bottom:14px">
+        <label for="nm-email" style="margin-top:0">${L("📧 QR bilgilerinizi e-postanıza gönderelim")}</label>
+        <input id="nm-email" type="email" inputmode="email" autocomplete="email" placeholder="${L("ornek@gmail.com")}">
+        <div class="hint">${L("QR kodu ve PIN e-postanızda dursun; PIN'i unutursanız ya da telefonunuz değişirse geri alırsınız.")}</div>
+        <button class="btn alt" type="submit">${L("Gönder")}</button>
+      </form>`}` : ""}
     <div class="preview"><div style="zoom:${fit.toFixed(3)}">${stickerAt(t.code, t.design, qrLink(t.code), t.size, t.phrase)}</div></div>
     <div id="promo-slot"></div>
 
@@ -835,6 +848,15 @@ function showTag(code, isNew) {
     </form>`, true);
 
   const update = patch => { saveTag({...t, ...patch}); showTag(code, isNew); };
+  const nm = document.getElementById("nm");
+  if (nm) nm.addEventListener("submit", ev => {
+    ev.preventDefault();
+    const email = document.getElementById("nm-email").value.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return toast(L("E-posta adresi geçersiz."));
+    store.set("profile", {...profile(), email});
+    nm.remove();
+    syncRecoveryEmail();
+  });
   document.getElementById("t-name").onchange = ev => {
     saveTag({...findTag(code), name: ev.target.value.trim()});
     document.getElementById("apptitle").textContent = ev.target.value.trim() || t.code;

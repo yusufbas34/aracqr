@@ -1742,7 +1742,7 @@ async function showStats(rows, given, requests) {
 }
 
 async function showSettings(requests, error = "") {
-  const shop = await loadShopAdmin();
+  const [shop, pinVersion] = await Promise.all([loadShopAdmin(), rpc("aracqr_pin_version", {}).catch(() => 0)]);
   show(`
     ${tabsHtml(requests ? requests.filter(r => r.status === "yeni").length : 0)}
     ${shop ? "" : setupHtml("Sipariş sistemi kurulu değil.", "siparis.sql")}
@@ -1790,6 +1790,7 @@ async function showSettings(requests, error = "") {
         </ol>
         <p class="hint">Gönderen adresi boşken e-postalar onboarding@resend.dev'den gider ve yalnızca Resend hesabınızın e-postasına ulaşır.</p>
       </details>
+      ${pinVersion < 2 ? setupHtml("PIN e-postası güncellemesi var: yeni QR'a e-posta eklenince tüm QR bilgileri kullanıcıya e-postayla gider.", "pin.sql") : ""}
       <label for="s-from">Gönderen adresi</label><input id="s-from" autocomplete="off" placeholder="Araç QR <pin@bulqr.com.tr>" value="${esc(shop.mail_from || "")}">
       ` : setupHtml("“PIN'imi unuttum” e-postası kurulu değil.", "pin.sql")}
       ` : `<div class="msg err">Bildirimler için veritabanını güncelleyin: ${setupHtml("Sipariş sistemi güncellemesi var.", "siparis.sql")}</div>`}
