@@ -1299,6 +1299,12 @@ function route() {
   if (parts[0] === "etiket" && parts[2] === "siparis") return showOrder(parts[1]);
   if (parts[0] === "siparisler") return showOrders();
   if (parts[0] === "profil") return showProfile();
+  if (parts[0] === "yedek" && parts[1]) {  // eski adresten taşıma bağlantısı (eski-adres/index.html): kodu otomatik geri yükle
+    history.replaceState(null, "", "#/yedek");
+    showBackup();
+    document.getElementById("bk-in").value = parts[1];
+    return document.getElementById("bk-form").requestSubmit();
+  }
   if (parts[0] === "yedek") return showBackup();
   if (parts[0] === "yorumlar") return showReviews();
   if (parts[0] === "yorum-yaz") return showWriteReview();
