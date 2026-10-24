@@ -82,6 +82,10 @@ body{margin:0;background:#eef0f3;font-family:"Barlow",system-ui,sans-serif;color
 .tuck,.dust,.glue{background:#f4f6fa}
 .glue{background:repeating-linear-gradient(45deg,#f4f6fa 0 1.5mm,#e3e7ee 1.5mm 3mm)}
 .note{position:absolute;font-size:2.4mm;color:#8a93a3}
+/* matbaa: taşma payı için panellerin arkasında 2 mm büyük kopyalar */
+.pn.bl{z-index:0}.pn:not(.bl){z-index:1}
+body.matbaa{background:#fff}body.matbaa .bar,body.matbaa .help{display:none}body.matbaa .sheet-wrap{padding:0;display:block}
+body.matbaa .a4{box-shadow:none;page-break-after:always;break-after:page}
 @media print{body{background:#fff}.bar,.help{display:none}.sheet-wrap{padding:0;display:block}.a4{box-shadow:none}}
 </style>
 </head>
@@ -98,10 +102,22 @@ body{margin:0;background:#eef0f3;font-family:"Barlow",system-ui,sans-serif;color
     <li>Çizgili <b>yapıştırma payını</b> arka panelin içine yapıştırın (çift taraflı bant ya da yapıştırıcı).</li>
     <li>Alt kapağı kapatıp dilini içeri sokun. Sticker ile kartı koyup üst kapağı kapatın. Üstteki delikli dil mağaza askısına takılır.</li>
   </ol>
+  <p><b>Matbaa dosyaları</b> (yazılar eğriye çevrili; 1. sayfa 2 mm taşma paylı baskı, 2. sayfa bıçak çizgisi):
+    <a href="kutu/matbaa/aracqr-kutu-40x60-matbaa.pdf" download>4×6</a> ·
+    <a href="kutu/matbaa/aracqr-kutu-50x75-matbaa.pdf" download>5×7,5</a> ·
+    <a href="kutu/matbaa/aracqr-kutu-55x85-matbaa.pdf" download>5,5×8,5</a> ·
+    <a href="kutu/matbaa/aracqr-kutu-60x90-matbaa.pdf" download><b>6×9</b></a> ·
+    <a href="kutu/matbaa/aracqr-kutu-74x105-matbaa.pdf" download>7,4×10,5</a> ·
+    <a href="kutu/matbaa/aracqr-kutu-80x120-matbaa.pdf" download>8×12 cm</a> ·
+    <a href="kutu/matbaa/aracqr-kutu-a4-60x90.pdf" download>A4 (2 kutu, evde)</a></p>
 </div>
-<div class="sheet-wrap"><div class="a4" id="a4"></div></div>
+<div class="sheet-wrap" id="sheets"><div class="a4" id="a4"></div></div>
 <script>
 const params = new URLSearchParams(location.search);
+// ?matbaa=1: matbaa dosyası. Sayfa kutu açılımı + 4 mm; 1. sayfa baskı (2 mm taşma paylı, çizgisiz),
+// 2. sayfa bıçak (düz: kesim, kesikli: katlama; pembe #EC008C). PDF'e basılıp yazılar eğriye çevrilir (kutu/matbaa/OKUBENI.md).
+const MATBAA = params.has("matbaa"), BLEED = 2, MARGIN = 4;
+if (MATBAA) document.body.classList.add("matbaa");
 const APP_URL = "https://arac.bulqr.com.tr/", IG = "https://www.instagram.com/aracqr/";
 const sizes = Object.keys(SIZES).filter(k => { const {w, h} = dims(k); return w <= 80 && h <= 120; });
 let size = sizes.includes(params.get("size")) ? params.get("size") : "60x90";
@@ -118,7 +134,11 @@ function render() {
   // A4'e sığdığı kadar kutu (6×9 cm'de 2 adet): alt alta, aralarında 5 mm
   const GAP = 5, count = 2 * totalH + GAP <= 297 - 16 ? 2 : 1;
   const ox = (210 - totalW) / 2, oy = (297 - (count * totalH + (count - 1) * GAP)) / 2;
-  const P = (cls, l, t, w, h, html = "") => `<div class="pn ${cls}" style="left:${l}mm;top:${t}mm;width:${w}mm;height:${h}mm">${html}</div>`;
+  const bleed = [];
+  const P = (cls, l, t, w, h, html = "") => {
+    bleed.push(`<div class="pn ${cls} bl" style="left:${l - BLEED}mm;top:${t - BLEED}mm;width:${w + 2 * BLEED}mm;height:${h + 2 * BLEED}mm"></div>`);
+    return `<div class="pn ${cls}" style="left:${l}mm;top:${t}mm;width:${w}mm;height:${h}mm">${html}</div>`;
+  };
   const cut = [], fold = [];
   const L = (a, b, c, d) => `M${a} ${b}L${c} ${d}`;
   // --- paneller ve grafikler
@@ -201,6 +221,17 @@ function render() {
       <path d="${cut.join("")}" fill="none" stroke="#111" stroke-width=".3"/>
       <path d="${fold.join("")}" fill="none" stroke="#e4002b" stroke-width=".25" stroke-dasharray="1.6 1.2"/>
     </g></svg>`;
+  if (MATBAA) {
+    const pw = totalW + 2 * MARGIN, ph = totalH + 2 * MARGIN;
+    document.getElementById("pagestyle").textContent = `@page{size:${pw}mm ${ph}mm;margin:0}`;
+    const page = inner => `<div class="a4" style="width:${pw}mm;height:${ph}mm"><div class="box" style="left:${MARGIN}mm;top:${MARGIN}mm;width:${totalW}mm;height:${totalH}mm">${inner}</div></div>`;
+    const die = `<svg class="lines" width="${totalW}mm" height="${totalH}mm" viewBox="0 0 ${totalW} ${totalH}">
+      <path d="${cut.join("")}" fill="none" stroke="#EC008C" stroke-width=".25"/>
+      <path d="${fold.join("")}" fill="none" stroke="#EC008C" stroke-width=".25" stroke-dasharray="2 1.5"/></svg>`;
+    document.getElementById("sheets").innerHTML = page(bleed.join("") + html) + page(die);
+    document.title = `aracqr-kutu-${size}-matbaa`;
+    return;
+  }
   const one = top => `<div class="box" style="left:${ox}mm;top:${top}mm;width:${totalW}mm;height:${totalH}mm">${html}${svg}</div>`;
   document.getElementById("a4").innerHTML = Array.from({length: count}, (_, i) => one(oy + i * (totalH + GAP))).join("") +
     `<div class="note" style="left:${ox}mm;top:${Math.min(297 - 6, oy + count * totalH + (count - 1) * GAP + 1.5)}mm">Siyah düz çizgi: kes · Kırmızı kesikli çizgi: katla · Çizgili alan: yapıştır · İç ölçü ${W}×${H}×${D} mm · Sayfada ${count} kutu · %100 basın</div>`;
