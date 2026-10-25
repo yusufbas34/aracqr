@@ -109,14 +109,17 @@ section > h2{font-size:24px;margin:0 0 14px}
 .tasma{display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;margin:0 0 38px;padding:20px 22px;border-radius:18px;
   background:linear-gradient(120deg,#b8501a,#d9692a 60%,#f08a4b);color:#fff;text-decoration:none;box-shadow:0 10px 28px rgba(184,80,26,.3);position:relative;overflow:hidden}
 .tasma::after{content:"🐾";position:absolute;right:-8px;bottom:-22px;font-size:110px;opacity:.12;transform:rotate(-18deg);pointer-events:none}
-.tasma img{width:72px;height:72px;border-radius:16px;box-shadow:0 0 0 3px #ffffff55;animation:tasma-sway 3s ease-in-out infinite;transform-origin:50% 0}
+.tq-ph{position:relative;width:150px;height:150px;border-radius:16px;overflow:hidden;box-shadow:0 0 0 3px #ffffff66,0 8px 20px rgba(0,0,0,.25);background:#f3dccb}
+.tq-ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:tq-fade 16s infinite}
+.tq-ph img:nth-child(2){animation-delay:-12s}.tq-ph img:nth-child(3){animation-delay:-8s}.tq-ph img:nth-child(4){animation-delay:-4s}
+@keyframes tq-fade{0%,22%{opacity:1}27%,95%{opacity:0}100%{opacity:1}}
 .tasma small{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:#ffd400;color:#4a2410;border-radius:6px;padding:2px 7px;margin-bottom:6px}
 .tasma b{display:block;font-size:22px;line-height:1.2}
 .tasma span{display:block;font-size:15px;line-height:1.45;opacity:.95;margin-top:4px}
 .tasma em{font-style:normal;font-weight:700;background:#fff;color:#b8501a;border-radius:10px;padding:12px 16px;white-space:nowrap;position:relative;z-index:1}
 @keyframes tasma-sway{50%{transform:rotate(-6deg)}}
-@media (max-width:640px){.tasma{grid-template-columns:auto 1fr}.tasma em{grid-column:1/-1;text-align:center}.tasma img{width:58px;height:58px}.tasma b{font-size:19px}}
-@media (prefers-reduced-motion:reduce){.tasma img{animation:none}}
+@media (max-width:640px){.tasma{grid-template-columns:auto 1fr}.tasma em{grid-column:1/-1;text-align:center}.tq-ph{width:96px;height:96px}.tasma b{font-size:19px}}
+@media (prefers-reduced-motion:reduce){.tq-ph img{animation:none}.tq-ph img:not(:first-child){display:none}}
 .guides ul{margin:0;padding-left:20px;line-height:1.9}.guides a{color:var(--band);font-weight:600}
 .rv-sum{display:flex;align-items:center;gap:12px;margin:-4px 0 18px;font-size:15px;color:var(--muted)}
 .rv-sum b{font-size:34px;color:var(--ink);line-height:1}
@@ -1119,7 +1122,7 @@ function showHome() {
     </section>
 
     <a class="tasma" href="https://tasma.bulqr.com.tr/" target="_blank" rel="noopener">
-      <img src="app/tasma-logo.svg" alt="" width="72" height="72">
+      <div class="tq-ph"><img src="app/img/tasma-1.jpg" alt="Tasmasında pembe QR künyesi olan golden retriever" width="480" height="480" loading="lazy"><img src="app/img/tasma-2.jpg" alt="Tasmasında mavi QR künyesi olan border collie" width="480" height="480" loading="lazy"><img src="app/img/tasma-3.jpg" alt="Mavi Sahibimi Ara QR tasma künyesi" width="480" height="480" loading="lazy"><img src="app/img/tasma-4.jpg" alt="Pembe Sahibimi Ara QR tasma künyesi" width="480" height="480" loading="lazy"></div>
       <div><small>Yeni · Köpeğiniz için</small>
         <b>Tasma QR: dostunuz kaybolursa size geri getirsin</b>
         <span>Tasmaya takılan QR rozeti okutan kişi tek dokunuşla sizi arar ve bulunduğu yeri gönderir. Kayıp modu, ödül notu, sağlık bilgisi.</span></div>

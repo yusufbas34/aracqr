@@ -195,7 +195,7 @@ function profile() {
 const IG_URL = "https://www.instagram.com/aracqr/";
 const TASMA_URL = "https://tasma.bulqr.com.tr/";
 const tasmaAdHtml = () => `<a class="tasma-ad" href="${TASMA_URL}" target="_blank" rel="noopener">
-      <img src="tasma-logo.svg" alt="" width="52" height="52">
+      <div class="tq-ph"><img src="img/tasma-1.jpg" alt="Tasmasında pembe QR künyesi olan golden retriever" width="480" height="480" loading="lazy"><img src="img/tasma-2.jpg" alt="Tasmasında mavi QR künyesi olan border collie" width="480" height="480" loading="lazy"><img src="img/tasma-3.jpg" alt="Mavi Sahibimi Ara QR tasma künyesi" width="480" height="480" loading="lazy"><img src="img/tasma-4.jpg" alt="Pembe Sahibimi Ara QR tasma künyesi" width="480" height="480" loading="lazy"></div>
       <span><small>${L("Köpeğiniz için")}</small><b>Tasma QR</b>${L("Kaybolursa onu bulan kişi tek dokunuşla sizi arar, yerini gönderir.")}</span>
       <i aria-hidden="true">›</i>
     </a>`;
