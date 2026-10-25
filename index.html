@@ -78,6 +78,16 @@ input:focus,textarea:focus{outline:none;border-color:var(--band)}
 .showcase .grid{gap:0}
 .showcase button{font:inherit;font-size:14px;font-weight:600;color:var(--band);background:#fff;border:2px solid var(--line);
   border-radius:999px;padding:6px 14px;cursor:pointer}
+.mine{background:#fff;border:2px solid var(--line);border-radius:14px;padding:12px;margin:0 0 26px}
+.mine-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.mine-nav a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 4px;border-radius:10px;background:#eef2fb;color:var(--band);text-decoration:none;font-weight:700;font-size:14px;text-align:center}
+.mine-nav a i{font-style:normal;font-size:22px;line-height:1.1}.mine-nav a.new{background:var(--band);color:#fff}
+.mine-nav em{font-style:normal;background:#ffd23f;color:#2b2200;border-radius:999px;padding:0 7px;font-size:12px;margin-top:2px}
+.mine-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-top:10px}
+.mine-list a{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;text-decoration:none;color:var(--ink)}
+.mine-list a b{display:block}.mine-list a span{color:var(--muted);font-size:14px}.mine-list a i{font-style:normal;margin-left:auto;color:var(--muted);font-size:22px}
+.mine-list .pl{font:700 15px/1 "Barlow Condensed","Barlow",sans-serif;letter-spacing:.06em;border:2px solid var(--ink);border-radius:6px;padding:6px 8px;background:#fff;white-space:nowrap}
+@media (max-width:520px){.mine-nav a{font-size:12px}.mine-nav a i{font-size:20px}}
 .note{background:#fff;border-left:4px solid var(--band);border-radius:6px;padding:12px 14px;font-size:15px;color:var(--ink);margin-bottom:30px}
 section{margin-bottom:38px}
 section > h2{font-size:24px;margin:0 0 14px}
@@ -1077,9 +1087,27 @@ function showcaseHtml() {
 
 const IG_URL = "https://www.instagram.com/aracqr/";
 const APP_URL = "app/";  // web uygulaması: Android uygulamasıyla aynı kod
+// Bu tarayıcıda web uygulamasıyla oluşturulan QR'lar ve siparişler (app/app.js aynı adreste localStorage'da tutar)
+function mineHtml() {
+  const get = k => { try { const v = JSON.parse(localStorage.getItem("aracqr-" + k) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
+  const tags = get("tags").filter(t => t && t.code), orders = get("orders");
+  const n = x => x ? `<em>${x}</em>` : "";
+  return `<div class="mine">
+    <nav class="mine-nav" aria-label="Hesabım">
+      <a href="${APP_URL}#/"><i>🚗</i>QR'larım${n(tags.length)}</a>
+      <a href="${APP_URL}#/siparisler"><i>📦</i>Siparişlerim${n(orders.length)}</a>
+      <a href="${APP_URL}#/profil"><i>👤</i>Profilim</a>
+      <a class="new" href="${APP_URL}#/yeni"><i>＋</i>Yeni QR</a>
+    </nav>
+    ${tags.length ? `<div class="mine-list">${tags.slice(0, 6).map(t => `<a href="${APP_URL}#/etiket/${encodeURIComponent(t.code)}">
+        <span class="pl">${esc(t.code)}</span><span><b>${esc(t.name || "QR'ım")}</b>${esc(prettyPhone(t.phone || ""))}${t.disabled ? " · kapalı" : ""}</span><i>›</i></a>`).join("")}</div>` : ""}
+  </div>`;
+}
 
 function showHome() {
+  const mine = mineHtml(), hasTags = mine.includes("mine-list");  // QR'ı olan kullanıcıda en üstte
   show(`
+    ${hasTags ? mine : ""}
     <div class="hero">
       <div>
         <h1>Hatalı park ettiğinizde sizi tek dokunuşla arasınlar</h1>
@@ -1094,6 +1122,7 @@ function showHome() {
       </div>
     </div>
 
+    ${hasTags ? "" : mine}
     <div class="note">Bir aracın üzerindeki QR'ı okuttuysanız arama ekranı doğrudan açılır. Bu sayfa, kendi QR'ını edinmek isteyenler içindir.</div>
 
     <section id="reviews" hidden></section>
