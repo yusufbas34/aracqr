@@ -276,6 +276,17 @@ Google Play'e çıkması için 14 gün test eden 12 kişi lazım. 5 dakikanı al
 Çok teşekkürler! 💙
 ```
 
+### Sürüm notu: 1.0.49 (Play'e yapıştırılacak, dil etiketli)
+
+```
+<tr-TR>
+Yeni: PIN'imi unuttum, QR bilgileriniz e-postanızda. Tasma QR tanıtımı, yenilenen arama ekranı ve 200 TL basılı sticker.
+</tr-TR>
+<en-US>
+New: Forgot PIN with email recovery, refreshed call screen, Tasma QR showcase and printed stickers for 200 TL.
+</en-US>
+```
+
 ### Sürüm notu: PIN kurtarma güncellemesi (derleme 46 ve sonrası)
 
 - **Türkçe:** `Yeni: PIN'imi unuttum. E-postanızı ekleyin, QR kodlarınız ve PIN'leriniz e-postanıza gelsin. Yeni adres: arac.bulqr.com.tr`
