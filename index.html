@@ -107,13 +107,17 @@ section > h2{font-size:24px;margin:0 0 14px}
 .scan-promo .sp-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;font-size:14px;line-height:1.4}
 .scan-promo small{align-self:flex-start;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:#ffd400;color:#3a2a00;border-radius:6px;padding:2px 7px}
 .scan-promo b{font-size:19px;line-height:1.2}
-.scan-promo .sp-price strong{color:#ffd400;font-size:16px}
-.scan-promo em{align-self:flex-start;margin-top:4px;font-style:normal;font-weight:700;background:#fff;color:#0a3a9e;border-radius:10px;padding:9px 14px;animation:sp-pulse 1.6s ease-in-out infinite}
+.req-art{display:flex;justify-content:center;margin:6px 0 14px}.req-art .grid{zoom:.9}
+.scan-promo a{text-decoration:none;font-weight:700;border-radius:10px;padding:10px 14px;text-align:center}
+.scan-promo .sp-req{margin-top:6px;background:#fff;color:#0a3a9e;animation:sp-pulse 1.6s ease-in-out infinite}
+.scan-promo .sp-req strong{color:#e8453c;white-space:nowrap}
+.scan-promo .sp-only{font-size:12px;opacity:.9;text-align:center}
+.scan-promo .sp-own{background:rgba(255,255,255,.16);color:#fff;border:2px solid rgba(255,255,255,.55)}
 @keyframes sp-pulse{50%{transform:scale(1.06)}}
 @keyframes sp-wobble{50%{transform:rotate(4deg) translateY(-3px)}}
 @keyframes sp-glow{50%{box-shadow:0 12px 34px rgba(255,90,60,.45)}}
-[dir=rtl] .scan-promo small,[dir=rtl] .scan-promo em{align-self:flex-end}
-@media (prefers-reduced-motion:reduce){.scan-promo,.scan-promo .sp-art,.scan-promo em{animation:none}}
+[dir=rtl] .scan-promo small{align-self:flex-end}
+@media (prefers-reduced-motion:reduce){.scan-promo,.scan-promo .sp-art,.scan-promo .sp-req{animation:none}}
 .ig-btn{display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;color:#fff;font-weight:700;border-radius:12px;padding:13px 16px;
   background:linear-gradient(45deg,#f9a825,#e1306c 45%,#833ab4);box-shadow:0 6px 18px rgba(225,48,108,.3)}
 .ig-btn small{font-weight:400;opacity:.9}
@@ -303,6 +307,7 @@ const params = new URLSearchParams(location.search);
 // Okutma, numara kaydetme ve yönetim sayfaları arama motorlarında çıkmasın (yalnızca ana sayfa çıksın)
 if ([...params.keys()].length) document.head.insertAdjacentHTML("beforeend", '<meta name="robots" content="noindex,nofollow">');
 const BASE = location.origin + location.pathname;
+const PRICE_FALLBACK = 200;  // basılı sticker fiyatı; güncel fiyat yönetimdeki Ayarlar'dan (shop_info) gelir
 
 // ---------------------------------------------------------------- yardımcılar
 
@@ -424,6 +429,50 @@ function showForgot(code, msg = "") {
   document.getElementById("fg-back").onclick = ev => { ev.preventDefault(); route(); };
 }
 
+// Hazır QR talebi (?talep): basılı Plaka tasarımı sticker + PIN kartı kargoyla gelir. Talep yönetimde "QR talepleri"ne düşer.
+function showRequestForm(msg = "", v = {}) {
+  const val = k => `value="${esc(v[k] || "")}"`;
+  show(`
+    <div class="req-art"><div class="grid" style="--w:40mm;--h:60mm;--k:.667">${stickerHtml("ÖRNEK", "plaka", "https://arac.bulqr.com.tr/")}</div></div>
+    <h1>Hazır QR kod talep et</h1>
+    <p>Su geçirmez vinil <b>Plaka</b> tasarımı QR sticker ve PIN kartı kapınıza gelsin: <b class="price-tag">${PRICE_FALLBACK} TL</b>. Sticker gelince QR'ı okutup numaranızı ve karttaki PIN'i girmeniz yeterli.</p>
+    <p class="hint">Şu an yalnızca Plaka tasarımı var. Başka tasarım isterseniz <a href="${APP_URL}">kendi tasarımınızı yapın</a>.</p>
+    ${msg}
+    <form id="rq" novalidate>
+      <div class="row2"><div><label for="rq-first">Ad</label><input id="rq-first" autocomplete="given-name" ${val("first")}></div>
+        <div><label for="rq-last">Soyad</label><input id="rq-last" autocomplete="family-name" ${val("last")}></div></div>
+      <label for="rq-phone">Telefon</label><input id="rq-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="05xx xxx xx xx" ${val("phone")}>
+      <label for="rq-email">E-posta</label><input id="rq-email" type="email" inputmode="email" autocomplete="email" ${val("email")}>
+      <label for="rq-addr">Teslimat adresi</label>
+      <textarea id="rq-addr" rows="3" autocomplete="street-address" placeholder="Mahalle, cadde/sokak, bina no, daire, ilçe / il">${esc(v.addr || "")}</textarea>
+      <button class="btn" type="submit">Talep gönder</button>
+      <p class="hint">Ödeme ve kargo için sizinle telefon ya da e-postayla iletişime geçeriz.</p>
+    </form>`);
+  rpc("shop_info", {}).then(sh => { if (sh?.price) document.querySelectorAll(".price-tag").forEach(el => { el.textContent = `${sh.price} TL`; }); }).catch(() => {});
+  document.getElementById("rq").addEventListener("submit", async ev => {
+    ev.preventDefault();
+    const g = id => document.getElementById(id).value.trim();
+    const d = {first: g("rq-first"), last: g("rq-last"), phone: g("rq-phone"), email: g("rq-email"), addr: g("rq-addr")};
+    const fail = t => showRequestForm(`<div class="msg err">${esc(t)}</div>`, d);
+    if (!d.first || !d.last) return fail("Adınızı ve soyadınızı yazın.");
+    const phone = normalizePhone(d.phone);
+    if (!phone) return fail("Telefon numarası geçersiz. Örnek: 0532 123 45 67");
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email)) return fail("E-posta adresi geçersiz.");
+    if (d.addr.length < 10) return fail("Teslimat adresini eksiksiz yazın.");
+    ev.submitter && (ev.submitter.disabled = true);
+    let res;
+    try { res = await rpc("request_create", {p_first_name: d.first, p_last_name: d.last, p_email: d.email, p_phone: phone,
+      p_note: `Hazır QR (Plaka tasarımı) · Adres: ${d.addr}`}); }
+    catch (e) { return fail("Bağlantı hatası. İnternetinizi kontrol edip tekrar deneyin."); }
+    if (!res?.ok) return fail({too_many: "Bugün çok fazla talep gönderdiniz. Yarın tekrar deneyin.", busy: "Şu an çok yoğun, birkaç dakika sonra tekrar deneyin.",
+      bad_email: "E-posta adresi geçersiz.", bad_phone: "Telefon numarası geçersiz.", missing: "Adınızı ve soyadınızı yazın."}[res?.error] || "Gönderilemedi, tekrar deneyin.");
+    show(`<div class="req-art"><div class="grid" style="--w:40mm;--h:60mm;--k:.667">${stickerHtml("ÖRNEK", "plaka", "https://arac.bulqr.com.tr/")}</div></div>
+      <h1>Talebiniz alındı 🎉</h1>
+      <p>Teşekkürler ${esc(d.first)}! Ödeme ve kargo için kısa süre içinde sizinle iletişime geçeceğiz.</p>
+      <a class="btn" href="${BASE}">Ana sayfaya dön</a>`);
+  });
+}
+
 const CLAIM = {title: "Bu etiketi numaranıza bağlayın", button: "Numarayı kaydet", overwrite: false,
   intro: "Etiket henüz kullanılmıyor. Numaranızı ve etiketle gelen karttaki PIN'i girin. Bundan sonra bu QR'ı okutan herkes sizi arayabilecek."};
 const CHANGE = {title: "Numarayı değiştir", button: "Yeni numarayı kaydet", overwrite: true,
@@ -448,7 +497,7 @@ function inQuietHours(tag, now) {
 // ---------------------------------------------------------------- okutma sayfasının dili (Türkçe / English / العربية)
 // QR'ı yabancı biri de okutabilir: telefonunun diline göre açılır, üstteki düğmelerle değiştirilebilir.
 const SCAN_TEXT = {
-  tr: {callTitle: "Araç sahibini arayın", callIntro: "Arama ekranı açılmadıysa aşağıdaki butona dokunun.", call: "Ara",
+  tr: {callTitle: "Araç sahibini arayın", callIntro: "Arama ekranı açılmadıysa aşağıdaki butona dokunun.", call: "📞 Araç sahibini ara",
     quietTitle: "Araç sahibi şu an Rahatsız Etmeyin modunda",
     quietText: (a, b) => `Araç sahibi ${a}–${b} arasında arama almıyor. Aşağıdan ona SMS ya da WhatsApp mesajı gönderebilirsiniz; acil durumlar için de hazır mesaj var.`,
     msgTitle: "Mesaj gönderin", msgOr: "Ya da hazır mesaj gönderin", via: "Gönderme yolu", note: "",
@@ -456,8 +505,8 @@ const SCAN_TEXT = {
     noneTitle: "QR bulunamadı", noneText: "Bu QR kod geçerli bir etikete ait değil.",
     netTitle: "Bağlantı hatası", netText: "Sayfayı yenileyip tekrar deneyin.",
     backup: "Ulaşamazsanız", backupCall: "Yedek numarayı ara", owner: "Aracın sahibi misiniz? Numarayı değiştirin", promoTag: "Sen de ister misin?", promoTitle: "Hatalı park ettiğinde seni de tek dokunuşla arasınlar",
-    promoText: "Aracına kendi QR'ını ücretsiz yap; numaran camda yazmaz. Yazıcıyla uğraşmak istemezsen su geçirmez sticker'ını istediğin ölçüde biz basıp gönderelim.", promoPrice: "Basılı vinil sticker", promoCta: "Ücretsiz QR'ımı oluştur"},
-  en: {callTitle: "Call the vehicle owner", callIntro: "If the call screen didn't open, tap the button below.", call: "Call",
+    promoReq: "Hazır QR kod talep et", promoOwn: "Kendi tasarımını yap", promoOnly: "Şu an yalnızca Plaka tasarımı var"},
+  en: {callTitle: "Call the vehicle owner", callIntro: "If the call screen didn't open, tap the button below.", call: "📞 Call the vehicle owner",
     quietTitle: "The owner has Do Not Disturb on",
     quietText: (a, b) => `The owner doesn't take calls between ${a} and ${b} (Turkey time). You can send an SMS or WhatsApp message below; there are ready messages for emergencies too.`,
     msgTitle: "Send a message", msgOr: "Or send a ready message", via: "Send via", note: "The message is sent in Turkish together with your language, so the owner understands it.",
@@ -465,8 +514,8 @@ const SCAN_TEXT = {
     noneTitle: "QR not found", noneText: "This QR code doesn't belong to a valid sticker.",
     netTitle: "Connection error", netText: "Refresh the page and try again.",
     backup: "If you can't reach them", backupCall: "Call the backup number", owner: "Are you the owner? Change the number", promoTag: "Want one too?", promoTitle: "Let people call you with one tap when you park badly",
-    promoText: "Make your own car QR for free; your number is never shown on the window. Printed waterproof stickers are available in Turkey.", promoPrice: "Printed vinyl sticker", promoCta: "Create my free QR"},
-  ar: {callTitle: "اتصل بصاحب السيارة", callIntro: "إذا لم تُفتح شاشة الاتصال، اضغط على الزر أدناه.", call: "اتصال",
+    promoReq: "Request a ready-made QR sticker", promoOwn: "Design your own", promoOnly: "Currently only the Plate design is available"},
+  ar: {callTitle: "اتصل بصاحب السيارة", callIntro: "إذا لم تُفتح شاشة الاتصال، اضغط على الزر أدناه.", call: "📞 اتصل بصاحب السيارة",
     quietTitle: "صاحب السيارة في وضع عدم الإزعاج الآن",
     quietText: (a, b) => `لا يستقبل صاحب السيارة المكالمات بين ${a} و${b} (بتوقيت تركيا). يمكنك إرسال رسالة SMS أو واتساب أدناه، وتوجد رسائل جاهزة للحالات الطارئة.`,
     msgTitle: "أرسل رسالة", msgOr: "أو أرسل رسالة جاهزة", via: "طريقة الإرسال", note: "تُرسل الرسالة بالتركية مع لغتك حتى يفهمها صاحب السيارة.",
@@ -474,8 +523,8 @@ const SCAN_TEXT = {
     noneTitle: "لم يتم العثور على الرمز", noneText: "رمز QR هذا لا ينتمي إلى ملصق صالح.",
     netTitle: "خطأ في الاتصال", netText: "حدّث الصفحة وحاول مرة أخرى.",
     backup: "إذا لم تتمكن من الوصول", backupCall: "اتصل بالرقم الاحتياطي", owner: "هل أنت صاحب السيارة؟ غيّر الرقم", promoTag: "هل تريد واحدًا أيضًا؟", promoTitle: "دع الناس يتصلون بك بلمسة واحدة إذا ركنت بشكل خاطئ",
-    promoText: "أنشئ رمز QR لسيارتك مجانًا؛ رقمك لا يظهر على الزجاج. تتوفر ملصقات مطبوعة مقاومة للماء داخل تركيا.", promoPrice: "ملصق فينيل مطبوع", promoCta: "أنشئ رمزي المجاني"},
-  ru: {callTitle: "Позвоните владельцу автомобиля", callIntro: "Если экран звонка не открылся, нажмите кнопку ниже.", call: "Позвонить",
+    promoReq: "اطلب ملصق QR جاهزًا", promoOwn: "صمّم ملصقك بنفسك", promoOnly: "متوفر حاليًا تصميم اللوحة فقط"},
+  ru: {callTitle: "Позвоните владельцу автомобиля", callIntro: "Если экран звонка не открылся, нажмите кнопку ниже.", call: "📞 Позвонить владельцу",
     quietTitle: "У владельца сейчас режим «Не беспокоить»",
     quietText: (a, b) => `Владелец не принимает звонки с ${a} до ${b} (по времени Турции). Вы можете отправить ему SMS или сообщение в WhatsApp ниже; для срочных случаев есть готовые сообщения.`,
     msgTitle: "Отправьте сообщение", msgOr: "Или отправьте готовое сообщение", via: "Способ отправки", note: "Сообщение уходит на турецком вместе с текстом на вашем языке, чтобы владелец понял.",
@@ -483,7 +532,7 @@ const SCAN_TEXT = {
     noneTitle: "QR не найден", noneText: "Этот QR-код не относится к действующей наклейке.",
     netTitle: "Ошибка соединения", netText: "Обновите страницу и попробуйте снова.",
     backup: "Если не дозвонились", backupCall: "Позвонить на запасной номер", owner: "Вы владелец? Изменить номер", promoTag: "Хотите такой же?", promoTitle: "Пусть вам звонят одним касанием, если вы неудачно припарковались",
-    promoText: "Сделайте QR для своей машины бесплатно; номер не виден на стекле. Печатные водостойкие наклейки доступны в Турции.", promoPrice: "Печатная виниловая наклейка", promoCta: "Создать бесплатный QR"},
+    promoReq: "Заказать готовый QR-стикер", promoOwn: "Сделать свой дизайн", promoOnly: "Сейчас доступен только дизайн «Номер»"},
 };
 const LANG_NAMES = {tr: "Türkçe", en: "English", ar: "العربية", ru: "Русский"};
 let LANG = (() => {
@@ -569,17 +618,18 @@ function bindQuickMessages() {
 // QR'ı okutan kişi de potansiyel müşteri: arama/mesaj seçeneklerinin altında dikkat çekici tanıtım
 function scanPromoHtml() {
   const t = T();
-  return `<a class="scan-promo" href="${APP_URL}">
-    <span class="sp-art" aria-hidden="true"><span class="grid" style="--w:40mm;--h:60mm;--k:.667">${stickerHtml("SENİN-QR", "klasik", "https://arac.bulqr.com.tr/")}</span></span>
-    <span class="sp-body"><small>${esc(t.promoTag)}</small><b>${esc(t.promoTitle)}</b><span>${esc(t.promoText)}</span>
-      <span class="sp-price" hidden>${esc(t.promoPrice)}: <strong></strong></span>
-      <em>${esc(t.promoCta)} →</em></span>
-  </a>`;
+  return `<div class="scan-promo">
+    <span class="sp-art" aria-hidden="true"><span class="grid" style="--w:40mm;--h:60mm;--k:.667">${stickerHtml("SENİN-QR", "plaka", "https://arac.bulqr.com.tr/")}</span></span>
+    <span class="sp-body"><small>${esc(t.promoTag)}</small><b>${esc(t.promoTitle)}</b>
+      <a class="sp-req" href="${BASE}?talep">${esc(t.promoReq)} · <strong class="sp-price">${PRICE_FALLBACK} TL</strong> →</a>
+      <span class="sp-only">${esc(t.promoOnly)}</span>
+      <a class="sp-own" href="${APP_URL}">🎨 ${esc(t.promoOwn)}</a></span>
+  </div>`;
 }
 function bindScanPromo() {
   rpc("shop_info", {}).then(sh => {
     const el = document.querySelector(".scan-promo .sp-price");
-    if (el && sh?.active && sh.price) { el.querySelector("strong").textContent = `${sh.price} TL`; el.hidden = false; }
+    if (el && sh?.price) el.textContent = `${sh.price} TL`;
   }).catch(() => {});
 }
 
@@ -615,7 +665,7 @@ function showCall(code, tag, again = false) {
     ${plate(code)}
     <h1>${esc(t.callTitle)}</h1>
     <p>${esc(t.callIntro)}</p>
-    <a class="btn call" href="tel:${esc(phone)}">${esc(t.call)}: <span dir="ltr">${esc(prettyPhone(phone))}</span></a>
+    <a class="btn call" href="tel:${esc(phone)}">${esc(t.call)}</a>
     ${quickMessagesHtml(phone)}
     ${backup}
     ${scanPromoHtml()}
@@ -1136,7 +1186,7 @@ function showHome() {
       <ol class="steps">
         <li><b>Tasarımınızı seçin</b>${Object.keys(DESIGNS).length} tasarım ve ${Object.keys(PHRASES).length} hazır söz arasından seçin; yana kaydırarak bakın.</li>
         <li><b>Numaranızı girin</b>QR'ınız anında oluşur. Numaranız QR'da ve camda yazmaz.</li>
-        <li><b>Yazdırın ya da sipariş verin</b>Kendiniz ücretsiz yazdırın ya da su geçirmez vinil sticker'ınızı istediğiniz ölçüde <span class="price-tag">250 TL</span>'ye biz basıp gönderelim.</li>
+        <li><b>Yazdırın ya da sipariş verin</b>Kendiniz ücretsiz yazdırın ya da su geçirmez vinil sticker'ınızı istediğiniz ölçüde <span class="price-tag">200 TL</span>'ye biz basıp gönderelim.</li>
         <li><b>Camınıza yapıştırın</b>QR'ı okutan kişi sizi tek dokunuşla arar ya da mesaj atar.</li>
       </ol>
       <a class="btn" href="${APP_URL}" style="max-width:360px">Hemen başla</a>
@@ -1164,7 +1214,7 @@ function showHome() {
 
     <section>
       <h2>Sık sorulanlar</h2>
-      <details><summary>Ücretli mi?</summary><p>QR oluşturmak ve kendiniz yazdırmak ücretsizdir. İsterseniz su geçirmez vinil sticker'ınızı istediğiniz ölçüde <span class="price-tag">250 TL</span>'ye biz basıp gönderiyoruz.</p></details>
+      <details><summary>Ücretli mi?</summary><p>QR oluşturmak ve kendiniz yazdırmak ücretsizdir. İsterseniz su geçirmez vinil sticker'ınızı istediğiniz ölçüde <span class="price-tag">200 TL</span>'ye biz basıp gönderiyoruz.</p></details>
       <details><summary>Numaram herkese görünür mü?</summary><p>Camda ve QR'da numaranız yazmaz. QR'ı okutan kişi sizi arayabilsin ya da mesaj atabilsin diye numaranıza ulaşır. Rahatsız Etmeyin saatlerinde arama butonu gösterilmez.</p></details>
       <details><summary>Telefon numaram değişirse ne olacak?</summary><p>Uygulamada QR'ınızı açıp “Numarayı değiştir”e dokunun. Sticker'ı yeniden basmanız gerekmez.</p></details>
       <details><summary>Sticker'ı nereye yapıştırmalıyım?</summary><p>Camın dış yüzüne, kaportaya ya da tampona yapıştırın. Normal bir sticker camın içine yapıştırılırsa dışarıdan ters görünür ve okunmaz. QR kod yüksek hata düzeltmeyle üretilir; biraz çizilse de okunur.</p></details>
@@ -1283,7 +1333,7 @@ async function loadRequests() {
 
 // talepler.sql'in güncel sürümü (telefon isteğe bağlı) kurulu mu?
 async function requestsUpToDate() {
-  try { return (await rpc("aracqr_requests_version", {})) >= 2; } catch (e) { return false; }
+  try { return (await rpc("aracqr_requests_version", {})) >= 3; } catch (e) { return false; }
 }
 
 async function showRequests(rows, given, requests) {
@@ -1296,7 +1346,7 @@ async function showRequests(rows, given, requests) {
   show(`
     ${tabsHtml(newCount)}
     ${requests ? "" : setupHtml("Talep formu kurulu değil.", "talepler.sql")}
-    ${upToDate ? "" : setupHtml("Talep formu güncellendi (telefon artık isteğe bağlı). Veritabanını güncellemeniz gerekiyor; güncellenene kadar telefonsuz talepler reddedilir.", "talepler.sql")}
+    ${upToDate ? "" : setupHtml("Talep güncellemesi var: okutma ekranındaki “Hazır QR kod talep et” formundan gelen talepler Telegram / e-postanıza bildirilir.", "talepler.sql")}
     <div class="bar">
       <select id="rfilter" aria-label="Talep durumu">
         <option value="yeni">Yeni talepler (${newCount})</option>
@@ -1897,6 +1947,7 @@ async function route() {
     return showMessage("Kurulum eksik", "index.html dosyasının başındaki SUPABASE_URL ve SUPABASE_KEY değerlerini doldurun.");
   }
   if (params.has("admin")) return showAdminLogin();
+  if (params.has("talep")) return showRequestForm();
 
   const code = (params.get(SELF ? "s" : "k") || "").trim().toUpperCase();
   if (!code) return showHome();

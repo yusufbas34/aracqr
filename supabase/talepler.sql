@@ -21,7 +21,7 @@ revoke all on public.qr_requests from anon, authenticated;
 alter table public.qr_requests alter column phone drop not null;  -- önceki sürümde zorunluydu
 
 -- Panelin kurulumun güncel olup olmadığını anlaması için
-create or replace function public.aracqr_requests_version() returns integer language sql immutable as 'select 2';
+create or replace function public.aracqr_requests_version() returns integer language sql immutable as 'select 3';
 grant execute on function public.aracqr_requests_version() to anon, authenticated;
 
 -- Herkese açık: talep oluşturur. {ok:true} ya da {ok:false, error:'...'} döner. Telefon isteğe bağlı; p_plate yok sayılır.
@@ -47,6 +47,13 @@ begin
     then return json_build_object('ok', false, 'error', 'busy'); end if;
   insert into qr_requests(first_name, last_name, email, phone, note)
     values (v_first, v_last, v_email, v_phone, v_note);
+  -- sürüm 3: yeni talep Telegram / e-postayla bildirilir (siparis.sql kuruluysa)
+  begin
+    perform public.aracqr_notify('Araç QR: yeni hazır QR talebi',
+      v_first || ' ' || v_last || coalesce(' · ' || v_phone, '') || ' · ' || v_email || coalesce(E'\n' || v_note, '') ||
+      E'\n\nYönetim: https://arac.bulqr.com.tr/?admin');
+  exception when others then null;  -- bildirim kurulu değilse talep yine kaydedilir
+  end;
   return json_build_object('ok', true);
 end $$;
 

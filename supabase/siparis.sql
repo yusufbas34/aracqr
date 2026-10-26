@@ -14,7 +14,7 @@ end $$;
 create table if not exists public.shop_settings (
   id integer primary key default 1 check (id = 1),
   active boolean not null default false,          -- IBAN girilip açılana kadar sipariş alınmaz
-  price integer not null default 250,             -- TL
+  price integer not null default 200,             -- TL
   iban text,
   account_name text,
   bank_name text,
