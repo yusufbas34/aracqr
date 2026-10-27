@@ -1,3 +1,13 @@
 User-agent: *
 Allow: /
+# Arama sonuçlarında çıkmaması gereken dosyalar (kurulum, üretim ve yüklenen belgeler)
+Disallow: /supabase/
+Disallow: /android/
+Disallow: /dosya/
+Disallow: /kutu/
+Disallow: /kutu.html
+Disallow: /eski-adres/
+Disallow: /test.html
+Disallow: /*?admin
+
 Sitemap: https://arac.bulqr.com.tr/sitemap.xml
